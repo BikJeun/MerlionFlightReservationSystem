@@ -46,3 +46,7 @@ MerlionFlightReservationSystemLibrary/dist/
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+/MerlionFlightReservationSystem/HolidayReservationSystemClient/nbproject/private/
+/MerlionFlightReservationSystem/MerlionFlightReservationSystemLibrary/nbproject/private/
+/MerlionFlightReservationSystem/MerlionFRSManagementClient/nbproject/private/
+/MerlionFlightReservationSystem/MerlionFRSReservationClient/nbproject/private/

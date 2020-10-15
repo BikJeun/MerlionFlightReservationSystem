@@ -9,7 +9,7 @@ import javax.ejb.Remote;
 
 /**
  *
- * @author Mitsuki
+ * @author Ooi Jun Hao
  */
 @Remote
 public interface ReservationSessionBeanRemote {

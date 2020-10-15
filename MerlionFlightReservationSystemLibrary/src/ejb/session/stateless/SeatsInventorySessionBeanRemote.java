@@ -5,15 +5,13 @@
  */
 package ejb.session.stateless;
 
-import javax.ejb.Stateless;
+import javax.ejb.Remote;
 
 /**
  *
  * @author Ooi Jun Hao
  */
-@Stateless
-public class CustomerSessionBean implements CustomerSessionBeanRemote, CustomerSessionBeanLocal {
-
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
+@Remote
+public interface SeatsInventorySessionBeanRemote {
+    
 }

@@ -12,11 +12,11 @@
                     <path-in-war>/</path-in-war>
                 </library>
                 <library>
-                    <file>${reference.MerlionFRSManagementClient.j2ee-module-car}</file>
+                    <file>${reference.MerlionFRSReservationClient.j2ee-module-car}</file>
                     <path-in-war>/</path-in-war>
                 </library>
                 <library>
-                    <file>${reference.MerlionFRSReservationClient.j2ee-module-car}</file>
+                    <file>${reference.MerlionFRSManagementClient.j2ee-module-car}</file>
                     <path-in-war>/</path-in-war>
                 </library>
                 <library>

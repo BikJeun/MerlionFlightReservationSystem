@@ -9,7 +9,7 @@ import javax.ejb.Local;
 
 /**
  *
- * @author Ong Bik Jeun
+ * @author Ooi Jun Hao
  */
 @Local
 public interface AircraftConfigurationSessionBeanLocal {

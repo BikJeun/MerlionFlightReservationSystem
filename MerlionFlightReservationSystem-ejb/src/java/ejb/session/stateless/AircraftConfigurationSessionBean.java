@@ -9,11 +9,10 @@ import javax.ejb.Stateless;
 
 /**
  *
- * @author Ong Bik Jeun
+ * @author Ooi Jun Hao
  */
 @Stateless
 public class AircraftConfigurationSessionBean implements AircraftConfigurationSessionBeanRemote, AircraftConfigurationSessionBeanLocal {
-    
 
     // Add business logic below. (Right-click in editor and choose
     // "Insert Code > Add Business Method")

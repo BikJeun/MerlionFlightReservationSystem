@@ -9,7 +9,7 @@ import javax.ejb.Stateless;
 
 /**
  *
- * @author Ong Bik Jeun
+ * @author Ooi Jun Hao
  */
 @Stateless
 public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionBeanRemote, FlightSchedulePlanSessionBeanLocal {

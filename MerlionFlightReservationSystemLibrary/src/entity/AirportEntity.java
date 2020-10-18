@@ -14,7 +14,7 @@ import javax.persistence.Id;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Entity
 public class AirportEntity implements Serializable {

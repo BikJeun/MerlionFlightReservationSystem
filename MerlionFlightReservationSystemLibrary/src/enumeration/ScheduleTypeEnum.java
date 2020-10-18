@@ -7,7 +7,7 @@ package enumeration;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 public enum ScheduleTypeEnum {
     SINGLE,

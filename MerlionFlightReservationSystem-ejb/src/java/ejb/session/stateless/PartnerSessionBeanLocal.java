@@ -5,6 +5,9 @@
  */
 package ejb.session.stateless;
 
+import entity.PartnerEntity;
+import exceptions.PartnerUsernameExistException;
+import exceptions.UnknownPersistenceException;
 import javax.ejb.Local;
 
 /**
@@ -13,5 +16,7 @@ import javax.ejb.Local;
  */
 @Local
 public interface PartnerSessionBeanLocal {
+
+    public PartnerEntity createNewPartner(PartnerEntity partner) throws PartnerUsernameExistException, UnknownPersistenceException;
     
 }

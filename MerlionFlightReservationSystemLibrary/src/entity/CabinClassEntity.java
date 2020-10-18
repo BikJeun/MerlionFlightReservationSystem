@@ -25,7 +25,7 @@ import javax.validation.constraints.Min;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Entity
 public class CabinClassEntity implements Serializable {
@@ -51,7 +51,7 @@ public class CabinClassEntity implements Serializable {
     
     @OneToMany(mappedBy = "cabinClass", fetch = FetchType.EAGER)
     private ArrayList<FareEntity> fare;
-    @ManyToMany(mappedBy = "cabinClass", fetch = FetchType.EAGER)
+    @ManyToMany
     private ArrayList<AircraftConfigurationEntity> aircraftConfig;
     @OneToOne
     private SeatInventoryEntity seatInventory;

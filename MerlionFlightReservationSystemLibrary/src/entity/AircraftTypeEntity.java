@@ -17,7 +17,7 @@ import javax.persistence.OneToMany;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Entity
 public class AircraftTypeEntity implements Serializable {
@@ -36,6 +36,12 @@ public class AircraftTypeEntity implements Serializable {
 
     public AircraftTypeEntity() {
         aircraftConfig = new ArrayList<>();
+    }
+
+    public AircraftTypeEntity(String typeName, int maxCapacity) {
+        this();
+        this.typeName = typeName;
+        this.maxCapacity = maxCapacity;
     }
 
     public AircraftTypeEntity(String typeName, int maxCapacity, ArrayList<AircraftConfigurationEntity> aircraftConfig) {

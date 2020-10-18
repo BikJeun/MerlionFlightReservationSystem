@@ -28,7 +28,7 @@ import javax.validation.constraints.Min;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Entity
 public class FlightScheduleEntity implements Serializable {
@@ -63,14 +63,14 @@ public class FlightScheduleEntity implements Serializable {
     @OneToMany(mappedBy = "flightSchedule")
     private ArrayList<SeatInventoryEntity> seatInventory;
     @OneToMany(mappedBy = "flightSchedule")
-    private ReservationEntity reservations;
+    private ArrayList<ReservationEntity> reservations;
 
     public FlightScheduleEntity() {
         flightSchedulePlan = new ArrayList<>();
         seatInventory = new ArrayList<>();
     }
 
-    public FlightScheduleEntity(String flightNum, ScheduleTypeEnum scheduleType, Date departureDateTime, int duration, Date arrivalDateTime, Date recurrentEndDate, ArrayList<FlightSchedulePlanEntity> flightSchedulePlan, FlightEntity flight, ArrayList<SeatInventoryEntity> seatInventory, ReservationEntity reservations) {
+    public FlightScheduleEntity(String flightNum, ScheduleTypeEnum scheduleType, Date departureDateTime, int duration, Date arrivalDateTime, Date recurrentEndDate, ArrayList<FlightSchedulePlanEntity> flightSchedulePlan, FlightEntity flight, ArrayList<SeatInventoryEntity> seatInventory, ArrayList<ReservationEntity> reservations) {
         this();
         this.flightNum = flightNum;
         this.scheduleType = scheduleType;
@@ -156,11 +156,11 @@ public class FlightScheduleEntity implements Serializable {
         this.seatInventory = seatInventory;
     }
 
-    public ReservationEntity getReservations() {
+    public ArrayList<ReservationEntity> getReservations() {
         return reservations;
     }
 
-    public void setReservations(ReservationEntity reservations) {
+    public void setReservations(ArrayList<ReservationEntity> reservations) {
         this.reservations = reservations;
     }
 

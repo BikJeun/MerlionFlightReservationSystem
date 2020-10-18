@@ -6,6 +6,8 @@
 package entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -18,7 +20,7 @@ import javax.persistence.OneToOne;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Entity
 public class FlightEntity implements Serializable {
@@ -36,12 +38,14 @@ public class FlightEntity implements Serializable {
     @OneToOne(optional = false)
     private AircraftConfigurationEntity aircraftConfig;
     @OneToMany(mappedBy = "flight")
-    private FlightScheduleEntity flightSchedule;
+    private List<FlightScheduleEntity> flightSchedule;
 
     public FlightEntity() {
+        flightSchedule = new ArrayList<>();
     }
 
-    public FlightEntity(String flightNum, FlightRouteEntity flightRoute, AircraftConfigurationEntity aircraftConfig, FlightScheduleEntity flightSchedule) {
+    public FlightEntity(String flightNum, FlightRouteEntity flightRoute, AircraftConfigurationEntity aircraftConfig, List<FlightScheduleEntity> flightSchedule) {
+        this();
         this.flightNum = flightNum;
         this.flightRoute = flightRoute;
         this.aircraftConfig = aircraftConfig;
@@ -72,11 +76,11 @@ public class FlightEntity implements Serializable {
         this.aircraftConfig = aircraftConfig;
     }
 
-    public FlightScheduleEntity getFlightSchedule() {
+    public List<FlightScheduleEntity> getFlightSchedule() {
         return flightSchedule;
     }
 
-    public void setFlightSchedule(FlightScheduleEntity flightSchedule) {
+    public void setFlightSchedule(List<FlightScheduleEntity> flightSchedule) {
         this.flightSchedule = flightSchedule;
     }
     

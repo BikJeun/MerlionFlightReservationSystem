@@ -17,7 +17,7 @@ import javax.persistence.ManyToOne;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Entity
 public class FareEntity implements Serializable {
@@ -36,7 +36,7 @@ public class FareEntity implements Serializable {
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
-    private CabinClassEntity cabin;
+    private CabinClassEntity cabinClass;
 
     public FareEntity() {
     }
@@ -44,7 +44,7 @@ public class FareEntity implements Serializable {
     public FareEntity(String fareBasisCode, BigDecimal fareAmount, CabinClassEntity cabin) {
         this.fareBasisCode = fareBasisCode;
         this.fareAmount = fareAmount;
-        this.cabin = cabin;
+        this.cabinClass = cabin;
     }
 
     public String getFareBasisCode() {
@@ -64,17 +64,12 @@ public class FareEntity implements Serializable {
     }
 
     public CabinClassEntity getCabin() {
-        return cabin;
+        return cabinClass;
     }
 
     public void setCabin(CabinClassEntity cabin) {
-        this.cabin = cabin;
+        this.cabinClass = cabin;
     }
-    
-    
-    
-    
-    
     
     public Long getFareID() {
         return fareID;

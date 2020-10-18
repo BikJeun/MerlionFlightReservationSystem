@@ -7,7 +7,7 @@ package holidayreservationsystemclient;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 public class MainApp {
     

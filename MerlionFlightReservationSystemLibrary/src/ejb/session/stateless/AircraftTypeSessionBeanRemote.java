@@ -5,17 +5,17 @@
  */
 package ejb.session.stateless;
 
-import entity.PartnerEntity;
-import exceptions.PartnerNotFoundException;
+import entity.AircraftTypeEntity;
+import exceptions.AircraftTypeNotFoundException;
 import javax.ejb.Remote;
 
 /**
  *
- * @author Ooi Jun Hao
+ * @author Mitsuki
  */
 @Remote
-public interface PartnerSessionBeanRemote {
+public interface AircraftTypeSessionBeanRemote {
 
-    public PartnerEntity retrievePartnerById(Long id) throws PartnerNotFoundException;
+    public AircraftTypeEntity retrieveAircraftTypeById(Long id) throws AircraftTypeNotFoundException;
     
 }

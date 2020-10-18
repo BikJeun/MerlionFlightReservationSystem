@@ -16,7 +16,7 @@ import javax.persistence.OneToMany;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Entity
 public class PartnerEntity implements Serializable {
@@ -39,6 +39,12 @@ public class PartnerEntity implements Serializable {
     public PartnerEntity() {
     }
 
+    public PartnerEntity(String name, String username, String password) {
+        this.name = name;
+        this.username = username;
+        this.password = password;
+    }
+
     public PartnerEntity(String name, String username, String password, ArrayList<ReservationEntity> reservations) {
         this.name = name;
         this.username = username;
@@ -46,8 +52,6 @@ public class PartnerEntity implements Serializable {
         this.reservations = reservations;
     }
     
-    
-
     public Long getPartnerID() {
         return partnerID;
     }

@@ -5,6 +5,8 @@
  */
 package ejb.session.stateless;
 
+import entity.EmployeeEntity;
+import exceptions.EmployeeNotFoundException;
 import javax.ejb.Remote;
 
 /**
@@ -13,5 +15,7 @@ import javax.ejb.Remote;
  */
 @Remote
 public interface EmployeeSessionBeanRemote {
+
+    public EmployeeEntity retrieveEmployeeById(Long id) throws EmployeeNotFoundException;
     
 }

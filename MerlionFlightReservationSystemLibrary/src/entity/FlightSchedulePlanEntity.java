@@ -17,7 +17,7 @@ import javax.persistence.ManyToMany;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Entity
 public class FlightSchedulePlanEntity implements Serializable {

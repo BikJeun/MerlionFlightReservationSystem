@@ -23,7 +23,7 @@ import javax.validation.constraints.Min;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Entity
 public class AircraftConfigurationEntity implements Serializable {
@@ -43,12 +43,12 @@ public class AircraftConfigurationEntity implements Serializable {
     @JoinColumn(nullable = false)
     private AircraftTypeEntity aircraftType;
     @ManyToMany(mappedBy = "aircraftConfig", fetch = FetchType.EAGER)
-    private ArrayList<CabinClassEntity> cabinClass;
+    private ArrayList<CabinClassEntity> cabin;
     @OneToOne
     private FlightEntity flight;
 
     public AircraftConfigurationEntity() {
-        cabinClass = new ArrayList<>();
+        cabin = new ArrayList<>();
     }
 
     public AircraftConfigurationEntity(String name, int numberOfCabinClasses, AircraftTypeEntity aircraftType, ArrayList<CabinClassEntity> cabinClass, FlightEntity flight) {
@@ -56,7 +56,7 @@ public class AircraftConfigurationEntity implements Serializable {
         this.name = name;
         this.numberOfCabinClasses = numberOfCabinClasses;
         this.aircraftType = aircraftType;
-        this.cabinClass = cabinClass;
+        this.cabin = cabinClass;
         this.flight = flight;
     }
 
@@ -84,12 +84,12 @@ public class AircraftConfigurationEntity implements Serializable {
         this.aircraftType = aircraftType;
     }
 
-    public ArrayList<CabinClassEntity> getCabinClass() {
-        return cabinClass;
+    public ArrayList<CabinClassEntity> getCabin() {
+        return cabin;
     }
 
-    public void setCabinClass(ArrayList<CabinClassEntity> cabinClass) {
-        this.cabinClass = cabinClass;
+    public void setCabin(ArrayList<CabinClassEntity> cabin) {
+        this.cabin = cabin;
     }
 
     public FlightEntity getFlight() {

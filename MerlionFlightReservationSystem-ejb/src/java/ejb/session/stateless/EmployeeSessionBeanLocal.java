@@ -5,6 +5,10 @@
  */
 package ejb.session.stateless;
 
+import entity.EmployeeEntity;
+import exceptions.EmployeeNotFoundException;
+import exceptions.EmployeeUsernameExistException;
+import exceptions.UnknownPersistenceException;
 import javax.ejb.Local;
 
 /**
@@ -13,5 +17,10 @@ import javax.ejb.Local;
  */
 @Local
 public interface EmployeeSessionBeanLocal {
+
+    public EmployeeEntity createNewEmployee(EmployeeEntity employee) throws EmployeeUsernameExistException, UnknownPersistenceException;
     
+    public EmployeeEntity retrieveEmployeeById(Long id) throws EmployeeNotFoundException; 
+
+    public EmployeeEntity retrieveEmployeeByUsername(String username) throws EmployeeNotFoundException;
 }

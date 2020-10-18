@@ -62,7 +62,7 @@ public class EmployeeSessionBean implements EmployeeSessionBeanRemote, EmployeeS
 
     @Override
     public EmployeeEntity retrieveEmployeeByUsername(String username) throws EmployeeNotFoundException{
-        Query query = em.createQuery("SELECT e FROM EmployeeEntity e WHERE e.username = :user");
+        Query query = em.createQuery("SELECT e FROM EmployeeEntity e WHERE e.userName = :user");
         query.setParameter("user", username);
         
         try{

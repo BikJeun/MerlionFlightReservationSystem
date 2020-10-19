@@ -128,7 +128,7 @@ public class MainApp {
                     //salesManagementModule
                 } else if (response == 4) {
                     doLogOut();
-                    System.out.println("Log out successful.");
+                    System.out.println("Log out successful.\n");
                     break;
                 } else {
                     System.out.println("Invalid Option, please try again!");

@@ -1,9 +1,22 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+* To change this license header, choose License Headers in Project Properties.
+* To change this template file, choose Tools | Templates
+* and open the template in the editor.
+*/
 package merlionfrsmanagementclient;
+
+import ejb.session.stateless.AircraftConfigurationSessionBeanRemote;
+import ejb.session.stateless.EmployeeSessionBeanRemote;
+import ejb.session.stateless.FlightRouteSessionBeanRemote;
+import ejb.session.stateless.FlightSchedulePlanSessionBeanRemote;
+import ejb.session.stateless.FlightSessionBeanRemote;
+import ejb.session.stateless.ReservationSessionBeanRemote;
+import ejb.session.stateless.SeatsInventorySessionBeanRemote;
+import entity.EmployeeEntity;
+import exceptions.InvalidLoginCredentialException;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -11,4 +24,132 @@ package merlionfrsmanagementclient;
  */
 public class MainApp {
     
+    
+    private ReservationSessionBeanRemote reservationSessionBean;
+    private SeatsInventorySessionBeanRemote seatsInventorySessionBean;
+    private FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean;
+    private FlightSessionBeanRemote flightSessionBean;
+    private FlightRouteSessionBeanRemote flightRouteSessionBean;
+    private AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean;
+    private EmployeeSessionBeanRemote employeeSessionBean;
+    
+    private boolean login = false;
+    private EmployeeEntity currentEmployee;
+    
+    public MainApp(ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean) {
+        this.reservationSessionBean = reservationSessionBean;
+        this.seatsInventorySessionBean = seatsInventorySessionBean;
+        this.flightSchedulePlanSessionBean = flightSchedulePlanSessionBean;
+        this.flightSessionBean = flightSessionBean;
+        this.flightRouteSessionBean = flightRouteSessionBean;
+        this.aircraftConfigurationSessionBean = aircraftConfigurationSessionBean;
+        this.employeeSessionBean = employeeSessionBean;
+    }
+    
+    public void runApp() {
+        while (true) {
+            if(!login) {
+                Scanner sc = new Scanner(System.in);
+                Integer response = 0;
+                
+                System.out.println("=== Welcome to Merlion Flight Reservation System ===\n");
+                System.out.println("1: Login");
+                System.out.println("2: Exit\n");
+                
+                response = 0;
+                while(response < 1 || response > 2) {
+                    System.out.print("> ");
+                    response = sc.nextInt();
+                    if(response == 1) {
+                        try {
+                            doLogin();
+                            System.out.println("Login Successful!\n");
+                            login = true;
+                            mainMenu();
+                        } catch (InvalidLoginCredentialException ex) {
+                            System.out.println(ex.getMessage());
+                            System.out.println();
+                        }
+                    } else if (response == 2) {
+                        break;
+                    } else {
+                        System.out.println("Invalid input, please try again!\n");
+                    }
+                }
+                if(response == 2) {
+                    break;
+                }
+            } else {
+              mainMenu();
+            }
+        }
+    }
+    
+    private void doLogin() throws InvalidLoginCredentialException {
+        Scanner sc = new Scanner(System.in) ;
+        System.out.println("*** MFRS :: LOGIN ***\n");
+        System.out.print("Enter username> ");
+        String username = sc.nextLine().trim();
+        System.out.print("Enter password> ");
+        String password = sc.nextLine().trim();
+        
+        if(username.length() > 0 && password.length() > 0) {
+                currentEmployee = employeeSessionBean.doLogin(username, password);
+                //login = true;
+        } else {
+            throw new InvalidLoginCredentialException("Missing Login Credentials");
+        }
+    }
+
+    private void mainMenu() {
+        Scanner sc = new Scanner(System.in);
+        Integer response = 0;
+        
+        while(login) {
+            System.out.println("*** MFRS ***\n");
+            System.out.println("You are currently logged in as " + currentEmployee.getFirstName() + " " + currentEmployee.getLastName() + " with " + currentEmployee.getAccessRight().toString() + " rights!\n");
+            System.out.println();
+            System.out.println("*** Select Module To Access ***");
+            System.out.println("1: Flight Operation Module");
+            System.out.println("2: Flight Planning Module");
+            System.out.println("3: Sales Management Module");
+            System.out.println("4: Log Out");
+            
+            response = 0;
+            while(response < 1 || response > 4) {
+                System.out.print("> ");
+                response = sc.nextInt();
+                
+                if(response == 1) {
+                    //flightOperationModule
+                } else if(response == 2) {
+                    //flightPlanningModule
+                } else if (response == 3) {
+                    //salesManagementModule
+                } else if (response == 4) {
+                    doLogOut();
+                    System.out.println("Log out successful.");
+                    break;
+                } else {
+                    System.out.println("Invalid Option, please try again!");
+                }
+            }
+            
+            if(response == 4) {
+                break;
+            }
+        }
+    } 
+
+    private void doLogOut() {
+        Scanner sc = new Scanner(System.in);
+        
+        System.out.print("Are you sure you want to log out? (Y or N)> ");
+        String reply = sc.nextLine().trim();
+        
+        if((reply.equals("Y") || reply.equals("y")) && login) {
+            currentEmployee = null;
+            login = false;
+        }
+    }
 }

@@ -13,6 +13,7 @@ import ejb.session.stateless.FlightSessionBeanRemote;
 import ejb.session.stateless.ReservationSessionBeanRemote;
 import ejb.session.stateless.SeatsInventorySessionBeanRemote;
 import entity.EmployeeEntity;
+import enumeration.EmployeeAccessRightEnum;
 import exceptions.InvalidLoginCredentialException;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -35,6 +36,10 @@ public class MainApp {
     
     private boolean login = false;
     private EmployeeEntity currentEmployee;
+    
+    private FlightOperationModule flightOperationModule;
+    private FlightPlanningModule flightPlanningModule;
+    private SalesManagementModule salesManagementModule;
     
     public MainApp(ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean) {
         this.reservationSessionBean = reservationSessionBean;
@@ -65,6 +70,9 @@ public class MainApp {
                             doLogin();
                             System.out.println("Login Successful!\n");
                             login = true;
+                            flightOperationModule = new FlightOperationModule(currentEmployee, flightSessionBean, flightSchedulePlanSessionBean);
+                            flightPlanningModule = new FlightPlanningModule(currentEmployee, aircraftConfigurationSessionBean, flightRouteSessionBean);
+                            salesManagementModule = new SalesManagementModule(currentEmployee, seatsInventorySessionBean, reservationSessionBean);
                             mainMenu();
                         } catch (InvalidLoginCredentialException ex) {
                             System.out.println(ex.getMessage());
@@ -80,7 +88,7 @@ public class MainApp {
                     break;
                 }
             } else {
-              mainMenu();
+                mainMenu();
             }
         }
     }
@@ -94,13 +102,13 @@ public class MainApp {
         String password = sc.nextLine().trim();
         
         if(username.length() > 0 && password.length() > 0) {
-                currentEmployee = employeeSessionBean.doLogin(username, password);
-                //login = true;
+            currentEmployee = employeeSessionBean.doLogin(username, password);
+            //login = true;
         } else {
             throw new InvalidLoginCredentialException("Missing Login Credentials");
         }
     }
-
+    
     private void mainMenu() {
         Scanner sc = new Scanner(System.in);
         Integer response = 0;
@@ -121,11 +129,25 @@ public class MainApp {
                 response = sc.nextInt();
                 
                 if(response == 1) {
-                    //flightOperationModule
+                    if(currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.ADMINISTRATOR) || currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.SCHEDULEMANAGER)) {
+                        flightOperationModule.mainMenu();
+                    } else {
+                        System.out.println("You are not authorised to use this feature.");
+                    }
                 } else if(response == 2) {
                     //flightPlanningModule
+                    if(currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.ADMINISTRATOR) || currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.FLEETMANAGER) || currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.ROUTEPLANNER)) {
+                        flightPlanningModule.mainMenu();
+                    }else {
+                        System.out.println("You are not authorised to use this feature.");
+                    }
+                    
                 } else if (response == 3) {
-                    //salesManagementModule
+                    if(currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.ADMINISTRATOR) || currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.SALESMANAGER)) {
+                        salesManagementModule.mainMenu();
+                    }else {
+                        System.out.println("You are not authorised to use this feature.");
+                    }
                 } else if (response == 4) {
                     doLogOut();
                     System.out.println("Log out successful.");
@@ -139,8 +161,8 @@ public class MainApp {
                 break;
             }
         }
-    } 
-
+    }
+    
     private void doLogOut() {
         Scanner sc = new Scanner(System.in);
         

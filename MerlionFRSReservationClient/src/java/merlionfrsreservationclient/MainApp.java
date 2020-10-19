@@ -35,7 +35,7 @@ public class MainApp {
                 Integer response = 0;
                 
                 System.out.println("=== Welcome to Merlion Airlines ===\n");
-                System.out.println("1: Customer Log in");
+                System.out.println("1: Customer Login");
                 System.out.println("2: Register for new Customer Account");
                 System.out.println("3: Search Flight");
                 System.out.println("4: Exit\n");

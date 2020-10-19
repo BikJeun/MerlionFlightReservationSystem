@@ -150,7 +150,7 @@ public class MainApp {
                     }
                 } else if (response == 4) {
                     doLogOut();
-                    System.out.println("Log out successful.");
+                    System.out.println("Log out successful.\n");
                     break;
                 } else {
                     System.out.println("Invalid Option, please try again!");

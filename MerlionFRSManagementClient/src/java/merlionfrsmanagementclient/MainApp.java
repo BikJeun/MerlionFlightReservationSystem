@@ -6,6 +6,8 @@
 package merlionfrsmanagementclient;
 
 import ejb.session.stateless.AircraftConfigurationSessionBeanRemote;
+import ejb.session.stateless.AircraftTypeSessionBeanRemote;
+import ejb.session.stateless.CabinClassSessionBeanRemote;
 import ejb.session.stateless.EmployeeSessionBeanRemote;
 import ejb.session.stateless.FlightRouteSessionBeanRemote;
 import ejb.session.stateless.FlightSchedulePlanSessionBeanRemote;
@@ -18,14 +20,18 @@ import exceptions.InvalidLoginCredentialException;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
  *
  * @author Ong Bik Jeun
  */
 public class MainApp {
-    
-    
+  
+    private AircraftTypeSessionBeanRemote aircraftTypeSessionBean;
+    private CabinClassSessionBeanRemote cabinClassSessionBean;
     private ReservationSessionBeanRemote reservationSessionBean;
     private SeatsInventorySessionBeanRemote seatsInventorySessionBean;
     private FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean;
@@ -34,6 +40,7 @@ public class MainApp {
     private AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean;
     private EmployeeSessionBeanRemote employeeSessionBean;
     
+    
     private boolean login = false;
     private EmployeeEntity currentEmployee;
     
@@ -41,7 +48,9 @@ public class MainApp {
     private FlightPlanningModule flightPlanningModule;
     private SalesManagementModule salesManagementModule;
     
-    public MainApp(ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean) {
+    public MainApp(AircraftTypeSessionBeanRemote aircraftTypeSessionBean, CabinClassSessionBeanRemote cabinClassSessionBean, ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean) {
+        this.aircraftTypeSessionBean = aircraftTypeSessionBean;
+        this.cabinClassSessionBean = cabinClassSessionBean;
         this.reservationSessionBean = reservationSessionBean;
         this.seatsInventorySessionBean = seatsInventorySessionBean;
         this.flightSchedulePlanSessionBean = flightSchedulePlanSessionBean;
@@ -71,7 +80,7 @@ public class MainApp {
                             System.out.println("Login Successful!\n");
                             login = true;
                             flightOperationModule = new FlightOperationModule(currentEmployee, flightSessionBean, flightSchedulePlanSessionBean);
-                            flightPlanningModule = new FlightPlanningModule(currentEmployee, aircraftConfigurationSessionBean, flightRouteSessionBean);
+                            flightPlanningModule = new FlightPlanningModule(currentEmployee, aircraftConfigurationSessionBean, flightRouteSessionBean, cabinClassSessionBean, aircraftTypeSessionBean);
                             salesManagementModule = new SalesManagementModule(currentEmployee, seatsInventorySessionBean, reservationSessionBean);
                             mainMenu();
                         } catch (InvalidLoginCredentialException ex) {
@@ -121,7 +130,7 @@ public class MainApp {
             System.out.println("1: Flight Operation Module");
             System.out.println("2: Flight Planning Module");
             System.out.println("3: Sales Management Module");
-            System.out.println("4: Log Out");
+            System.out.println("4: Log Out\n");
             
             response = 0;
             while(response < 1 || response > 4) {

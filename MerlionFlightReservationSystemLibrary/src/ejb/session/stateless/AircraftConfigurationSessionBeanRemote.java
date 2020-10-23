@@ -5,6 +5,9 @@
  */
 package ejb.session.stateless;
 
+import entity.AircraftConfigurationEntity;
+import exceptions.AircraftConfigExistException;
+import exceptions.UnknownPersistenceException;
 import javax.ejb.Remote;
 
 /**
@@ -13,5 +16,11 @@ import javax.ejb.Remote;
  */
 @Remote
 public interface AircraftConfigurationSessionBeanRemote {
+
+    public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig) throws AircraftConfigExistException, UnknownPersistenceException;
+
+    public int calculateMaxCapacity(AircraftConfigurationEntity aircraftConfig);
+
+    public void associateTypeWithConfig(Long valueOf, Long aircraftConfigID);
     
 }

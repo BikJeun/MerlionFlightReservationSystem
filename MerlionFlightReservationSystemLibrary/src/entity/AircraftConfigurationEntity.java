@@ -51,13 +51,11 @@ public class AircraftConfigurationEntity implements Serializable {
         cabin = new ArrayList<>();
     }
 
-    public AircraftConfigurationEntity(String name, int numberOfCabinClasses, AircraftTypeEntity aircraftType, ArrayList<CabinClassEntity> cabinClass, FlightEntity flight) {
+    public AircraftConfigurationEntity(AircraftTypeEntity boeing, String name, int numberOfCabinClasses) {
         this();
+        aircraftType = boeing;
         this.name = name;
         this.numberOfCabinClasses = numberOfCabinClasses;
-        this.aircraftType = aircraftType;
-        this.cabin = cabinClass;
-        this.flight = flight;
     }
 
     public String getName() {

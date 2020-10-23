@@ -5,6 +5,8 @@
  */
 package ejb.session.stateless;
 
+import entity.AircraftConfigurationEntity;
+import exceptions.AircraftConfigNotFoundException;
 import javax.ejb.Local;
 
 /**
@@ -13,5 +15,7 @@ import javax.ejb.Local;
  */
 @Local
 public interface AircraftConfigurationSessionBeanLocal {
+
+    public AircraftConfigurationEntity retriveAircraftConfigByID(Long aircraftConfigID) throws AircraftConfigNotFoundException;
     
 }

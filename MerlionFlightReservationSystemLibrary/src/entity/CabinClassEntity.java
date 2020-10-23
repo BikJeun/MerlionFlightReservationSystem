@@ -61,7 +61,7 @@ public class CabinClassEntity implements Serializable {
         aircraftConfig = new ArrayList<>();
     }
 
-    public CabinClassEntity(CabinClassTypeEnum cabinClassType, int numOfAisles, int numOfRows, int numOfSeatsAbreast, String seatingConfigPerColumn, int maxSeatCapacity, ArrayList<FareEntity> fare, ArrayList<AircraftConfigurationEntity> aircraftConfig, SeatInventoryEntity seatInventory) {
+    public CabinClassEntity(CabinClassTypeEnum cabinClassType, int numOfAisles, int numOfRows, int numOfSeatsAbreast, String seatingConfigPerColumn, int maxSeatCapacity) {
         this();
         this.cabinClassType = cabinClassType;
         this.numOfAisles = numOfAisles;
@@ -69,9 +69,6 @@ public class CabinClassEntity implements Serializable {
         this.numOfSeatsAbreast = numOfSeatsAbreast;
         this.seatingConfigPerColumn = seatingConfigPerColumn;
         this.maxSeatCapacity = maxSeatCapacity;
-        this.fare = fare;
-        this.aircraftConfig = aircraftConfig;
-        this.seatInventory = seatInventory;
     }
 
     public CabinClassTypeEnum getCabinClassType() {

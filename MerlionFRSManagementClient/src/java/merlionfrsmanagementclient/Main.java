@@ -6,6 +6,8 @@
 package merlionfrsmanagementclient;
 
 import ejb.session.stateless.AircraftConfigurationSessionBeanRemote;
+import ejb.session.stateless.AircraftTypeSessionBeanRemote;
+import ejb.session.stateless.CabinClassSessionBeanRemote;
 import ejb.session.stateless.EmployeeSessionBeanRemote;
 import ejb.session.stateless.FlightRouteSessionBeanRemote;
 import ejb.session.stateless.FlightSchedulePlanSessionBeanRemote;
@@ -19,6 +21,12 @@ import javax.ejb.EJB;
  * @author Ong Bik Jeun
  */
 public class Main {
+
+    @EJB
+    private static AircraftTypeSessionBeanRemote aircraftTypeSessionBean;
+
+    @EJB
+    private static CabinClassSessionBeanRemote cabinClassSessionBean;
 
     @EJB
     private static ReservationSessionBeanRemote reservationSessionBean;
@@ -41,12 +49,14 @@ public class Main {
     @EJB
     private static EmployeeSessionBeanRemote employeeSessionBean;
     
+    
+    
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        MainApp mainApp = new MainApp(reservationSessionBean,seatsInventorySessionBean, flightSchedulePlanSessionBean, flightSessionBean, flightRouteSessionBean, aircraftConfigurationSessionBean, employeeSessionBean);
+        MainApp mainApp = new MainApp(aircraftTypeSessionBean, cabinClassSessionBean,reservationSessionBean,seatsInventorySessionBean, flightSchedulePlanSessionBean, flightSessionBean, flightRouteSessionBean, aircraftConfigurationSessionBean, employeeSessionBean);
         mainApp.runApp();
     }
     

@@ -7,11 +7,13 @@ package ejb.session.stateless;
 
 import entity.AircraftConfigurationEntity;
 import exceptions.AircraftConfigExistException;
+import exceptions.AircraftConfigNotFoundException;
 import exceptions.UnknownPersistenceException;
+import java.util.List;
 import javax.ejb.Remote;
 
 /**
- *
+ * @author Ong Bik Jeun
  * @author Ooi Jun Hao
  */
 @Remote
@@ -22,5 +24,9 @@ public interface AircraftConfigurationSessionBeanRemote {
     public int calculateMaxCapacity(AircraftConfigurationEntity aircraftConfig);
 
     public void associateTypeWithConfig(Long valueOf, Long aircraftConfigID);
+
+    public List<AircraftConfigurationEntity> retrieveAllConfiguration();
+    
+    public AircraftConfigurationEntity retriveAircraftConfigByID(Long aircraftConfigID) throws AircraftConfigNotFoundException;
     
 }

@@ -16,6 +16,7 @@ import entity.EmployeeEntity;
 import enumeration.CabinClassTypeEnum;
 import enumeration.EmployeeAccessRightEnum;
 import exceptions.AircraftConfigExistException;
+import exceptions.AircraftConfigNotFoundException;
 import exceptions.AircraftTypeNotFoundException;
 import exceptions.CabinClassExistException;
 import exceptions.CabinClassTypeEnumNotFoundException;
@@ -106,9 +107,9 @@ public class FlightPlanningModule {
                 if(response == 1) {
                     doCreateAircraftConfig();
                 } else if(response == 2) {
-                    //doViewAllAircraftConfig();
+                    doViewAllAircraftConfig();
                 } else if(response == 3) {
-                    //doViewAircraftConfigDetails();
+                    doViewAircraftConfigDetails();
                 } else if(response == 4) {
                     break;
                 } else {
@@ -194,6 +195,36 @@ public class FlightPlanningModule {
             System.out.println(ex.getMessage());
         }
     }
+
+    private void doViewAllAircraftConfig() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("*** View all aircraft configuration ***");
+        List<AircraftConfigurationEntity> list = aircraftConfigurationSessionBean.retrieveAllConfiguration();
+        System.out.printf("%30s%20s%25s%20s\n", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type");
+        
+        for(AircraftConfigurationEntity config : list) {
+            System.out.printf("%30s%20s%25s%20s\n", config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName());
+        }
+        System.out.print("Press any key to continue...> ");
+        sc.nextLine();
+    }
+
+    private void doViewAircraftConfigDetails() {
+        try {
+            Scanner sc = new Scanner(System.in);
+            System.out.println("*** View aircraft configuration details ***");
+            System.out.println("Enter configuration ID> ");
+            Long id = sc.nextLong();
+            
+            AircraftConfigurationEntity config = aircraftConfigurationSessionBean.retriveAircraftConfigByID(id);
+            System.out.printf("%30s%20s%25s%20s\n", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type");
+            System.out.printf("%30s%20s%25s%20s\n", config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName());
+        } catch (AircraftConfigNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    
     
    
     

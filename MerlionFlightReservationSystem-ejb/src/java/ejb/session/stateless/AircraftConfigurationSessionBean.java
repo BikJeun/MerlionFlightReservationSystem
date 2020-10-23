@@ -12,6 +12,7 @@ import exceptions.AircraftConfigExistException;
 import exceptions.AircraftConfigNotFoundException;
 import exceptions.AircraftTypeNotFoundException;
 import exceptions.UnknownPersistenceException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -19,6 +20,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 
 /**
  * @author Ong Bik Jeun
@@ -94,8 +96,11 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
         }
     }
 
-    
-    
+    @Override
+    public List<AircraftConfigurationEntity> retrieveAllConfiguration() {
+        Query query = em.createQuery("SELECT a FROM AircraftConfigurationEntity a ORDER BY a.aircraftType ASC, a.name ASC ");
+        return query.getResultList();
+    } 
 }
 
     

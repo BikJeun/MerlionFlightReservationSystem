@@ -5,8 +5,10 @@
  */
 package ejb.session.stateless;
 
+import entity.AircraftConfigurationEntity;
 import entity.CabinClassEntity;
 import enumeration.CabinClassTypeEnum;
+import exceptions.AircraftConfigNotFoundException;
 import exceptions.CabinClassExistException;
 import exceptions.CabinClassNotFoundException;
 import exceptions.CabinClassTypeEnumNotFoundException;
@@ -24,7 +26,7 @@ public interface CabinClassSessionBeanRemote {
 
     public int computeMaxSeatCapacity(int rows, int seatsAbreast);
 
-    public CabinClassEntity createNewCabinClass(CabinClassEntity cabin) throws CabinClassExistException, UnknownPersistenceException;
+    public CabinClassEntity createNewCabinClass(CabinClassEntity cabin, AircraftConfigurationEntity aircraft);
 
     public CabinClassEntity retrieveCabinByID(Long cabinClassID) throws CabinClassNotFoundException;
     

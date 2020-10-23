@@ -9,17 +9,14 @@ import entity.AircraftConfigurationEntity;
 import entity.CabinClassEntity;
 import enumeration.CabinClassTypeEnum;
 import exceptions.AircraftConfigNotFoundException;
-import exceptions.CabinClassExistException;
 import exceptions.CabinClassNotFoundException;
 import exceptions.CabinClassTypeEnumNotFoundException;
-import exceptions.UnknownPersistenceException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceException;
 
 /**
  *
@@ -53,14 +50,21 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
     public int computeMaxSeatCapacity(int rows, int seatsAbreast) {
         return rows * seatsAbreast;
     }
-
+    
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
-    public CabinClassEntity createNewCabinClass(CabinClassEntity cabin) throws CabinClassExistException, UnknownPersistenceException {
-        try {
+    public CabinClassEntity createNewCabinClass(CabinClassEntity cabin, AircraftConfigurationEntity aircraft) {  
         em.persist(cabin);
-        em.flush();
+        if(!aircraft.getCabin().contains(cabin)) {
+            aircraft.getCabin().add(cabin);
+        }
+        if(!cabin.getAircraftConfig().contains(aircraft)) {
+            cabin.getAircraftConfig().add(aircraft);
+        }
         return cabin;
-    } catch(PersistenceException ex) {
+        // QN: Does it matter if i flush here or is this considered 'exiting business method'?
+        /*  Removed because will never be thrown
+        } catch(PersistenceException ex) {
             if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
                 if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
                     throw new CabinClassExistException("Cabin class already exist!");
@@ -70,7 +74,7 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
             } else {
                 throw new UnknownPersistenceException(ex.getMessage());
             }
-        }
+        } */
     }
     
     @Override
@@ -95,9 +99,7 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
             if(!cabin.getAircraftConfig().contains(aircraft)) {
                 cabin.getAircraftConfig().add(aircraft);
             }
-        } catch (CabinClassNotFoundException ex) {
-            System.out.println(ex.getMessage());
-        } catch (AircraftConfigNotFoundException ex) {
+        } catch (CabinClassNotFoundException | AircraftConfigNotFoundException ex) {
             System.out.println(ex.getMessage());
         }
         

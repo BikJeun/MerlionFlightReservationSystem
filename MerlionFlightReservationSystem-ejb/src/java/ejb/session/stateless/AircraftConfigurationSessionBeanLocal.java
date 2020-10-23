@@ -6,7 +6,12 @@
 package ejb.session.stateless;
 
 import entity.AircraftConfigurationEntity;
+import entity.CabinClassEntity;
+import exceptions.AircraftConfigExistException;
 import exceptions.AircraftConfigNotFoundException;
+import exceptions.CreateNewAircraftConfigException;
+import exceptions.UnknownPersistenceException;
+import java.util.List;
 import javax.ejb.Local;
 
 /**
@@ -16,6 +21,8 @@ import javax.ejb.Local;
 @Local
 public interface AircraftConfigurationSessionBeanLocal {
 
+    public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig, List<CabinClassEntity> cabinClasses) throws CreateNewAircraftConfigException, AircraftConfigExistException, UnknownPersistenceException;
+    
     public AircraftConfigurationEntity retriveAircraftConfigByID(Long aircraftConfigID) throws AircraftConfigNotFoundException;
     
 }

@@ -17,11 +17,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
 
 /**
  *
@@ -44,7 +44,8 @@ public class CabinClassEntity implements Serializable {
     private int numOfRows;
     @Column(nullable = false)
     private int numOfSeatsAbreast;
-    @Column(nullable = false, length = 5)
+    @Column(nullable = false)
+    @Size(min=1, max=5)
     private String seatingConfigPerColumn;
     @Column(nullable = false)
     private int maxSeatCapacity;
@@ -163,13 +164,14 @@ public class CabinClassEntity implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the cabinClassID fields are not set
+        // EDIT (BY JUNHAO): Modified to account for when cabinClassID not set (used in sessionbean)
         if (!(object instanceof CabinClassEntity)) {
             return false;
         }
         CabinClassEntity other = (CabinClassEntity) object;
-        if ((this.cabinClassID == null && other.cabinClassID != null) || (this.cabinClassID != null && !this.cabinClassID.equals(other.cabinClassID))) {
+        if ((this.cabinClassID == null && other.cabinClassID != null) || (this.cabinClassID != null && !this.cabinClassID.equals(other.cabinClassID)) || (this.cabinClassID == null && other.cabinClassID == null) ) {
             return false;
-        }
+        } 
         return true;
     }
 

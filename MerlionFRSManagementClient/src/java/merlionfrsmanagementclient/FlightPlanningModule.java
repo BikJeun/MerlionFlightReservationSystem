@@ -20,6 +20,7 @@ import exceptions.AircraftConfigNotFoundException;
 import exceptions.AircraftTypeNotFoundException;
 import exceptions.CabinClassExistException;
 import exceptions.CabinClassTypeEnumNotFoundException;
+import exceptions.CreateNewAircraftConfigException;
 import exceptions.UnknownPersistenceException;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,64 +137,104 @@ public class FlightPlanningModule {
             int cabinNum = sc.nextInt();
             
             AircraftConfigurationEntity aircraftConfig = new AircraftConfigurationEntity(boeing, name, cabinNum);
-            aircraftConfig = aircraftConfigurationSessionBean.createNewAircraftConfig(aircraftConfig);
-            
+                       
+            List<CabinClassEntity> cabinClasses = new ArrayList<>();
             for(int i = 0; i<cabinNum; i++) {
-                doCreateCabinClass(aircraftConfig);
+                cabinClasses.add(doCreateCabinClass());
             }
-            int maxCapacity = aircraftConfigurationSessionBean.calculateMaxCapacity(aircraftConfig);
-            
-            //need to check that maxCapcity <= max seat capacity of the aircraft type
-            if(type == 1 && maxCapacity <= 189) {
-                System.out.println("Aircraft Configuration created for a Boeing 737 Type plane");
-                aircraftConfigurationSessionBean.associateTypeWithConfig(Long.valueOf(1), aircraftConfig.getAircraftConfigID());
-            } else if(type == 2 && maxCapacity <=416) {
-                System.out.println("Aircraft Configuration created for a Boeing 747 Type plane");
-                aircraftConfigurationSessionBean.associateTypeWithConfig(Long.valueOf(2), aircraftConfig.getAircraftConfigID());
-            } else {
-                //set a rollback to delete all the creation made????
-                System.out.println("Invalid Configuration");
-            }
-        } catch (AircraftConfigExistException ex) {
-            System.out.println(ex.getMessage());
-        } catch (UnknownPersistenceException ex) {
-            System.out.println(ex.getMessage());
-        } catch (AircraftTypeNotFoundException ex) {
-            System.out.println(ex.getMessage());
-        }
-            
-            
-        }
+            aircraftConfig = aircraftConfigurationSessionBean.createNewAircraftConfig(aircraftConfig, cabinClasses);
+            System.out.println("Aircraft Configuration created for a " + aircraftConfig.getAircraftType().getTypeName() + " Type plane\n");
+        } catch (AircraftTypeNotFoundException | CreateNewAircraftConfigException | UnknownPersistenceException| AircraftConfigExistException ex) {
+            System.out.println("Error occured in creating Aircraft Configuration: " + ex.getMessage());   
+            System.out.println("Please try again!"); 
+        } 
+    }
     
 
-    private void doCreateCabinClass(AircraftConfigurationEntity aircraftConfig) {
-        try {
-            Scanner sc = new Scanner(System.in);
-            System.out.println("*** Create a new cabin class ***");
+    private CabinClassEntity doCreateCabinClass() {
+        CabinClassEntity cabin = null;
+       
+        Scanner sc = new Scanner(System.in);
+        System.out.println("*** Create a new cabin class ***");
+        CabinClassTypeEnum type = null;
+        int aisles, rows, seatsAbreast = 0;
+        String config = null;
+        while (true) {
+            try {
             System.out.print("Enter class - First Class(F)/Buisiness Class(J)/Premium Economy Class(W)/ Economy Class(Y)> ");
-            CabinClassTypeEnum type = cabinClassSessionBean.findEnumType(sc.nextLine().trim());
-            System.out.print("Enter number of aisles> ");
-            int aisles = sc.nextInt();
-            System.out.print("Enter number of rows> ");
-            int rows = sc.nextInt();
-            System.out.print("Enter number of seats abreast> ");
-            int seatsAbreast = sc.nextInt();
-            sc.nextLine();
-            System.out.print("Enter seating configuration per column (x-y-z format)> ");
-            String config = sc.nextLine().trim();
-            
-            int maxCapacity = cabinClassSessionBean.computeMaxSeatCapacity(rows, seatsAbreast);
-            
-            CabinClassEntity cabin = new CabinClassEntity(type, aisles, rows, seatsAbreast, config, maxCapacity);
-            cabin = cabinClassSessionBean.createNewCabinClass(cabin);
-            cabinClassSessionBean.associateAircraftConfigToCabin(aircraftConfig.getAircraftConfigID(), cabin.getCabinClassID());
-        } catch (CabinClassTypeEnumNotFoundException ex) {
-            System.out.println(ex.getMessage());
-        } catch (CabinClassExistException ex) {
-            System.out.println(ex.getMessage());
-        } catch (UnknownPersistenceException ex) {
-            System.out.println(ex.getMessage());
+            type = cabinClassSessionBean.findEnumType(sc.nextLine().trim());
+            break;
+            } catch (CabinClassTypeEnumNotFoundException ex) {
+                System.out.println(ex.getMessage());
+            }
         }
+        while (true) {
+            try {
+                System.out.print("Enter number of aisles (0 to 2 only)> "); // enforce between 0 and 2? 
+                aisles = Integer.parseInt(sc.nextLine().trim());
+                break;
+            } catch (NumberFormatException ex) {
+                System.out.println("Please enter a valid number!");
+            }
+        }
+        while (true) {
+            try {
+                System.out.print("Enter number of rows> ");
+                rows = Integer.parseInt(sc.nextLine().trim());
+                break;
+            } catch (NumberFormatException ex) {
+                System.out.println("Please enter a valid number!");
+            }
+        }
+        while (true) {
+            try {
+                System.out.print("Enter number of seats abreast> ");
+                seatsAbreast = Integer.parseInt(sc.nextLine().trim());
+                break;
+            } catch (NumberFormatException ex) {
+                System.out.println("Please enter a valid number!");
+            }
+        }
+        while (true) {
+            if (aisles == 0) {
+                config = String.valueOf(seatsAbreast);
+                break;
+            }
+            switch (aisles) {
+                case 1: System.out.print("Enter seating configuration per column (x-y format)> ");
+                    break;
+                case 2:  System.out.print("Enter seating configuration per column (x-y-z format)> ");
+                    break;
+            }
+            config = sc.nextLine().trim();
+            if (aisles == 1) {
+                if (config.length() == 3 && Character.isDigit(config.charAt(0)) && Character.isDigit(config.charAt(2)) && config.charAt(1) == '-') {
+                    if (Character.getNumericValue(config.charAt(0)) + Character.getNumericValue(config.charAt(2)) == seatsAbreast) { 
+                        break;
+                    }
+                    System.out.println("Please ensure total seats in seating configuration is equals to the seats abreast declared!");
+                    continue;
+                }
+                System.out.println("Please enter in the correct format!");
+            }
+            else if (aisles == 2) {
+                if (config.length() == 5 && Character.isDigit(config.charAt(0)) && Character.isDigit(config.charAt(2)) && Character.isDigit(config.charAt(4)) && config.charAt(1) == '-' && config.charAt(3) == '-') {
+                    if (Character.getNumericValue(config.charAt(0)) + Character.getNumericValue(config.charAt(2)) + Character.getNumericValue(config.charAt(4)) == seatsAbreast) { 
+                        break;
+                    }
+                    System.out.println("Please ensure total seats in seating configuration is equals to the seats abreast declared!");
+                    continue;
+                }
+                System.out.println("Please enter in the correct format!");
+            }
+            else {
+                break; //should not reach here unless inputted aisles is out of range (due to no enforcement above)
+            }
+        }
+
+        int maxCapacity = cabinClassSessionBean.computeMaxSeatCapacity(rows, seatsAbreast);
+        cabin = new CabinClassEntity(type, aisles, rows, seatsAbreast, config, maxCapacity);
+        return cabin;
     }
 
     private void doViewAllAircraftConfig() {

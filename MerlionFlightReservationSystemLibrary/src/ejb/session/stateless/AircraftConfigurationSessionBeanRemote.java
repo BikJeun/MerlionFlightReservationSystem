@@ -6,8 +6,10 @@
 package ejb.session.stateless;
 
 import entity.AircraftConfigurationEntity;
+import entity.CabinClassEntity;
 import exceptions.AircraftConfigExistException;
 import exceptions.AircraftConfigNotFoundException;
+import exceptions.CreateNewAircraftConfigException;
 import exceptions.UnknownPersistenceException;
 import java.util.List;
 import javax.ejb.Remote;
@@ -19,7 +21,7 @@ import javax.ejb.Remote;
 @Remote
 public interface AircraftConfigurationSessionBeanRemote {
 
-    public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig) throws AircraftConfigExistException, UnknownPersistenceException;
+     public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig, List<CabinClassEntity> cabinClasses) throws CreateNewAircraftConfigException, AircraftConfigExistException, UnknownPersistenceException;
 
     public int calculateMaxCapacity(AircraftConfigurationEntity aircraftConfig);
 

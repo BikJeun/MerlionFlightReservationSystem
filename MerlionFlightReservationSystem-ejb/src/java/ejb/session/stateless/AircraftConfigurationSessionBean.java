@@ -12,11 +12,14 @@ import exceptions.AircraftConfigExistException;
 import exceptions.AircraftConfigNotFoundException;
 import exceptions.AircraftTypeNotFoundException;
 import exceptions.UnknownPersistenceException;
+import exceptions.CreateNewAircraftConfigException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.ejb.EJBContext;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
@@ -29,27 +32,45 @@ import javax.persistence.Query;
 @Stateless
 public class AircraftConfigurationSessionBean implements AircraftConfigurationSessionBeanRemote, AircraftConfigurationSessionBeanLocal {
 
+    @Resource
+    private EJBContext eJBContext;
+    
+    @EJB
+    private CabinClassSessionBeanLocal cabinClassSessionBean;
+
     @EJB
     private AircraftTypeSessionBeanLocal aircraftTypeSessionBean;
-    
-    
 
     @PersistenceContext(unitName = "MerlionFlightReservationSystem-ejbPU")
     private EntityManager em;
 
     public AircraftConfigurationSessionBean() {
     }
-
+    
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
-    public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig) throws AircraftConfigExistException, UnknownPersistenceException {
-        try {
+    public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig, List<CabinClassEntity> cabinClasses) throws CreateNewAircraftConfigException, AircraftConfigExistException, UnknownPersistenceException {
+        try {       
             em.persist(aircraftConfig);
-            em.flush();
-            return aircraftConfig;
-        } catch (PersistenceException ex) {
+            //em.flush(); //QN: cannot flush here else the rollback wont work?             
+            for (CabinClassEntity cce: cabinClasses) {
+                cabinClassSessionBean.createNewCabinClass(cce, aircraftConfig);
+            }
+            int maxCapacity = calculateMaxCapacity(aircraftConfig);
+            if(aircraftConfig.getAircraftType().getMaxCapacity() >= maxCapacity) {                
+                em.flush(); //QN: What if i dont flush at all and wait for exit? any way to catch persistenceExcep?
+                return aircraftConfig;
+            } else {
+                throw new CreateNewAircraftConfigException("Configuration exceeds maximum capacity of aircraft type");
+            } 
+        } catch (CreateNewAircraftConfigException ex) { //exception thrown due to exceeding max capacity
+            eJBContext.setRollbackOnly();
+            throw new CreateNewAircraftConfigException(ex.getMessage());
+        } catch (PersistenceException ex) { //excpetion thrown from persisting aircraftConfig
+            eJBContext.setRollbackOnly();
             if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
                 if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
-                    throw new AircraftConfigExistException("This configuration already exist!");
+                    throw new AircraftConfigExistException("Configuration name already exists");
                 } else {
                     throw new UnknownPersistenceException(ex.getMessage());
                 }
@@ -59,7 +80,7 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
         }
     }
     
-@Override
+    @Override
     public AircraftConfigurationEntity retriveAircraftConfigByID(Long aircraftConfigID) throws AircraftConfigNotFoundException {
         AircraftConfigurationEntity config = em.find(AircraftConfigurationEntity.class, aircraftConfigID);
         if(config != null) {
@@ -72,10 +93,11 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
     @Override
     public int calculateMaxCapacity(AircraftConfigurationEntity aircraftConfig) {
         int max = 0;
-        
-        for(CabinClassEntity cabin: aircraftConfig.getCabin()) {
+        System.out.println("Number of cabins: " + aircraftConfig.getCabin().size());
+        for (CabinClassEntity cabin: aircraftConfig.getCabin()) {
             max += cabin.getMaxSeatCapacity();
         }
+        System.out.println("/nTesting max: " + max);
         return max;
     }
 

@@ -5,6 +5,11 @@
  */
 package ejb.session.stateless;
 
+import entity.AircraftConfigurationEntity;
+import entity.CabinClassEntity;
+import exceptions.AircraftConfigNotFoundException;
+import exceptions.CabinClassExistException;
+import exceptions.UnknownPersistenceException;
 import javax.ejb.Local;
 
 /**
@@ -13,5 +18,7 @@ import javax.ejb.Local;
  */
 @Local
 public interface CabinClassSessionBeanLocal {
+    
+    public CabinClassEntity createNewCabinClass(CabinClassEntity cabin, AircraftConfigurationEntity aircraft);
     
 }

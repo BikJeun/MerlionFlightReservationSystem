@@ -7,6 +7,7 @@ package merlionfrsmanagementclient;
 
 import ejb.session.stateless.AircraftConfigurationSessionBeanRemote;
 import ejb.session.stateless.AircraftTypeSessionBeanRemote;
+import ejb.session.stateless.AirportSessionBeanRemote;
 import ejb.session.stateless.CabinClassSessionBeanRemote;
 import ejb.session.stateless.EmployeeSessionBeanRemote;
 import ejb.session.stateless.FlightRouteSessionBeanRemote;
@@ -30,6 +31,7 @@ import javax.naming.NamingException;
  */
 public class MainApp {
   
+    private AirportSessionBeanRemote airportSessionBean;
     private AircraftTypeSessionBeanRemote aircraftTypeSessionBean;
     private CabinClassSessionBeanRemote cabinClassSessionBean;
     private ReservationSessionBeanRemote reservationSessionBean;
@@ -48,7 +50,8 @@ public class MainApp {
     private FlightPlanningModule flightPlanningModule;
     private SalesManagementModule salesManagementModule;
     
-    public MainApp(AircraftTypeSessionBeanRemote aircraftTypeSessionBean, CabinClassSessionBeanRemote cabinClassSessionBean, ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean) {
+    public MainApp(AirportSessionBeanRemote airportSessionBean, AircraftTypeSessionBeanRemote aircraftTypeSessionBean, CabinClassSessionBeanRemote cabinClassSessionBean, ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean) {
+        this.airportSessionBean = airportSessionBean;
         this.aircraftTypeSessionBean = aircraftTypeSessionBean;
         this.cabinClassSessionBean = cabinClassSessionBean;
         this.reservationSessionBean = reservationSessionBean;
@@ -80,7 +83,7 @@ public class MainApp {
                             System.out.println("Login Successful!\n");
                             login = true;
                             flightOperationModule = new FlightOperationModule(currentEmployee, flightSessionBean, flightSchedulePlanSessionBean);
-                            flightPlanningModule = new FlightPlanningModule(currentEmployee, aircraftConfigurationSessionBean, flightRouteSessionBean, cabinClassSessionBean, aircraftTypeSessionBean);
+                            flightPlanningModule = new FlightPlanningModule(currentEmployee, airportSessionBean, aircraftConfigurationSessionBean, flightRouteSessionBean, cabinClassSessionBean, aircraftTypeSessionBean);
                             salesManagementModule = new SalesManagementModule(currentEmployee, seatsInventorySessionBean, reservationSessionBean);
                             mainMenu();
                         } catch (InvalidLoginCredentialException ex) {

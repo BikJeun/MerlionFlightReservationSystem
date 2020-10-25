@@ -7,20 +7,26 @@ package merlionfrsmanagementclient;
 
 import ejb.session.stateless.AircraftConfigurationSessionBeanRemote;
 import ejb.session.stateless.AircraftTypeSessionBeanRemote;
+import ejb.session.stateless.AirportSessionBeanRemote;
 import ejb.session.stateless.CabinClassSessionBeanRemote;
 import ejb.session.stateless.FlightRouteSessionBeanRemote;
 import entity.AircraftConfigurationEntity;
 import entity.AircraftTypeEntity;
+import entity.AirportEntity;
 import entity.CabinClassEntity;
 import entity.EmployeeEntity;
+import entity.FlightRouteEntity;
 import enumeration.CabinClassTypeEnum;
 import enumeration.EmployeeAccessRightEnum;
 import exceptions.AircraftConfigExistException;
 import exceptions.AircraftConfigNotFoundException;
 import exceptions.AircraftTypeNotFoundException;
+import exceptions.AirportNotFoundException;
 import exceptions.CabinClassExistException;
 import exceptions.CabinClassTypeEnumNotFoundException;
 import exceptions.CreateNewAircraftConfigException;
+import exceptions.FlightRouteExistException;
+import exceptions.FlightRouteNotFoundException;
 import exceptions.UnknownPersistenceException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,13 +41,15 @@ import java.util.logging.Logger;
 public class FlightPlanningModule {
     
     private EmployeeEntity employee;
+    private AirportSessionBeanRemote airportSessionBean;
     private AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean;
     private FlightRouteSessionBeanRemote flightRouteSessionBean;
     private CabinClassSessionBeanRemote cabinClassSessionBean;
     private AircraftTypeSessionBeanRemote aircraftTypeSessionBean;
 
-    public FlightPlanningModule(EmployeeEntity employee, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, CabinClassSessionBeanRemote cabinClassSessionBean, AircraftTypeSessionBeanRemote aircraftTypeSessionBean) {
+    public FlightPlanningModule(EmployeeEntity employee, AirportSessionBeanRemote airportSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, CabinClassSessionBeanRemote cabinClassSessionBean, AircraftTypeSessionBeanRemote aircraftTypeSessionBean) {
         this.employee = employee;
+        this.airportSessionBean = airportSessionBean;
         this.aircraftConfigurationSessionBean = aircraftConfigurationSessionBean;
         this.flightRouteSessionBean = flightRouteSessionBean;
         this.cabinClassSessionBean = cabinClassSessionBean;
@@ -72,7 +80,7 @@ public class FlightPlanningModule {
                     }
                 } else if (response == 2) {
                     if(employee.getAccessRight().equals(EmployeeAccessRightEnum.ADMINISTRATOR) || employee.getAccessRight().equals(EmployeeAccessRightEnum.ROUTEPLANNER)) {
-                    //flightRouteMenu();
+                        flightRouteMenu();
                     } else {
                         System.out.println("You are not authorised to use this feature.");
                     }
@@ -263,6 +271,106 @@ public class FlightPlanningModule {
         } catch (AircraftConfigNotFoundException ex) {
             System.out.println(ex.getMessage());
         }
+    }
+
+    private void flightRouteMenu() {
+        Scanner sc = new Scanner(System.in);
+        int response = 0;
+        
+        while(true) {
+            System.out.println("=== Flight Planning Module :: Flight Route ===\n");
+            System.out.println("1: Create Flight Route");
+            System.out.println("2: View All Flight Routes");
+            System.out.println("3: Delete Flight Route");
+            System.out.println("4: Exit\n");
+            
+            response = 0;
+            while(response < 1 || response > 4) {
+                System.out.print("> ");
+                response = sc.nextInt();
+                
+                if(response == 1) {
+                    doCreateFlightRoute();
+                } else if(response == 2) {
+                    doViewAllFlightRoute();
+                } else if(response == 3) {
+                   // doViewAircraftConfigDetails();
+                } else if(response == 4) {
+                    break;
+                } else {
+                    System.out.println("Invalid option, please try again!\n");
+                }
+            }
+            if(response == 4) {
+                break;
+            }
+        }  
+    }
+
+    private void doCreateFlightRoute() {
+        AirportEntity originAirport, destinationAirport;
+        Scanner sc = new Scanner(System.in);
+        System.out.println("*** Create a new Flight Route ***");
+        while (true) {
+            try {
+                System.out.print("Enter IATA code of origin airport> ");
+                String origin = sc.nextLine().trim();
+                originAirport = airportSessionBean.retrieveAirportByIATA(origin);
+                break;
+            } catch (AirportNotFoundException ex) {
+                System.out.println("Error: " + ex.getMessage() +"\nPlease input a valid IATA Code!");
+            }
+        }
+        while (true) {
+            try {
+                System.out.print("Enter IATA code of destination airport> ");
+                String destination = sc.nextLine().trim();
+                destinationAirport = airportSessionBean.retrieveAirportByIATA(destination);
+                break;
+            } catch (AirportNotFoundException ex) {
+                System.out.println("Error: " + ex.getMessage() +"\nPlease input a valid IATA Code!");
+            }
+        }
+        FlightRouteEntity flightRoute = new FlightRouteEntity(); 
+        try {
+            flightRoute = flightRouteSessionBean.createNewFlightRoute(flightRoute, originAirport.getAirportID(), destinationAirport.getAirportID());
+        } catch (FlightRouteExistException | UnknownPersistenceException | AirportNotFoundException ex) {
+            System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
+            return;
+        }
+        System.out.print("Flight Route successfully created!\nWould you like to create its complementary return route? (Y or N)> ");
+        String reply = sc.nextLine().trim();
+        
+        if((reply.equals("Y") || reply.equals("y"))) {
+            try {          
+               FlightRouteEntity returnFlightRoute = flightRouteSessionBean.createNewFlightRoute(new FlightRouteEntity(), destinationAirport.getAirportID(),originAirport.getAirportID());    
+               flightRouteSessionBean.setComplementaryFlightRoute(returnFlightRoute.getFlightRouteID());
+               System.out.println("Complementary return route created!\n\n");
+            } catch (FlightRouteExistException ex) {
+               System.out.println("Complementary return route already exists!\n\n"); 
+                try {
+                    flightRouteSessionBean.setComplementaryFlightRoute(flightRoute.getFlightRouteID());
+                } catch (FlightRouteNotFoundException ex1) {
+                    System.out.println("Error:" + ex1.getMessage() + "\n\n"); //will never hit this 
+                }
+            } catch (UnknownPersistenceException | AirportNotFoundException | FlightRouteNotFoundException ex) {
+               System.out.println("Error:" + ex.getMessage() + "\n\n");
+            } 
+                     
+        } 
+    }
+
+    private void doViewAllFlightRoute() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("*** View all flight routes ***");
+        List<FlightRouteEntity> list = flightRouteSessionBean.retrieveAllFlightRouteInOrder();
+        System.out.printf("%20s%35s%20s%35s%25s\n", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA");
+        
+        for(FlightRouteEntity route : list) {
+            System.out.printf("%20s%35s%20s%35s%25s\n", route.getFlightRouteID().toString(), route.getOrigin().getAirportName() ,route.getOrigin().getIATACode(), route.getDestination().getAirportName() ,route.getDestination().getIATACode());
+        }
+        System.out.print("Press any key to continue...> ");
+        sc.nextLine();
     }
     
     

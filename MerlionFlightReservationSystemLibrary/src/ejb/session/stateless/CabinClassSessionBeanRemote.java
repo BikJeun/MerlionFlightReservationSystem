@@ -25,9 +25,7 @@ public interface CabinClassSessionBeanRemote {
     public CabinClassTypeEnum findEnumType(String trim) throws CabinClassTypeEnumNotFoundException;
 
     public int computeMaxSeatCapacity(int rows, int seatsAbreast);
-
-    public CabinClassEntity createNewCabinClass(CabinClassEntity cabin, AircraftConfigurationEntity aircraft);
-
+    
     public CabinClassEntity retrieveCabinByID(Long cabinClassID) throws CabinClassNotFoundException;
     
 }

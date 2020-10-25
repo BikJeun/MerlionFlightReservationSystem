@@ -53,7 +53,6 @@ public class FlightRouteEntity implements Serializable {
    
     public FlightRouteEntity() {
         flights = new ArrayList<>();  
-        complementaryRoute = null;
     }
 
     public FlightRouteEntity(AirportEntity origin, AirportEntity destination) {

@@ -83,22 +83,14 @@ public class DataInitSessionBean {
             airportSessionBean.createNewAirport(new AirportEntity("Narita International Airport", "NRT", "Narita", "Chiba", "Japan"));
             airportSessionBean.createNewAirport(new AirportEntity("Incheon International Airport", "ICN", "Seoul", "Seoul", "South Korea"));
             airportSessionBean.createNewAirport(new AirportEntity("Sydney Airport", "SYD", "Sydney", "New South Wales", "Australia"));
-            airportSessionBean.createNewAirport(new AirportEntity("Sendai Airport", "SDJ", "Sendai", "Miyagi", " Japan"));
+            airportSessionBean.createNewAirport(new AirportEntity("Sendai Airport", "SDJ", "Sendai", "Miyagi", "Japan"));
             airportSessionBean.createNewAirport(new AirportEntity("Taoyuan International Airport", "TPE", "Taoyuan", "Taipei", "Taiwan"));
             
             /*Initialise Aircraft Type*/
             aircraftTypeSessionBean.createNewAircraftType(new AircraftTypeEntity("Boeing 737", 189));
             aircraftTypeSessionBean.createNewAircraftType(new AircraftTypeEntity("Boeing 747", 416));
             
-        } catch (EmployeeUsernameExistException ex) {
-            System.out.println(ex.getMessage());
-        } catch (UnknownPersistenceException ex) {
-            System.out.println(ex.getMessage());
-        } catch (PartnerUsernameExistException ex) {
-            System.out.println(ex.getMessage());
-        } catch (AirportExistException ex) {
-            System.out.println(ex.getMessage());
-        } catch (AircraftTypeExistException ex) {
+        } catch (EmployeeUsernameExistException | UnknownPersistenceException | PartnerUsernameExistException | AirportExistException | AircraftTypeExistException ex) {
             System.out.println(ex.getMessage());
         }
     } 

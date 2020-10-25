@@ -50,7 +50,7 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
     public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig, List<CabinClassEntity> cabinClasses) throws CreateNewAircraftConfigException, AircraftConfigExistException, UnknownPersistenceException {
-        try {       
+        try {       //TODO: need to associate with aircraft type and the opposite association (more importantly the opposite direction)
             em.persist(aircraftConfig);
             //em.flush(); //QN: cannot flush here else the rollback wont work?             
             for (CabinClassEntity cce: cabinClasses) {
@@ -111,9 +111,7 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
                 type.getAircraftConfig().add(config);
                 config.setAircraftType(type);
             }
-        } catch (AircraftTypeNotFoundException ex) {
-            System.out.println(ex.getMessage());
-        } catch (AircraftConfigNotFoundException ex) {
+        } catch (AircraftTypeNotFoundException | AircraftConfigNotFoundException ex) {
             System.out.println(ex.getMessage());
         }
     }

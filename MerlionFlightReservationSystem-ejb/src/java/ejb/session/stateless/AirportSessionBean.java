@@ -11,8 +11,11 @@ import exceptions.AirportNotFoundException;
 import exceptions.UnknownPersistenceException;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 
 /**
  *
@@ -55,4 +58,16 @@ public class AirportSessionBean implements AirportSessionBeanRemote, AirportSess
             throw new AirportNotFoundException("Airport id " + id.toString() + " does not exist!");
         }
     }
+    
+    @Override
+    public AirportEntity retrieveAirportByIATA(String iata) throws AirportNotFoundException {
+        Query query = em.createQuery("SELECT a FROM AirportEntity a WHERE a.IATACode = :code");
+        query.setParameter("code", iata);
+        
+        try{
+            return (AirportEntity)query.getSingleResult();
+        } catch (NoResultException | NonUniqueResultException ex) {
+            throw new AirportNotFoundException("Airport does not exist in system!");
+        }
     }
+}

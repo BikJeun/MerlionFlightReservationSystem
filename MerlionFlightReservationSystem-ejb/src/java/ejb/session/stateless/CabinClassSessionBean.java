@@ -51,10 +51,12 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
         return rows * seatsAbreast;
     }
     
+    //only exposed in local interface
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
     public CabinClassEntity createNewCabinClass(CabinClassEntity cabin, AircraftConfigurationEntity aircraft) {  
         em.persist(cabin);
+        cabin.setAircraftConfig(aircraft); //this instance of aircraft is managed
         if(!aircraft.getCabin().contains(cabin)) {
             aircraft.getCabin().add(cabin);
         }

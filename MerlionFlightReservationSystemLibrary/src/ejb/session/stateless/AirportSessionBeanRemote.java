@@ -17,5 +17,7 @@ import javax.ejb.Remote;
 public interface AirportSessionBeanRemote {
 
     public AirportEntity retrieveAirportById(Long id) throws AirportNotFoundException;
+
+    public AirportEntity retrieveAirportByIATA(String iata) throws AirportNotFoundException;
     
 }

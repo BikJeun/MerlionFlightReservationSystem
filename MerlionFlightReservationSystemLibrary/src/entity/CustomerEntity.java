@@ -14,7 +14,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 /**
@@ -22,12 +21,10 @@ import javax.persistence.OneToMany;
  * @author Ong Bik Jeun
  */
 @Entity
-public class CustomerEntity implements Serializable {
+public class CustomerEntity extends UserEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long customerID;
+
     @Column(nullable = false, length = 64)
     private String firstName;
     @Column(nullable = false, length = 64)
@@ -40,28 +37,19 @@ public class CustomerEntity implements Serializable {
     private String address;
     @Column(nullable = false, length = 64)
     private String postalCode;
-    @Column(nullable = false, unique = true, length = 32)
-    private String username;
-    @Column(nullable = false, length = 32)
-    private String password;
-    
-    @OneToMany(mappedBy = "customer", fetch = FetchType.EAGER)
-    @JoinColumn(nullable = false)
-    private ArrayList<ReservationEntity> reservations;
 
     public CustomerEntity() {
+        super();
     }
 
-    public CustomerEntity(String firstName, String lastName, String identificationNumber, String contactNumber, String address, String postalCode, String username, String password, ArrayList<ReservationEntity> reservations) {
+    public CustomerEntity(String firstName, String lastName, String identificationNumber, String contactNumber, String address, String postalCode, String username, String password) {
+        super(username, password);
         this.firstName = firstName;
         this.lastName = lastName;
         this.identificationNumber = identificationNumber;
         this.contactNumber = contactNumber;
         this.address = address;
         this.postalCode = postalCode;
-        this.username = username;
-        this.password = password;
-        this.reservations = reservations;
     }
 
     public String getFirstName() {
@@ -112,55 +100,29 @@ public class CustomerEntity implements Serializable {
         this.postalCode = postalCode;
     }
 
-    public String getUsername() {
-        return username;
+    public Long getUserID() {
+        return UserID;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public ArrayList<ReservationEntity> getReservations() {
-        return reservations;
-    }
-
-    public void setReservations(ArrayList<ReservationEntity> reservations) {
-        this.reservations = reservations;
-    }
-    
-    
-
-    public Long getCustomerID() {
-        return customerID;
-    }
-
-    public void setCustomerID(Long customerID) {
-        this.customerID = customerID;
+    public void setUserID(Long UserID) {
+        this.UserID = UserID;
     }
 
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (customerID != null ? customerID.hashCode() : 0);
+        hash += (UserID != null ? UserID.hashCode() : 0);
         return hash;
     }
 
     @Override
     public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the customerID fields are not set
+        // TODO: Warning - this method won't work in the case the UserID fields are not set
         if (!(object instanceof CustomerEntity)) {
             return false;
         }
         CustomerEntity other = (CustomerEntity) object;
-        if ((this.customerID == null && other.customerID != null) || (this.customerID != null && !this.customerID.equals(other.customerID))) {
+        if ((this.UserID == null && other.UserID != null) || (this.UserID != null && !this.UserID.equals(other.UserID))) {
             return false;
         }
         return true;
@@ -168,7 +130,7 @@ public class CustomerEntity implements Serializable {
 
     @Override
     public String toString() {
-        return "entity.CustomerEntity[ id=" + customerID + " ]";
+        return "entity.CustomerEntity[ id=" + UserID + " ]";
     }
     
 }

@@ -8,17 +8,24 @@ package entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 /**
  *
  * @author Ong Bik Jeun
  */
 @Entity
+@Table(uniqueConstraints=
+       @UniqueConstraint(columnNames = {"origin", "destination"})) 
 public class FlightRouteEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -26,31 +33,35 @@ public class FlightRouteEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long flightRouteID;
     
-    @OneToOne
-    private ODPairEntity odPair;
-    @OneToMany(mappedBy = "flightRoute")
+    @OneToMany(mappedBy = "flightRoute", fetch = FetchType.EAGER)
     private ArrayList<FlightEntity> flights;
-    /*@ManyToMany(mappedBy = "airport")
-    private ArrayList<AirportEntity> airports;*/
-
+    
+    @ManyToOne
+    @JoinColumn(name = "origin")
+    private AirportEntity origin;
+    
+    @ManyToOne
+    @JoinColumn(name = "destination")
+    private AirportEntity destination;
+    
+    //One-to-One self referencing constraints (please check)
+    //QN: Why is a self referencing like this?? 
+    @OneToOne
+    private FlightRouteEntity complementaryRoute;
+    @OneToOne(mappedBy = "complementaryRoute")
+    private FlightRouteEntity sourceRoute;
+   
     public FlightRouteEntity() {
         flights = new ArrayList<>();  
+        complementaryRoute = null;
     }
 
-    public FlightRouteEntity(ODPairEntity odPair) {
+    public FlightRouteEntity(AirportEntity origin, AirportEntity destination) {
         this();
-        this.odPair = odPair;
-    }
-
-    public ODPairEntity getOdPair() {
-        return odPair;
-    }
-
-    public void setOdPair(ODPairEntity odPair) {
-        this.odPair = odPair;
+        this.origin = origin;
+        this.destination = destination;
     }
     
-
     public Long getFlightRouteID() {
         return flightRouteID;
     }
@@ -82,6 +93,76 @@ public class FlightRouteEntity implements Serializable {
     @Override
     public String toString() {
         return "entity.FlightRouteEntity[ id=" + flightRouteID + " ]";
+    }
+
+    /**
+     * @return the flights
+     */
+    public ArrayList<FlightEntity> getFlights() {
+        return flights;
+    }
+
+    /**
+     * @param flights the flights to set
+     */
+    public void setFlights(ArrayList<FlightEntity> flights) {
+        this.flights = flights;
+    }
+
+    /**
+     * @return the origin
+     */
+    public AirportEntity getOrigin() {
+        return origin;
+    }
+
+    /**
+     * @param origin the origin to set
+     */
+    public void setOrigin(AirportEntity origin) {
+        this.origin = origin;
+    }
+
+    /**
+     * @return the destination
+     */
+    public AirportEntity getDestination() {
+        return destination;
+    }
+
+    /**
+     * @param destination the destination to set
+     */
+    public void setDestination(AirportEntity destination) {
+        this.destination = destination;
+    }
+
+    /**
+     * @return the complementaryRoute
+     */
+    public FlightRouteEntity getComplementaryRoute() {
+        return complementaryRoute;
+    }
+
+    /**
+     * @param complementaryRoute the complementaryRoute to set
+     */
+    public void setComplementaryRoute(FlightRouteEntity complementaryRoute) {
+        this.complementaryRoute = complementaryRoute;
+    }
+
+    /**
+     * @return the sourceRoute
+     */
+    public FlightRouteEntity getSourceRoute() {
+        return sourceRoute;
+    }
+
+    /**
+     * @param sourceRoute the sourceRoute to set
+     */
+    public void setSourceRoute(FlightRouteEntity sourceRoute) {
+        this.sourceRoute = sourceRoute;
     }
     
 }

@@ -42,18 +42,18 @@ public class AircraftConfigurationEntity implements Serializable {
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private AircraftTypeEntity aircraftType;
-    @ManyToMany(mappedBy = "aircraftConfig", fetch = FetchType.EAGER)
+    
+    // How to enforce 1..*? (Right now only enforced in session bean)
+    @OneToMany(mappedBy = "aircraftConfig", fetch = FetchType.EAGER)
     private ArrayList<CabinClassEntity> cabin;
-    @OneToOne
-    private FlightEntity flight;
 
     public AircraftConfigurationEntity() {
         cabin = new ArrayList<>();
     }
 
-    public AircraftConfigurationEntity(AircraftTypeEntity boeing, String name, int numberOfCabinClasses) {
+    public AircraftConfigurationEntity(AircraftTypeEntity aircraftType, String name, int numberOfCabinClasses) {
         this();
-        aircraftType = boeing;
+        this.aircraftType = aircraftType;
         this.name = name;
         this.numberOfCabinClasses = numberOfCabinClasses;
     }
@@ -88,19 +88,7 @@ public class AircraftConfigurationEntity implements Serializable {
 
     public void setCabin(ArrayList<CabinClassEntity> cabin) {
         this.cabin = cabin;
-    }
-
-    public FlightEntity getFlight() {
-        return flight;
-    }
-
-    public void setFlight(FlightEntity flight) {
-        this.flight = flight;
-    }
-    
-    
-    
-    
+    }  
 
     public Long getAircraftConfigID() {
         return aircraftConfigID;

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -35,21 +36,32 @@ public class FlightEntity implements Serializable {
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private FlightRouteEntity flightRoute;
-    @OneToOne(optional = false)
+    
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private AircraftConfigurationEntity aircraftConfig;
-    @OneToMany(mappedBy = "flight")
-    private List<FlightScheduleEntity> flightSchedule;
+    
+    @OneToMany(mappedBy = "flight", fetch = FetchType.EAGER)
+    private List<FlightSchedulePlanEntity> flightSchedulePlan;
+    
+    //One-to-One self referencing constraints (please check)
+    //QN: Why is a self referencing like this??
+    @OneToOne
+    private FlightEntity returningFlight;
+    @OneToOne(mappedBy = "returningFlight")
+    private FlightEntity sourceFlight;
 
     public FlightEntity() {
-        flightSchedule = new ArrayList<>();
+        flightSchedulePlan = new ArrayList<>();
+        returningFlight = null;
     }
 
-    public FlightEntity(String flightNum, FlightRouteEntity flightRoute, AircraftConfigurationEntity aircraftConfig, List<FlightScheduleEntity> flightSchedule) {
+    public FlightEntity(String flightNum, FlightRouteEntity flightRoute, AircraftConfigurationEntity aircraftConfig, List<FlightSchedulePlanEntity> flightSchedulePlan) {
         this();
         this.flightNum = flightNum;
         this.flightRoute = flightRoute;
         this.aircraftConfig = aircraftConfig;
-        this.flightSchedule = flightSchedule;
+        this.flightSchedulePlan = flightSchedulePlan;
     }
 
     public String getFlightNum() {
@@ -76,12 +88,12 @@ public class FlightEntity implements Serializable {
         this.aircraftConfig = aircraftConfig;
     }
 
-    public List<FlightScheduleEntity> getFlightSchedule() {
-        return flightSchedule;
+    public List<FlightSchedulePlanEntity> getFlightSchedulePlan() {
+        return flightSchedulePlan;
     }
 
-    public void setFlightSchedule(List<FlightScheduleEntity> flightSchedule) {
-        this.flightSchedule = flightSchedule;
+    public void setFlightSchedulePlan(List<FlightSchedulePlanEntity> flightSchedule) {
+        this.flightSchedulePlan = flightSchedule;
     }
     
     
@@ -117,6 +129,34 @@ public class FlightEntity implements Serializable {
     @Override
     public String toString() {
         return "entity.FlightEntity[ id=" + FlightID + " ]";
+    }
+
+    /**
+     * @return the returningFlight
+     */
+    public FlightEntity getReturningFlight() {
+        return returningFlight;
+    }
+
+    /**
+     * @param returningFlight the returningFlight to set
+     */
+    public void setReturningFlight(FlightEntity returningFlight) {
+        this.returningFlight = returningFlight;
+    }
+
+    /**
+     * @return the sourceFlight
+     */
+    public FlightEntity getSourceFlight() {
+        return sourceFlight;
+    }
+
+    /**
+     * @param sourceFlight the sourceFlight to set
+     */
+    public void setSourceFlight(FlightEntity sourceFlight) {
+        this.sourceFlight = sourceFlight;
     }
     
 }

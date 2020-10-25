@@ -13,11 +13,11 @@
     <class>entity.FlightRouteEntity</class>
     <class>entity.FlightScheduleEntity</class>
     <class>entity.FlightSchedulePlanEntity</class>
-    <class>entity.ODPairEntity</class>
     <class>entity.PartnerEntity</class>
     <class>entity.PassengerEntity</class>
     <class>entity.ReservationEntity</class>
     <class>entity.SeatInventoryEntity</class>
+    <class>entity.UserEntity</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>
       <property name="javax.persistence.schema-generation.database.action" value="create"/>

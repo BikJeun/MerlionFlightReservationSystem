@@ -58,9 +58,6 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
         if(!aircraft.getCabin().contains(cabin)) {
             aircraft.getCabin().add(cabin);
         }
-        if(!cabin.getAircraftConfig().contains(aircraft)) {
-            cabin.getAircraftConfig().add(aircraft);
-        }
         return cabin;
         // QN: Does it matter if i flush here or is this considered 'exiting business method'?
         /*  Removed because will never be thrown
@@ -86,24 +83,5 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
             throw new CabinClassNotFoundException("Cabin class with " + cabinClassID + " not found!\n");
         }
     }
-
-    @Override
-    public void associateAircraftConfigToCabin(Long aircraftConfigID, Long cabinClassID) {
-        try {
-            AircraftConfigurationEntity aircraft = aircraftConfigurationSessionBean.retriveAircraftConfigByID(aircraftConfigID);
-            CabinClassEntity cabin = retrieveCabinByID(cabinClassID);
-            
-            if(!aircraft.getCabin().contains(cabin)) {
-                aircraft.getCabin().add(cabin);
-            }
-            if(!cabin.getAircraftConfig().contains(aircraft)) {
-                cabin.getAircraftConfig().add(aircraft);
-            }
-        } catch (CabinClassNotFoundException | AircraftConfigNotFoundException ex) {
-            System.out.println(ex.getMessage());
-        }
-        
-    }
-
 }
     

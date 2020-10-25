@@ -11,6 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
@@ -32,19 +33,21 @@ public class SeatInventoryEntity implements Serializable {
     @Column(nullable = false)
     private int balance;
     
-    @OneToOne
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private CabinClassEntity cabin;
-    @ManyToOne
+    
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
     private FlightScheduleEntity flightSchedule;
 
     public SeatInventoryEntity() {
     }
 
-    public SeatInventoryEntity(Long seatInventoryID, int available, int reserved, int balance, CabinClassEntity cabin, FlightScheduleEntity flightSchedule) {
-        this.seatInventoryID = seatInventoryID;
+    public SeatInventoryEntity(int available, CabinClassEntity cabin, FlightScheduleEntity flightSchedule) {
         this.available = available;
-        this.reserved = reserved;
-        this.balance = balance;
+        this.reserved = 0;
+        this.balance = 0;
         this.cabin = cabin;
         this.flightSchedule = flightSchedule;
     }
@@ -89,8 +92,6 @@ public class SeatInventoryEntity implements Serializable {
         this.flightSchedule = flightSchedule;
     }
     
-    
-
     public Long getSeatInventoryID() {
         return seatInventoryID;
     }

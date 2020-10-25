@@ -35,26 +35,34 @@ public class ReservationEntity implements Serializable {
     
     @OneToMany(fetch = FetchType.EAGER)
     private ArrayList<PassengerEntity> passenger;
+    
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
-    private CustomerEntity customer;
+    private UserEntity user;
+    
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private FlightScheduleEntity flightSchedule;
-    @ManyToOne(optional = true)
-    @JoinColumn(nullable = true)
-    private PartnerEntity partner;
+    
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    private FareEntity fare;
+      
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    private CabinClassEntity cabinClass;
 
     public ReservationEntity() {
     }
 
-    public ReservationEntity(String creditCardNumber, String cvv, ArrayList<PassengerEntity> passenger, CustomerEntity customer, FlightScheduleEntity flightSchedule, PartnerEntity partner) {
+    public ReservationEntity(String creditCardNumber, String cvv, ArrayList<PassengerEntity> passenger, UserEntity user, FlightScheduleEntity flightSchedule, FareEntity fare, CabinClassEntity cabinClass) {
         this.creditCardNumber = creditCardNumber;
         this.cvv = cvv;
         this.passenger = passenger;
-        this.customer = customer;
+        this.user = user;
         this.flightSchedule = flightSchedule;
-        this.partner = partner;
+        this.fare = fare;
+        this.cabinClass = cabinClass;
     }
 
     public String getCreditCardNumber() {
@@ -81,33 +89,14 @@ public class ReservationEntity implements Serializable {
         this.passenger = passenger;
     }
 
-    public CustomerEntity getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(CustomerEntity customer) {
-        this.customer = customer;
-    }
-
     public FlightScheduleEntity getFlightSchedule() {
         return flightSchedule;
     }
 
     public void setFlightSchedule(FlightScheduleEntity flightSchedule) {
         this.flightSchedule = flightSchedule;
-    }
-
-    public PartnerEntity getPartner() {
-        return partner;
-    }
-
-    public void setPartner(PartnerEntity partner) {
-        this.partner = partner;
-    }
-    
-    
-    
-    
+    }  
+        
     public Long getReservationID() {
         return reservationID;
     }
@@ -139,6 +128,48 @@ public class ReservationEntity implements Serializable {
     @Override
     public String toString() {
         return "entity.ReservationEntity[ id=" + reservationID + " ]";
+    }
+
+    /**
+     * @return the user
+     */
+    public UserEntity getUser() {
+        return user;
+    }
+
+    /**
+     * @param user the user to set
+     */
+    public void setUser(UserEntity user) {
+        this.user = user;
+    }
+
+    /**
+     * @return the fare
+     */
+    public FareEntity getFare() {
+        return fare;
+    }
+
+    /**
+     * @param fare the fare to set
+     */
+    public void setFare(FareEntity fare) {
+        this.fare = fare;
+    }
+
+    /**
+     * @return the cabinClass
+     */
+    public CabinClassEntity getCabinClass() {
+        return cabinClass;
+    }
+
+    /**
+     * @param cabinClass the cabinClass to set
+     */
+    public void setCabinClass(CabinClassEntity cabinClass) {
+        this.cabinClass = cabinClass;
     }
     
 }

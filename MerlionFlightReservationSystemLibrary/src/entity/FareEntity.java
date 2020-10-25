@@ -37,14 +37,19 @@ public class FareEntity implements Serializable {
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private CabinClassEntity cabinClass;
+    
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    private FlightSchedulePlanEntity flightSchedulePlan;
 
     public FareEntity() {
     }
 
-    public FareEntity(String fareBasisCode, BigDecimal fareAmount, CabinClassEntity cabin) {
+    public FareEntity(String fareBasisCode, BigDecimal fareAmount, CabinClassEntity cabinClass, FlightSchedulePlanEntity flightSchedulePlan) {
         this.fareBasisCode = fareBasisCode;
         this.fareAmount = fareAmount;
-        this.cabinClass = cabin;
+        this.cabinClass = cabinClass;
+        this.flightSchedulePlan = flightSchedulePlan;
     }
 
     public String getFareBasisCode() {
@@ -64,11 +69,11 @@ public class FareEntity implements Serializable {
     }
 
     public CabinClassEntity getCabin() {
-        return cabinClass;
+        return getCabinClass();
     }
 
     public void setCabin(CabinClassEntity cabin) {
-        this.cabinClass = cabin;
+        this.setCabinClass(cabin);
     }
     
     public Long getFareID() {
@@ -102,6 +107,34 @@ public class FareEntity implements Serializable {
     @Override
     public String toString() {
         return "entity.FareEntity[ id=" + fareID + " ]";
+    }
+
+    /**
+     * @return the cabinClass
+     */
+    public CabinClassEntity getCabinClass() {
+        return cabinClass;
+    }
+
+    /**
+     * @param cabinClass the cabinClass to set
+     */
+    public void setCabinClass(CabinClassEntity cabinClass) {
+        this.cabinClass = cabinClass;
+    }
+
+    /**
+     * @return the flightSchedulePlan
+     */
+    public FlightSchedulePlanEntity getFlightSchedulePlan() {
+        return flightSchedulePlan;
+    }
+
+    /**
+     * @param flightSchedulePlan the flightSchedulePlan to set
+     */
+    public void setFlightSchedulePlan(FlightSchedulePlanEntity flightSchedulePlan) {
+        this.flightSchedulePlan = flightSchedulePlan;
     }
     
 }

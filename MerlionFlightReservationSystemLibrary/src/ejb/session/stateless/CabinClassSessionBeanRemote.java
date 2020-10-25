@@ -30,6 +30,4 @@ public interface CabinClassSessionBeanRemote {
 
     public CabinClassEntity retrieveCabinByID(Long cabinClassID) throws CabinClassNotFoundException;
     
-    public void associateAircraftConfigToCabin(Long aircraftConfigID, Long cabinClassID);
-    
 }

@@ -126,7 +126,7 @@ public class MainApp {
                 contactnumber.length() > 0 && 
                 address.length() > 0 && 
                 postalcode.length() > 0) {
-                CustomerEntity customer = new CustomerEntity(firstname, lastname, idNumber, contactnumber, address, postalcode, username, password, null);
+                CustomerEntity customer = new CustomerEntity(firstname, lastname, idNumber, contactnumber, address, postalcode, username, password);
                 currentCustomer = customerSessionBean.createNewCustomerEntity(customer);
                 login = true;
                 System.out.println("Account successfully created: " + currentCustomer.getIdentificationNumber()+"\n");

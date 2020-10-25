@@ -27,7 +27,7 @@ public class PassengerEntity implements Serializable {
     private String firstName;
     @Column(nullable = false, length = 64)
     private String lastName;
-    @Column(nullable = false, unique = true, length = 64)
+    @Column(nullable = false, unique = true, length = 64) //this might lead to issues later depending on how we implement our session bean
     private String passportNumber;
     
     public PassengerEntity() {

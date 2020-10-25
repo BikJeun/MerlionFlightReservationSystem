@@ -7,18 +7,15 @@ package entity;
 
 import enumeration.CabinClassTypeEnum;
 import java.io.Serializable;
-import java.util.ArrayList;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
@@ -50,20 +47,15 @@ public class CabinClassEntity implements Serializable {
     @Column(nullable = false)
     private int maxSeatCapacity;
     
-    @OneToMany(mappedBy = "cabinClass", fetch = FetchType.EAGER)
-    private ArrayList<FareEntity> fare;
-    @ManyToMany
-    private ArrayList<AircraftConfigurationEntity> aircraftConfig;
-    @OneToOne
-    private SeatInventoryEntity seatInventory;
+    @ManyToOne(optional = false)
+    @JoinColumn(nullable = false)
+    private AircraftConfigurationEntity aircraftConfig;
 
-    public CabinClassEntity() {
-        fare = new ArrayList<>();
-        aircraftConfig = new ArrayList<>();
+    public CabinClassEntity() { 
     }
 
-    public CabinClassEntity(CabinClassTypeEnum cabinClassType, int numOfAisles, int numOfRows, int numOfSeatsAbreast, String seatingConfigPerColumn, int maxSeatCapacity) {
-        this();
+    public CabinClassEntity(AircraftConfigurationEntity aircraftConfig, CabinClassTypeEnum cabinClassType, int numOfAisles, int numOfRows, int numOfSeatsAbreast, String seatingConfigPerColumn, int maxSeatCapacity) {
+        this.aircraftConfig = aircraftConfig;
         this.cabinClassType = cabinClassType;
         this.numOfAisles = numOfAisles;
         this.numOfRows = numOfRows;
@@ -118,33 +110,7 @@ public class CabinClassEntity implements Serializable {
 
     public void setMaxSeatCapacity(int maxSeatCapacity) {
         this.maxSeatCapacity = maxSeatCapacity;
-    }
-
-    public ArrayList<FareEntity> getFare() {
-        return fare;
-    }
-
-    public void setFare(ArrayList<FareEntity> fare) {
-        this.fare = fare;
-    }
-
-    public ArrayList<AircraftConfigurationEntity> getAircraftConfig() {
-        return aircraftConfig;
-    }
-
-    public void setAircraftConfig(ArrayList<AircraftConfigurationEntity> aircraftConfig) {
-        this.aircraftConfig = aircraftConfig;
-    }
-
-    public SeatInventoryEntity getSeatInventory() {
-        return seatInventory;
-    }
-
-    public void setSeatInventory(SeatInventoryEntity seatInventory) {
-        this.seatInventory = seatInventory;
-    }
-    
-    
+    }   
 
     public Long getCabinClassID() {
         return cabinClassID;
@@ -178,6 +144,20 @@ public class CabinClassEntity implements Serializable {
     @Override
     public String toString() {
         return "entity.CabinClassEntity[ id=" + cabinClassID + " ]";
+    }
+
+    /**
+     * @return the aircraftConfig
+     */
+    public AircraftConfigurationEntity getAircraftConfig() {
+        return aircraftConfig;
+    }
+
+    /**
+     * @param aircraftConfig the aircraftConfig to set
+     */
+    public void setAircraftConfig(AircraftConfigurationEntity aircraftConfig) {
+        this.aircraftConfig = aircraftConfig;
     }
     
 }

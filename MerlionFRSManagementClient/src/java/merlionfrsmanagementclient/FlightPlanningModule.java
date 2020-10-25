@@ -140,7 +140,7 @@ public class FlightPlanningModule {
                        
             List<CabinClassEntity> cabinClasses = new ArrayList<>();
             for(int i = 0; i<cabinNum; i++) {
-                cabinClasses.add(doCreateCabinClass());
+                cabinClasses.add(doCreateCabinClass(aircraftConfig));
             }
             aircraftConfig = aircraftConfigurationSessionBean.createNewAircraftConfig(aircraftConfig, cabinClasses);
             System.out.println("Aircraft Configuration created for a " + aircraftConfig.getAircraftType().getTypeName() + " Type plane\n");
@@ -151,7 +151,7 @@ public class FlightPlanningModule {
     }
     
 
-    private CabinClassEntity doCreateCabinClass() {
+    private CabinClassEntity doCreateCabinClass(AircraftConfigurationEntity aircraftConfig) {
         CabinClassEntity cabin = null;
        
         Scanner sc = new Scanner(System.in);
@@ -233,7 +233,7 @@ public class FlightPlanningModule {
         }
 
         int maxCapacity = cabinClassSessionBean.computeMaxSeatCapacity(rows, seatsAbreast);
-        cabin = new CabinClassEntity(type, aisles, rows, seatsAbreast, config, maxCapacity);
+        cabin = new CabinClassEntity(aircraftConfig, type, aisles, rows, seatsAbreast, config, maxCapacity);
         return cabin;
     }
 

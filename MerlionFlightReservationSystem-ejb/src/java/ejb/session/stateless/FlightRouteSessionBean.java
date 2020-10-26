@@ -38,12 +38,15 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
         try {
             AirportEntity originAirport = em.find(AirportEntity.class, originAirportID);
             AirportEntity destinationAirport = em.find(AirportEntity.class, destinationAirportID);
+            
             if (originAirport == null || destinationAirport == null) {
                 throw new AirportNotFoundException("Airport does not exist!");
             }
             em.persist(flightRoute); //unidirectional, so there is no need to associate on airport side
+            
             flightRoute.setOrigin(originAirport); // QN: neccesary to set with managed instances? should i set then persist or persist then set?
             flightRoute.setDestination(destinationAirport);
+            
             em.flush();
             return flightRoute;
         } catch (PersistenceException ex) {

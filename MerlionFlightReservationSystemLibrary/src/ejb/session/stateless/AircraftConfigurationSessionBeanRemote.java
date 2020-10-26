@@ -21,9 +21,7 @@ import javax.ejb.Remote;
 @Remote
 public interface AircraftConfigurationSessionBeanRemote {
 
-     public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig, List<CabinClassEntity> cabinClasses) throws CreateNewAircraftConfigException, AircraftConfigExistException, UnknownPersistenceException;
-
-    public int calculateMaxCapacity(AircraftConfigurationEntity aircraftConfig);
+    public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig, long aircraftTypeID, List<CabinClassEntity> cabinClasses) throws CreateNewAircraftConfigException, AircraftConfigExistException, UnknownPersistenceException;
 
     public void associateTypeWithConfig(Long valueOf, Long aircraftConfigID);
 

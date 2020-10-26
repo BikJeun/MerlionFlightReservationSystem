@@ -25,6 +25,7 @@ import exceptions.AirportNotFoundException;
 import exceptions.CabinClassExistException;
 import exceptions.CabinClassTypeEnumNotFoundException;
 import exceptions.CreateNewAircraftConfigException;
+import exceptions.FlightRouteExistButDisabledException;
 import exceptions.FlightRouteExistException;
 import exceptions.FlightRouteNotFoundException;
 import exceptions.UnknownPersistenceException;
@@ -135,7 +136,13 @@ public class FlightPlanningModule {
         try {
             Scanner sc = new Scanner(System.in);
             System.out.println("*** Create a new aircraft configuration ***");
-            System.out.print("Enter aircraft type (1: Boeing 737, 2: Boeing 747)> ");
+            
+            List<AircraftTypeEntity> acType = aircraftTypeSessionBean.retrieveAllAircraftType();    
+            System.out.printf("%20s%25s%20s\n", "Aircraft Type ID", "Name", "Maximum Capacity");       
+            for(AircraftTypeEntity type : acType) {
+                System.out.printf("%20s%25s%20s\n", type.getAircraftID().toString(), type.getTypeName(), type.getMaxCapacity());
+            }
+            System.out.print("Enter aircraft type (BY ID)> "); 
             Long type = sc.nextLong();
             sc.nextLine();
             AircraftTypeEntity boeing = aircraftTypeSessionBean.retrieveAircraftTypeById(type);
@@ -144,13 +151,13 @@ public class FlightPlanningModule {
             System.out.print("Enter number of cabin class (1-4 only)> \n");
             int cabinNum = sc.nextInt();
             
-            AircraftConfigurationEntity aircraftConfig = new AircraftConfigurationEntity(boeing, name, cabinNum);
+            AircraftConfigurationEntity aircraftConfig = new AircraftConfigurationEntity(name, cabinNum);
                        
             List<CabinClassEntity> cabinClasses = new ArrayList<>();
             for(int i = 0; i<cabinNum; i++) {
-                cabinClasses.add(doCreateCabinClass(aircraftConfig));
+                cabinClasses.add(doCreateCabinClass());
             }
-            aircraftConfig = aircraftConfigurationSessionBean.createNewAircraftConfig(aircraftConfig, cabinClasses);
+            aircraftConfig = aircraftConfigurationSessionBean.createNewAircraftConfig(aircraftConfig, boeing.getAircraftID(), cabinClasses);
             System.out.println("Aircraft Configuration created for a " + aircraftConfig.getAircraftType().getTypeName() + " Type plane\n");
         } catch (AircraftTypeNotFoundException | CreateNewAircraftConfigException | UnknownPersistenceException| AircraftConfigExistException ex) {
             System.out.println("Error occured in creating Aircraft Configuration: " + ex.getMessage());   
@@ -159,7 +166,7 @@ public class FlightPlanningModule {
     }
     
 
-    private CabinClassEntity doCreateCabinClass(AircraftConfigurationEntity aircraftConfig) {
+    private CabinClassEntity doCreateCabinClass() {
         CabinClassEntity cabin = null;
        
         Scanner sc = new Scanner(System.in);
@@ -168,7 +175,7 @@ public class FlightPlanningModule {
         int aisles, rows, seatsAbreast = 0;
         String config = null;
         while (true) {
-            try {
+            try { 
             System.out.print("Enter class - First Class(F)/Buisiness Class(J)/Premium Economy Class(W)/ Economy Class(Y)> ");
             type = cabinClassSessionBean.findEnumType(sc.nextLine().trim());
             break;
@@ -178,8 +185,12 @@ public class FlightPlanningModule {
         }
         while (true) {
             try {
-                System.out.print("Enter number of aisles (0 to 2 only)> "); // enforce between 0 and 2? 
+                System.out.print("Enter number of aisles (0 to 2 only)> "); 
                 aisles = Integer.parseInt(sc.nextLine().trim());
+                if (aisles < 0 || aisles > 2) {
+                    System.out.println("Please enter a value within the specified range!");
+                    continue;
+                }
                 break;
             } catch (NumberFormatException ex) {
                 System.out.println("Please enter a valid number!");
@@ -236,12 +247,12 @@ public class FlightPlanningModule {
                 System.out.println("Please enter in the correct format!");
             }
             else {
-                break; //should not reach here unless inputted aisles is out of range (due to no enforcement above)
+                break; //should not reach here unless inputted aisles is out of range due to enforcement above
             }
         }
 
         int maxCapacity = cabinClassSessionBean.computeMaxSeatCapacity(rows, seatsAbreast);
-        cabin = new CabinClassEntity(aircraftConfig, type, aisles, rows, seatsAbreast, config, maxCapacity);
+        cabin = new CabinClassEntity(type, aisles, rows, seatsAbreast, config, maxCapacity);
         return cabin;
     }
 
@@ -294,7 +305,7 @@ public class FlightPlanningModule {
                 } else if(response == 2) {
                     doViewAllFlightRoute();
                 } else if(response == 3) {
-                   // doViewAircraftConfigDetails();
+                   deleteFlightRoute();
                 } else if(response == 4) {
                     break;
                 } else {
@@ -334,10 +345,18 @@ public class FlightPlanningModule {
         FlightRouteEntity flightRoute = new FlightRouteEntity(); 
         try {
             flightRoute = flightRouteSessionBean.createNewFlightRoute(flightRoute, originAirport.getAirportID(), destinationAirport.getAirportID());
-        } catch (FlightRouteExistException | UnknownPersistenceException | AirportNotFoundException ex) {
+        } catch (UnknownPersistenceException | AirportNotFoundException ex) {          
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
             return;
-        }
+        } catch (FlightRouteExistException ex) {
+            try {           
+                flightRoute = flightRouteSessionBean.enableFlightRoute(originAirport.getAirportID(), destinationAirport.getAirportID());
+                System.out.println("Previous disabled flight route entry found!\nRe-enabling flight route...");   // when flight route exists but disabled    
+            } catch (FlightRouteNotFoundException ex1) {
+                System.out.println("Error: Flight route already exists in system!\n\n"); // when flight route already exists and is enabled
+                return;
+            }
+        } 
         System.out.print("Flight Route successfully created!\nWould you like to create its complementary return route? (Y or N)> ");
         String reply = sc.nextLine().trim();
         
@@ -345,16 +364,24 @@ public class FlightPlanningModule {
             try {          
                FlightRouteEntity returnFlightRoute = flightRouteSessionBean.createNewFlightRoute(new FlightRouteEntity(), destinationAirport.getAirportID(),originAirport.getAirportID());    
                flightRouteSessionBean.setComplementaryFlightRoute(returnFlightRoute.getFlightRouteID());
-               System.out.println("Complementary return route created!\n\n");
+               System.out.println("Complementary return route created!\n\n"); // when no return flight route exists
             } catch (FlightRouteExistException ex) {
-               System.out.println("Complementary return route already exists!\n\n"); 
-                try {
-                    flightRouteSessionBean.setComplementaryFlightRoute(flightRoute.getFlightRouteID());
-                } catch (FlightRouteNotFoundException ex1) {
-                    System.out.println("Error:" + ex1.getMessage() + "\n\n"); //will never hit this 
+                
+                try {                            
+                    flightRoute = flightRouteSessionBean.enableFlightRoute(destinationAirport.getAirportID(), originAirport.getAirportID());             
+                    flightRouteSessionBean.setComplementaryFlightRoute(flightRoute.getFlightRouteID());                           
+                    System.out.println("Previous disabled flight route entry found!\nRe-enabling flight route and pairing complementary flights...");   // when return flight route exists but disabled    
+                } catch (FlightRouteNotFoundException ex1) { // will be thrown by the code 3 lines above (not 2)
+                    System.out.println("Complementary return route already exists!\nPairing complementary routes..\n\n"); // when return flight route already exists and is enabled
+                    try {
+                        flightRouteSessionBean.setComplementaryFlightRoute(flightRoute.getFlightRouteID());
+                    } catch (FlightRouteNotFoundException ex2) {
+                        System.out.println("Error:" + ex2.getMessage() + "\n\n"); //will never hit this 
+                    }
                 }
+              
             } catch (UnknownPersistenceException | AirportNotFoundException | FlightRouteNotFoundException ex) {
-               System.out.println("Error:" + ex.getMessage() + "\n\n");
+               System.out.println("Error:" + ex.getMessage() + "\n\n"); // should never hit this
             } 
                      
         } 
@@ -371,6 +398,26 @@ public class FlightPlanningModule {
         }
         System.out.print("Press any key to continue...> ");
         sc.nextLine();
+    }
+
+    private void deleteFlightRoute() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("*** Delete flight route ***");
+        List<FlightRouteEntity> list = flightRouteSessionBean.retrieveAllFlightRouteInOrder();
+        System.out.printf("%20s%35s%20s%35s%25s\n", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA");
+        
+        for(FlightRouteEntity route : list) {
+            System.out.printf("%20s%35s%20s%35s%25s\n", route.getFlightRouteID().toString(), route.getOrigin().getAirportName() ,route.getOrigin().getIATACode(), route.getDestination().getAirportName() ,route.getDestination().getIATACode());
+        }
+        System.out.print("Select flight route to delete (By ID)> ");
+        long id = sc.nextLong();
+        try {
+            flightRouteSessionBean.removeFlightRoute(id);
+            System.out.println("Flight Route successfully removed!\n\n");
+        } catch (FlightRouteNotFoundException ex) {
+            System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
+        }
+        
     }
     
     

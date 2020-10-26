@@ -7,6 +7,7 @@ package ejb.session.stateless;
 
 import entity.FlightRouteEntity;
 import exceptions.AirportNotFoundException;
+import exceptions.FlightRouteExistButDisabledException;
 import exceptions.FlightRouteExistException;
 import exceptions.FlightRouteNotFoundException;
 import exceptions.UnknownPersistenceException;
@@ -27,4 +28,8 @@ public interface FlightRouteSessionBeanLocal {
     public long setComplementaryFlightRoute(long routeID) throws FlightRouteNotFoundException;
      
     public List<FlightRouteEntity> retrieveAllFlightRouteInOrder();
+    
+    public void removeFlightRoute(long flightRouteID) throws FlightRouteNotFoundException;
+    
+    public FlightRouteEntity enableFlightRoute(long originAirportID, long destinationAirportID) throws FlightRouteNotFoundException;
 }

@@ -49,24 +49,35 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
     
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
-    public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig, List<CabinClassEntity> cabinClasses) throws CreateNewAircraftConfigException, AircraftConfigExistException, UnknownPersistenceException {
-        try {       //TODO: need to associate with aircraft type and the opposite association (more importantly the opposite direction)
+    public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig, long aircraftTypeID, List<CabinClassEntity> cabinClasses) throws CreateNewAircraftConfigException, AircraftConfigExistException, UnknownPersistenceException {
+        try {      
             em.persist(aircraftConfig);
-            //em.flush(); //QN: cannot flush here else the rollback wont work?             
+            
+            // Bidirectional association between aircraftType <-> aircraftConfig
+            AircraftTypeEntity aircraftType = em.find(AircraftTypeEntity.class, aircraftTypeID);
+            if (aircraftType == null) {
+                throw new AircraftTypeNotFoundException("Aircraft Type does not exist!");
+            }
+            aircraftType.getAircraftConfig().add(aircraftConfig);
+            aircraftConfig.setAircraftType(aircraftType);
+            
+            // Creation of all cabin classes through cabinClassSessionBean, passing in managed instance of aircraftConfig (local)
             for (CabinClassEntity cce: cabinClasses) {
                 cabinClassSessionBean.createNewCabinClass(cce, aircraftConfig);
             }
+            
             int maxCapacity = calculateMaxCapacity(aircraftConfig);
             if(aircraftConfig.getAircraftType().getMaxCapacity() >= maxCapacity) {                
-                em.flush(); //QN: What if i dont flush at all and wait for exit? any way to catch persistenceExcep?
+                em.flush(); //explicit flushing to catch any persistance exception
                 return aircraftConfig;
             } else {
                 throw new CreateNewAircraftConfigException("Configuration exceeds maximum capacity of aircraft type");
             } 
-        } catch (CreateNewAircraftConfigException ex) { //exception thrown due to exceeding max capacity
+            
+        } catch (CreateNewAircraftConfigException | AircraftTypeNotFoundException ex) {
             eJBContext.setRollbackOnly();
             throw new CreateNewAircraftConfigException(ex.getMessage());
-        } catch (PersistenceException ex) { //excpetion thrown from persisting aircraftConfig
+        } catch (PersistenceException ex) { //excpetion thrown from persisting aircraftConfig *or persisting cabinClass (impossible)*
             eJBContext.setRollbackOnly();
             if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
                 if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
@@ -90,7 +101,6 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
         }
     }
     
-    @Override
     public int calculateMaxCapacity(AircraftConfigurationEntity aircraftConfig) {
         int max = 0;
         System.out.println("Number of cabins: " + aircraftConfig.getCabin().size());

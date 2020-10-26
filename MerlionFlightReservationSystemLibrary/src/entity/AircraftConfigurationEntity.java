@@ -14,10 +14,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
@@ -51,9 +49,8 @@ public class AircraftConfigurationEntity implements Serializable {
         cabin = new ArrayList<>();
     }
 
-    public AircraftConfigurationEntity(AircraftTypeEntity aircraftType, String name, int numberOfCabinClasses) {
+    public AircraftConfigurationEntity(String name, int numberOfCabinClasses) {
         this();
-        this.aircraftType = aircraftType;
         this.name = name;
         this.numberOfCabinClasses = numberOfCabinClasses;
     }

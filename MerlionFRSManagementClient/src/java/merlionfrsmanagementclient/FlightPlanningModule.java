@@ -22,18 +22,14 @@ import exceptions.AircraftConfigExistException;
 import exceptions.AircraftConfigNotFoundException;
 import exceptions.AircraftTypeNotFoundException;
 import exceptions.AirportNotFoundException;
-import exceptions.CabinClassExistException;
 import exceptions.CabinClassTypeEnumNotFoundException;
 import exceptions.CreateNewAircraftConfigException;
-import exceptions.FlightRouteExistButDisabledException;
 import exceptions.FlightRouteExistException;
 import exceptions.FlightRouteNotFoundException;
 import exceptions.UnknownPersistenceException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *

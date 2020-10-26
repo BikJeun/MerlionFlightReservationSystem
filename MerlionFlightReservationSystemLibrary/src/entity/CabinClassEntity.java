@@ -54,8 +54,7 @@ public class CabinClassEntity implements Serializable {
     public CabinClassEntity() { 
     }
 
-    public CabinClassEntity(AircraftConfigurationEntity aircraftConfig, CabinClassTypeEnum cabinClassType, int numOfAisles, int numOfRows, int numOfSeatsAbreast, String seatingConfigPerColumn, int maxSeatCapacity) {
-        this.aircraftConfig = aircraftConfig;
+    public CabinClassEntity(CabinClassTypeEnum cabinClassType, int numOfAisles, int numOfRows, int numOfSeatsAbreast, String seatingConfigPerColumn, int maxSeatCapacity) {
         this.cabinClassType = cabinClassType;
         this.numOfAisles = numOfAisles;
         this.numOfRows = numOfRows;

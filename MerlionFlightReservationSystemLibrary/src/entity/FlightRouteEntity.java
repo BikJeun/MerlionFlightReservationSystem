@@ -7,6 +7,8 @@ package entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -24,6 +26,7 @@ import javax.persistence.UniqueConstraint;
  * @author Ong Bik Jeun
  */
 @Entity
+@Cacheable(false)
 @Table(uniqueConstraints=
        @UniqueConstraint(columnNames = {"origin", "destination"})) 
 public class FlightRouteEntity implements Serializable {
@@ -32,6 +35,9 @@ public class FlightRouteEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long flightRouteID;
+    
+    @Column(nullable = false)
+    private boolean disabled;
     
     @OneToMany(mappedBy = "flightRoute", fetch = FetchType.EAGER)
     private ArrayList<FlightEntity> flights;
@@ -53,8 +59,10 @@ public class FlightRouteEntity implements Serializable {
    
     public FlightRouteEntity() {
         flights = new ArrayList<>();  
+        disabled = false;
     }
 
+    // Should not be called by remote clients
     public FlightRouteEntity(AirportEntity origin, AirportEntity destination) {
         this();
         this.origin = origin;
@@ -162,6 +170,20 @@ public class FlightRouteEntity implements Serializable {
      */
     public void setSourceRoute(FlightRouteEntity sourceRoute) {
         this.sourceRoute = sourceRoute;
+    }
+
+    /**
+     * @return the disabled
+     */
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    /**
+     * @param disabled the disabled to set
+     */
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
     }
     
 }

@@ -51,29 +51,18 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
         return rows * seatsAbreast;
     }
     
-    //only exposed in local interface
+    // only exposed in local interface => aircraftConfig passed in is managed
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
     public CabinClassEntity createNewCabinClass(CabinClassEntity cabin, AircraftConfigurationEntity aircraft) {  
         em.persist(cabin);
+        
+        // Bidirectional association between cabinClass <-> aircraftConfig
         cabin.setAircraftConfig(aircraft); //this instance of aircraft is managed
         if(!aircraft.getCabin().contains(cabin)) {
             aircraft.getCabin().add(cabin);
         }
-        return cabin;
-        // QN: Does it matter if i flush here or is this considered 'exiting business method'?
-        /*  Removed because will never be thrown
-        } catch(PersistenceException ex) {
-            if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
-                if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
-                    throw new CabinClassExistException("Cabin class already exist!");
-                } else {
-                    throw new UnknownPersistenceException(ex.getMessage());
-                }
-            } else {
-                throw new UnknownPersistenceException(ex.getMessage());
-            }
-        } */
+        return cabin; // will never have persistance error due to constraint violation because of no constraints
     }
     
     @Override

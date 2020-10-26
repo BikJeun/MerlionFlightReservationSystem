@@ -9,10 +9,12 @@ import entity.AircraftTypeEntity;
 import exceptions.AircraftTypeExistException;
 import exceptions.AircraftTypeNotFoundException;
 import exceptions.UnknownPersistenceException;
+import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 
 /**
  *
@@ -54,5 +56,11 @@ public class AircraftTypeSessionBean implements AircraftTypeSessionBeanRemote, A
         } else {
             throw new AircraftTypeNotFoundException("AircraftType id " + id.toString() + " does not exist!");
         }
+    }
+    
+    @Override
+    public List<AircraftTypeEntity> retrieveAllAircraftType() {
+        Query query = em.createQuery("SELECT a FROM AircraftTypeEntity a ORDER BY a.aircraftID ASC");
+        return query.getResultList();
     }
 }

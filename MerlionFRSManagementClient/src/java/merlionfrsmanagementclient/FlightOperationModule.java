@@ -173,9 +173,17 @@ public class FlightOperationModule {
         try {  
             flight = new FlightEntity(flightNum);
             flight = flightSessionBean.createNewFlight(flight, chosenRoute, chosenConfig);         
-        } catch (UnknownPersistenceException | FlightRouteNotFoundException | AircraftConfigNotFoundException | FlightExistException ex) {
+        } catch (UnknownPersistenceException | FlightRouteNotFoundException | AircraftConfigNotFoundException ex) {
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
-            return;
+            return; 
+        } catch (FlightExistException ex) {
+            try {
+                flight = flightSessionBean.enableFlight(flightNum, chosenRoute, chosenConfig);
+                System.out.println("Previous disabled flight found!\nRe-enabling flight...");
+            } catch (FlightNotFoundException ex1) {
+                System.out.println("Error: Flight " + flightNum + " already exists\nPlease try again!\n\n");
+                return; 
+            }
         }
         System.out.println("Flight created successfully!");
                    
@@ -198,17 +206,25 @@ public class FlightOperationModule {
                         } catch (NumberFormatException ex) {
                             System.out.println("Please enter a valid number!");
                         }
-                    }
-                    try {
-                        FlightRouteEntity returnFlightRoute = flightRoute.getComplementaryRoute();
+                    }         
+                    FlightRouteEntity returnFlightRoute = flightRoute.getComplementaryRoute();
+                    try {   
                         FlightEntity returnFlight = new FlightEntity(returnFlightNum);
                         returnFlight = flightSessionBean.createNewFlight(returnFlight, returnFlightRoute.getFlightRouteID(), chosenConfig);
                         flightSessionBean.associateExistingTwoWayFlights(flight.getFlightID(), returnFlight.getFlightID());
                         System.out.println("Return flight created!\n\n");
                         break;
-                    } catch (UnknownPersistenceException | FlightNotFoundException | FlightRouteNotFoundException | AircraftConfigNotFoundException | FlightExistException ex) {
-                        System.out.println("Error: " + ex.getMessage() + "\nPlease enter another flight number!"); // only FlightExistException might be caught here
-                    } 
+                    } catch (UnknownPersistenceException | FlightNotFoundException | FlightRouteNotFoundException | AircraftConfigNotFoundException ex) {
+                        System.out.println("Error: " + ex.getMessage() + "\nPlease try again!"); // will never hit this
+                    } catch (FlightExistException ex) {
+                         try {
+                            flight = flightSessionBean.enableFlight(returnFlightNum, returnFlightRoute.getFlightRouteID(), chosenConfig);
+                            System.out.println("Previous disabled return flight found!\nRe-enabling flight...");
+                            break;
+                        } catch (FlightNotFoundException ex1) {
+                            System.out.println("Error: Flight " + flightNum + " already exists\nPlease try again!\n\n");
+                        }
+                    }
                 }                 
             }      
         }  

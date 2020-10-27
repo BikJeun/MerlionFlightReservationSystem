@@ -86,9 +86,11 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
     }
     
     @Override
-    public FlightEntity enableFlight(String flightNumber) throws FlightNotFoundException {
-        Query query = em.createQuery("SELECT f FROM FlightEntity f WHERE f.flightNum = :num AND f.disabled=true");
+    public FlightEntity enableFlight(String flightNumber, long routeID, long configID) throws FlightNotFoundException {
+        Query query = em.createQuery("SELECT f FROM FlightEntity f WHERE f.flightNum = :num AND f.disabled=true AND f.flightRoute.flightRouteID = :route AND f.aircraftConfig.aircraftConfigID = :config");
         query.setParameter("num", flightNumber);
+        query.setParameter("route", routeID);
+        query.setParameter("config", configID);
         try {
             FlightEntity flight = (FlightEntity) query.getSingleResult();
             flight.setDisabled(false);
@@ -126,7 +128,7 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
         FlightEntity flight = retreiveFlightById(flightID);
         FlightEntity returnFlight = retreiveFlightById(returnFlightID);
 
-        flight.setReturningFlight(returnFlight);
+        flight.setReturningFlight(returnFlight); // this or the one in flightRoute? both seem to work?
         flight.setSourceFlight(flight);
 
         returnFlight.setSourceFlight(returnFlight);

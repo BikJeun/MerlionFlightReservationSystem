@@ -35,7 +35,7 @@ public interface FlightSessionBeanRemote {
 
     public void deleteFlight(Long flightID) throws FlightNotFoundException;
 
-    public FlightEntity enableFlight(String flightNumber) throws FlightNotFoundException;
+    public FlightEntity enableFlight(String flightNumber, long routeID, long configID) throws FlightNotFoundException;
 
     public FlightEntity retrieveFlightByFlightNumber(String flightNum) throws FlightNotFoundException;
 

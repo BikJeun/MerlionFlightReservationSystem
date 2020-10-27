@@ -82,7 +82,7 @@ public class MainApp {
                             doLogin();
                             System.out.println("Login Successful!\n");
                             login = true;
-                            flightOperationModule = new FlightOperationModule(currentEmployee, flightSessionBean, flightSchedulePlanSessionBean);
+                            flightOperationModule = new FlightOperationModule(currentEmployee, flightSessionBean, flightSchedulePlanSessionBean, flightRouteSessionBean, aircraftConfigurationSessionBean);
                             flightPlanningModule = new FlightPlanningModule(currentEmployee, airportSessionBean, aircraftConfigurationSessionBean, flightRouteSessionBean, cabinClassSessionBean, aircraftTypeSessionBean);
                             salesManagementModule = new SalesManagementModule(currentEmployee, seatsInventorySessionBean, reservationSessionBean);
                             mainMenu();
@@ -107,7 +107,7 @@ public class MainApp {
     
     private void doLogin() throws InvalidLoginCredentialException {
         Scanner sc = new Scanner(System.in) ;
-        System.out.println("*** MFRS :: LOGIN ***\n");
+        System.out.println("*** Merlion Flight Reservation System :: LOGIN ***\n");
         System.out.print("Enter username> ");
         String username = sc.nextLine().trim();
         System.out.print("Enter password> ");
@@ -126,9 +126,8 @@ public class MainApp {
         Integer response = 0;
         
         while(login) {
-            System.out.println("*** MFRS ***\n");
+            System.out.println("*** Merlion Flight Reservation System ***\n");
             System.out.println("You are currently logged in as " + currentEmployee.getFirstName() + " " + currentEmployee.getLastName() + " with " + currentEmployee.getAccessRight().toString() + " rights!\n");
-            System.out.println();
             System.out.println("*** Select Module To Access ***");
             System.out.println("1: Flight Operation Module");
             System.out.println("2: Flight Planning Module");
@@ -147,7 +146,6 @@ public class MainApp {
                         System.out.println("You are not authorised to use this feature.");
                     }
                 } else if(response == 2) {
-                    //flightPlanningModule
                     if(currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.ADMINISTRATOR) || currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.FLEETMANAGER) || currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.ROUTEPLANNER)) {
                         flightPlanningModule.mainMenu();
                     }else {

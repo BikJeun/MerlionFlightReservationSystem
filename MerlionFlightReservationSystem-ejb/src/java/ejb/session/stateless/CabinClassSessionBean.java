@@ -30,7 +30,32 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
 
     @PersistenceContext(unitName = "MerlionFlightReservationSystem-ejbPU")
     private EntityManager em;
-
+    
+    // only exposed in local interface => aircraftConfig passed in is managed
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    @Override
+    public CabinClassEntity createNewCabinClass(CabinClassEntity cabin, AircraftConfigurationEntity aircraft) {  
+        em.persist(cabin);
+        
+        // Bidirectional association between cabinClass <-> aircraftConfig
+        cabin.setAircraftConfig(aircraft); //this instance of aircraft is managed
+        if(!aircraft.getCabin().contains(cabin)) {
+            aircraft.getCabin().add(cabin);
+        }
+        em.refresh(cabin);
+        return cabin; // will never have persistance error due to constraint violation because of no constraints
+    }
+    
+    @Override
+    public CabinClassEntity retrieveCabinByID(Long cabinClassID) throws CabinClassNotFoundException {
+        CabinClassEntity cabin = em.find(CabinClassEntity.class, cabinClassID);
+        if(cabin != null) {
+            return cabin;
+        } else {
+            throw new CabinClassNotFoundException("Cabin class with " + cabinClassID + " not found!\n");
+        }
+    }
+    
     @Override
     public CabinClassTypeEnum findEnumType(String input) throws CabinClassTypeEnumNotFoundException {
         if(input.equalsIgnoreCase("F")) {
@@ -49,30 +74,6 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
     @Override
     public int computeMaxSeatCapacity(int rows, int seatsAbreast) {
         return rows * seatsAbreast;
-    }
-    
-    // only exposed in local interface => aircraftConfig passed in is managed
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    @Override
-    public CabinClassEntity createNewCabinClass(CabinClassEntity cabin, AircraftConfigurationEntity aircraft) {  
-        em.persist(cabin);
-        
-        // Bidirectional association between cabinClass <-> aircraftConfig
-        cabin.setAircraftConfig(aircraft); //this instance of aircraft is managed
-        if(!aircraft.getCabin().contains(cabin)) {
-            aircraft.getCabin().add(cabin);
-        }
-        return cabin; // will never have persistance error due to constraint violation because of no constraints
-    }
-    
-    @Override
-    public CabinClassEntity retrieveCabinByID(Long cabinClassID) throws CabinClassNotFoundException {
-        CabinClassEntity cabin = em.find(CabinClassEntity.class, cabinClassID);
-        if(cabin != null) {
-            return cabin;
-        } else {
-            throw new CabinClassNotFoundException("Cabin class with " + cabinClassID + " not found!\n");
-        }
     }
 }
     

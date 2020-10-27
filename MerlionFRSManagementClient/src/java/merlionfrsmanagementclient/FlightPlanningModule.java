@@ -144,8 +144,9 @@ public class FlightPlanningModule {
             AircraftTypeEntity boeing = aircraftTypeSessionBean.retrieveAircraftTypeById(type);
             System.out.print("Enter name> ");
             String name = sc.nextLine().trim();
-            System.out.print("Enter number of cabin class (1-4 only)> \n");
+            System.out.print("Enter number of cabin class (1-4 only)> ");
             int cabinNum = sc.nextInt();
+            System.out.println();
             
             AircraftConfigurationEntity aircraftConfig = new AircraftConfigurationEntity(name, cabinNum);
                        
@@ -170,6 +171,7 @@ public class FlightPlanningModule {
         CabinClassTypeEnum type = null;
         int aisles, rows, seatsAbreast = 0;
         String config = null;
+        
         while (true) {
             try { 
             System.out.print("Enter class - First Class(F)/Buisiness Class(J)/Premium Economy Class(W)/ Economy Class(Y)> ");
@@ -269,7 +271,7 @@ public class FlightPlanningModule {
         try {
             Scanner sc = new Scanner(System.in);
             System.out.println("*** View aircraft configuration details ***");
-            System.out.println("Enter configuration ID> ");
+            System.out.print("Enter configuration ID> ");
             Long id = sc.nextLong();
             
             AircraftConfigurationEntity config = aircraftConfigurationSessionBean.retriveAircraftConfigByID(id);
@@ -387,10 +389,10 @@ public class FlightPlanningModule {
         Scanner sc = new Scanner(System.in);
         System.out.println("*** View all flight routes ***");
         List<FlightRouteEntity> list = flightRouteSessionBean.retrieveAllFlightRouteInOrder();
-        System.out.printf("%20s%35s%20s%35s%25s\n", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA");
+        System.out.printf("%20s%40s%20s%40s%25s\n", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA");
         
         for(FlightRouteEntity route : list) {
-            System.out.printf("%20s%35s%20s%35s%25s\n", route.getFlightRouteID().toString(), route.getOrigin().getAirportName() ,route.getOrigin().getIATACode(), route.getDestination().getAirportName() ,route.getDestination().getIATACode());
+            System.out.printf("%20s%40s%20s%40s%25s\n", route.getFlightRouteID().toString(), route.getOrigin().getAirportName() ,route.getOrigin().getIATACode(), route.getDestination().getAirportName() ,route.getDestination().getIATACode());
         }
         System.out.print("Press any key to continue...> ");
         sc.nextLine();

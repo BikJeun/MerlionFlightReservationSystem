@@ -21,5 +21,7 @@ public interface AirportSessionBeanLocal {
     public AirportEntity createNewAirport(AirportEntity airport) throws AirportExistException, UnknownPersistenceException;
     
     public AirportEntity retrieveAirportByIATA(String iata) throws AirportNotFoundException;
+
+    public AirportEntity retrieveAirportById(Long id) throws AirportNotFoundException;
     
 }

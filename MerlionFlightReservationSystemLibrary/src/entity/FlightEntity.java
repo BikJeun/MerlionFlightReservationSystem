@@ -56,12 +56,9 @@ public class FlightEntity implements Serializable {
         returningFlight = null;
     }
 
-    public FlightEntity(String flightNum, FlightRouteEntity flightRoute, AircraftConfigurationEntity aircraftConfig, List<FlightSchedulePlanEntity> flightSchedulePlan) {
+    public FlightEntity(String flightNum) {
         this();
         this.flightNum = flightNum;
-        this.flightRoute = flightRoute;
-        this.aircraftConfig = aircraftConfig;
-        this.flightSchedulePlan = flightSchedulePlan;
     }
 
     public String getFlightNum() {

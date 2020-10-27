@@ -70,4 +70,5 @@ public class AirportSessionBean implements AirportSessionBeanRemote, AirportSess
             throw new AirportNotFoundException("Airport does not exist in system!");
         }
     }
+
 }

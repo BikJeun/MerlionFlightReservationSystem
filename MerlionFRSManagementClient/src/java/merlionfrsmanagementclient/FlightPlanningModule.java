@@ -30,6 +30,8 @@ import exceptions.UnknownPersistenceException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -319,67 +321,57 @@ public class FlightPlanningModule {
     private void doCreateFlightRoute() {
         AirportEntity originAirport, destinationAirport;
         Scanner sc = new Scanner(System.in);
-        System.out.println("*** Create a new Flight Route ***");
-        while (true) {
-            try {
-                System.out.print("Enter IATA code of origin airport> ");
-                String origin = sc.nextLine().trim();
-                originAirport = airportSessionBean.retrieveAirportByIATA(origin);
-                break;
-            } catch (AirportNotFoundException ex) {
-                System.out.println("Error: " + ex.getMessage() +"\nPlease input a valid IATA Code!");
-            }
-        }
-        while (true) {
-            try {
-                System.out.print("Enter IATA code of destination airport> ");
-                String destination = sc.nextLine().trim();
-                destinationAirport = airportSessionBean.retrieveAirportByIATA(destination);
-                break;
-            } catch (AirportNotFoundException ex) {
-                System.out.println("Error: " + ex.getMessage() +"\nPlease input a valid IATA Code!");
-            }
-        }
+        System.out.println("*** Create a new Flight Route ***");                
+        System.out.print("Enter IATA code of origin airport> ");                         
+        String origin = sc.nextLine().trim();
+        System.out.print("Enter IATA code of destination airport> ");
+        String destination = sc.nextLine().trim();
         FlightRouteEntity flightRoute = new FlightRouteEntity(); 
         try {
+            originAirport = airportSessionBean.retrieveAirportByIATA(origin);
+            destinationAirport = airportSessionBean.retrieveAirportByIATA(destination);
             flightRoute = flightRouteSessionBean.createNewFlightRoute(flightRoute, originAirport.getAirportID(), destinationAirport.getAirportID());
         } catch (UnknownPersistenceException | AirportNotFoundException ex) {          
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
             return;
         } catch (FlightRouteExistException ex) {
-            try {           
+            try {                         
+                originAirport = airportSessionBean.retrieveAirportByIATA(origin);            
+                destinationAirport = airportSessionBean.retrieveAirportByIATA(destination);
                 flightRoute = flightRouteSessionBean.enableFlightRoute(originAirport.getAirportID(), destinationAirport.getAirportID());
                 System.out.println("Previous disabled flight route entry found!\nRe-enabling flight route...");   // when flight route exists but disabled    
             } catch (FlightRouteNotFoundException ex1) {
                 System.out.println("Error: Flight route already exists in system!\n\n"); // when flight route already exists and is enabled
                 return;
+            } catch (AirportNotFoundException ex1) {
+               return; // will never hit this
             }
         } 
         System.out.print("Flight Route successfully created!\nWould you like to create its complementary return route? (Y or N)> ");
         String reply = sc.nextLine().trim();
         
         if((reply.equals("Y") || reply.equals("y"))) {
-            try {          
-               FlightRouteEntity returnFlightRoute = flightRouteSessionBean.createNewFlightRoute(new FlightRouteEntity(), destinationAirport.getAirportID(),originAirport.getAirportID());    
-               flightRouteSessionBean.setComplementaryFlightRoute(returnFlightRoute.getFlightRouteID());
-               System.out.println("Complementary return route created!\n\n"); // when no return flight route exists
-            } catch (FlightRouteExistException ex) {
+            try {     
+                FlightRouteEntity returnFlightRoute = flightRouteSessionBean.createNewFlightRoute(new FlightRouteEntity(), destinationAirport.getAirportID(),originAirport.getAirportID());    
+                flightRouteSessionBean.setComplementaryFlightRoute(returnFlightRoute.getFlightRouteID());
+                System.out.println("Complementary return route created!\n\n"); // when no return flight route exists
+            } catch (FlightRouteExistException ex) {             
                 
                 try {                            
                     flightRoute = flightRouteSessionBean.enableFlightRoute(destinationAirport.getAirportID(), originAirport.getAirportID());             
                     flightRouteSessionBean.setComplementaryFlightRoute(flightRoute.getFlightRouteID());                           
-                    System.out.println("Previous disabled flight route entry found!\nRe-enabling flight route and pairing complementary flights...");   // when return flight route exists but disabled    
+                    System.out.println("Previous disabled flight route entry found!\nRe-enabling flight route and pairing complementary flight routes...\n\n");   // when return flight route exists but disabled    
                 } catch (FlightRouteNotFoundException ex1) { // will be thrown by the code 3 lines above (not 2)
-                    System.out.println("Complementary return route already exists!\nPairing complementary routes..\n\n"); // when return flight route already exists and is enabled
+                    System.out.println("Complementary return route already exists!\nPairing complementary flight routes..\n\n"); // when return flight route already exists and is enabled
                     try {
                         flightRouteSessionBean.setComplementaryFlightRoute(flightRoute.getFlightRouteID());
                     } catch (FlightRouteNotFoundException ex2) {
                         System.out.println("Error:" + ex2.getMessage() + "\n\n"); //will never hit this 
                     }
-                }
+                } 
               
             } catch (UnknownPersistenceException | AirportNotFoundException | FlightRouteNotFoundException ex) {
-               System.out.println("Error:" + ex.getMessage() + "\n\n"); // should never hit this
+               System.out.println("Error:" + ex.getMessage() + "\n\n"); // will never hit this
             } 
                      
         } 

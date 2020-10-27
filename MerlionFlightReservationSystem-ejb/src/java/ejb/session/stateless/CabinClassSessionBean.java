@@ -8,7 +8,6 @@ package ejb.session.stateless;
 import entity.AircraftConfigurationEntity;
 import entity.CabinClassEntity;
 import enumeration.CabinClassTypeEnum;
-import exceptions.AircraftConfigNotFoundException;
 import exceptions.CabinClassNotFoundException;
 import exceptions.CabinClassTypeEnumNotFoundException;
 import javax.ejb.EJB;
@@ -42,7 +41,10 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
         if(!aircraft.getCabin().contains(cabin)) {
             aircraft.getCabin().add(cabin);
         }
-        em.refresh(cabin);
+        // To Mitsuki: Do not use refresh here, 
+        //             because we are not commiting into DB until end of transaction,
+        //             so calling an explicit refresh will result in EntityNotFound 
+        //em.refresh(cabin); 
         return cabin; // will never have persistance error due to constraint violation because of no constraints
     }
     

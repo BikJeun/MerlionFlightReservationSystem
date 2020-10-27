@@ -8,6 +8,7 @@ package entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -24,6 +25,7 @@ import javax.persistence.OneToOne;
  * @author Ong Bik Jeun
  */
 @Entity
+@Cacheable(false)
 public class FlightEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -32,6 +34,8 @@ public class FlightEntity implements Serializable {
     private Long FlightID;
     @Column(nullable = false, unique = true, length = 32)
     private String flightNum;
+    @Column(nullable = false)
+    private boolean disabled;
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
@@ -53,7 +57,7 @@ public class FlightEntity implements Serializable {
 
     public FlightEntity() {
         flightSchedulePlan = new ArrayList<>();
-        returningFlight = null;
+        disabled = false;
     }
 
     public FlightEntity(String flightNum) {
@@ -154,6 +158,20 @@ public class FlightEntity implements Serializable {
      */
     public void setSourceFlight(FlightEntity sourceFlight) {
         this.sourceFlight = sourceFlight;
+    }
+
+    /**
+     * @return the disabled
+     */
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    /**
+     * @param disabled the disabled to set
+     */
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
     }
     
 }

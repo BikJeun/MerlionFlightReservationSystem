@@ -8,9 +8,7 @@ package ejb.session.stateless;
 import entity.AircraftConfigurationEntity;
 import entity.FlightEntity;
 import entity.FlightRouteEntity;
-import entity.FlightSchedulePlanEntity;
 import exceptions.AircraftConfigNotFoundException;
-import exceptions.DeleteFlightException;
 import exceptions.FlightExistException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightRouteNotFoundException;
@@ -22,6 +20,8 @@ import java.util.Set;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -54,29 +54,30 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
     }
     
     @Override
-    public FlightEntity createNewFlight(FlightEntity flight, Long chosenRoute, Long chosenConfig) throws FlightExistException, UnknownPersistenceException {
+    public FlightEntity createNewFlight(FlightEntity flight, Long chosenRoute, Long chosenConfig) throws FlightExistException, UnknownPersistenceException, FlightRouteNotFoundException, AircraftConfigNotFoundException {
         if(flight != null) {
+            
+            FlightRouteEntity flightRoute = flightRouteSessionBean.retreiveFlightRouteById(chosenRoute);               
+            AircraftConfigurationEntity aircraftConfig = aircraftConfigurationSessionBean.retriveAircraftConfigByID(chosenConfig);
+    
             try {
                 em.persist(flight);
-                
-                FlightRouteEntity flightRoute = flightRouteSessionBean.retreiveFlightRouteById(chosenRoute);
-                AircraftConfigurationEntity aircraftConfig = aircraftConfigurationSessionBean.retriveAircraftConfigByID(chosenConfig);
-                
                 flight.setAircraftConfig(aircraftConfig);
                 flight.setFlightRoute(flightRoute);
                 
                 em.flush();
                 em.refresh(flight);
-                
-            } catch (FlightRouteNotFoundException ex) {
-                System.out.println(ex.getMessage());
-            } catch (AircraftConfigNotFoundException ex) {
-                System.out.println(ex.getMessage());
-            } catch (PersistenceException ex) {
-                if (ex.getCause() != null && ex.getCause().getCause() != null && ex.getCause().getCause().getClass()
-                        .getSimpleName().equals("SQLIntegrityConstraintViolationException")) {
-                    throw new FlightExistException("Flight with " + flight.getFlightNum() + " already exist!");
-                }
+
+            } catch (PersistenceException ex) {              
+                if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
+                    if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
+                         throw new FlightExistException("Flight with " + flight.getFlightNum() + " already exist");
+                    } else {
+                        throw new UnknownPersistenceException(ex.getMessage());
+                    }
+                } else {
+                    throw new UnknownPersistenceException(ex.getMessage());
+                }                          
             }
             
         }
@@ -85,54 +86,74 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
     }
     
     @Override
+    public FlightEntity enableFlight(String flightNumber) throws FlightNotFoundException {
+        Query query = em.createQuery("SELECT f FROM FlightEntity f WHERE f.flightNum = :num AND f.disabled=true");
+        query.setParameter("num", flightNumber);
+        try {
+            FlightEntity flight = (FlightEntity) query.getSingleResult();
+            flight.setDisabled(false);
+            em.flush();
+            return flight;
+        } catch (NoResultException |  NonUniqueResultException ex) {
+            throw new FlightNotFoundException("Disabled flight deos not exist in system");
+        }
+    }
+    
+    @Override
     public FlightEntity retreiveFlightById(Long id) throws FlightNotFoundException {
         FlightEntity flight = em.find(FlightEntity.class, id);
         
-        if(flight != null) {
+        if(flight != null && flight.isDisabled() == false) {
             return flight;
         } else {
             throw new FlightNotFoundException("Flight " + id + " not found!");
         }
     }
+    
+    @Override
+    public FlightEntity retrieveFlightByFlightNumber(String flightNum) throws FlightNotFoundException {
+        Query query = em.createQuery("SELECT f FROM FlightEntity f WHERE f.flightNum = :num AND f.disabled=false");
+        query.setParameter("num", flightNum);
+        try {
+            return (FlightEntity) query.getSingleResult();
+        } catch (NoResultException | NonUniqueResultException ex) {
+            throw new FlightNotFoundException("Flight does not exist in system");
+        }
+    }
 
     @Override
-    public void associateExistingTwoWayFlights(Long flightID, Long returnFlightID) {
-        try {
-            FlightEntity flight = retreiveFlightById(flightID);
-            FlightEntity returnFlight = retreiveFlightById(returnFlightID);
-            
-            flight.setReturningFlight(returnFlight);
-            flight.setSourceFlight(flight);
-            
-            returnFlight.setSourceFlight(returnFlight);
-            returnFlight.setReturningFlight(flight);
-        } catch (FlightNotFoundException ex) {
-            System.out.println(ex.getMessage());
-        }
+    public void associateExistingTwoWayFlights(Long flightID, Long returnFlightID) throws FlightNotFoundException {
+        FlightEntity flight = retreiveFlightById(flightID);
+        FlightEntity returnFlight = retreiveFlightById(returnFlightID);
+
+        flight.setReturningFlight(returnFlight);
+        flight.setSourceFlight(flight);
+
+        returnFlight.setSourceFlight(returnFlight);
+        returnFlight.setReturningFlight(flight);
     }
     
     @Override
     public List<FlightEntity> retrieveAllFlight() {
-        Query query = em.createQuery("SELECT f FROM FlightEntity f ORDER BY CAST(SUBSTRING(f.flightNum, 3) INTEGER) ASC");
+        Query query = em.createQuery("SELECT f FROM FlightEntity f WHERE f.disabled=false ORDER BY SUBSTRING(f.flightNum, 3) ASC");
         List<FlightEntity> result =  query.getResultList();
         int x = result.size()-1;
-      while (x >= 0) {    
-        FlightEntity flight = result.get(x);
-        boolean replaced = false;
-        for (int y = x - 2; y >= 0; y--) {
-          FlightEntity otherFlight = result.get(y);
-           if (flight.getReturningFlight()!= null && flight.getReturningFlight().getFlightID() == otherFlight.getFlightID()) {
-            result.remove(x);
-            result.add(y + 1, flight);
-            replaced = true;
-            break;
-              
-          }
-        }
-        if (replaced) {continue;}
-        x--;
-      }
-      return result;
+        while (x >= 0) {          
+            FlightEntity flight = result.get(x);
+            boolean replaced = false;
+            for (int y = x - 2; y >= 0; y--) {           
+                FlightEntity otherFlight = result.get(y);                             
+                if (flight.getReturningFlight()!= null && flight.getReturningFlight().getFlightID() == otherFlight.getFlightID()) {
+                    result.remove(x);
+                    result.add(y + 1, flight);
+                    replaced = true;
+                    break;                                      
+                }
+            }
+            if (replaced) {continue;}
+            x--;        
+        }     
+        return result;
     }
     
     @Override
@@ -164,17 +185,24 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
     }
     
     @Override
-    public void deleteFlight(Long flightID) throws FlightNotFoundException, DeleteFlightException {
+    public void deleteFlight(Long flightID) throws FlightNotFoundException {
         FlightEntity flight = retreiveFlightById(flightID);
-        
-        flight.getFlightRoute().getFlights().remove(flight);
-        
-        for(FlightSchedulePlanEntity plan: flight.getFlightSchedulePlan()) {
-            plan.setFlight(null); //probably is call the local session bean n delete the scheuleplan??...
+        if (flight.getFlightSchedulePlan().isEmpty()) {
+            
+            // Disassociation of FK before removal
+            flight.getFlightRoute().getFlights().remove(flight);
+            if (flight.getReturningFlight() != null) {
+                flight.getReturningFlight().setReturningFlight(null);
+                flight.getReturningFlight().setSourceFlight(null);
+            }
+            flight.setSourceFlight(null);
+            flight.setReturningFlight(null);
+
+
+            em.remove(flight);
+        } else {
+            flight.setDisabled(true);
         }
-        
-        em.remove(flight);
-        
     }
     
     private String prepareInputDataValidationErrorsMessage(Set<ConstraintViolation<FlightEntity>>constraintViolations) {

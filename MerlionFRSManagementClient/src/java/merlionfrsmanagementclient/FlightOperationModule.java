@@ -15,7 +15,6 @@ import entity.FlightEntity;
 import entity.FlightRouteEntity;
 import enumeration.EmployeeAccessRightEnum;
 import exceptions.AircraftConfigNotFoundException;
-import exceptions.DeleteFlightException;
 import exceptions.FlightExistException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightRouteNotFoundException;
@@ -138,66 +137,91 @@ public class FlightOperationModule {
     }
     
     private void doCreateFlight() {
-        try {
-            Scanner sc = new Scanner(System.in);
-            System.out.println("*** Create a new flight ***");
-            
-            System.out.print("Enter Flight Number> ");
-            String flightNum = "ML" + sc.nextLine().trim();
-            
-            List<FlightRouteEntity> routes = flightRouteSessionBean.retrieveAllFlightRouteInOrder();
-            System.out.printf("%20s%40s%20s%40s%25s\n", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA");
-            for(FlightRouteEntity rte : routes) {
-                System.out.printf("%20s%40s%20s%40s%25s\n", rte.getFlightRouteID().toString(), rte.getOrigin().getAirportName() ,rte.getOrigin().getIATACode(), rte.getDestination().getAirportName() ,rte.getDestination().getIATACode());
+        FlightEntity flight; 
+        long chosenRoute, chosenConfig;
+        String flightNum;
+        Scanner sc = new Scanner(System.in);
+        System.out.println("*** Create a new flight ***");
+        while (true) {    
+            try {
+                System.out.print("Enter Flight Number> ");
+                flightNum = "ML" + String.valueOf(Integer.parseInt(sc.nextLine().trim())); // not sure if must enforce MLxxx  
+                break;
+            } catch (NumberFormatException ex) {
+                System.out.println("Please enter a valid number!");
             }
-            System.out.print("Enter Flight Route (BY ID)>  ");
-            Long chosenRoute = sc.nextLong();
-            FlightRouteEntity flightRoute = flightRouteSessionBean.retreiveFlightRouteById(chosenRoute);
-            sc.nextLine();
-            
-            List<AircraftConfigurationEntity> aircraftConfig = aircraftConfigurationSessionBean.retrieveAllConfiguration();
-            System.out.printf("%30s%20s%25s%20s\n", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type");
-            
-            for(AircraftConfigurationEntity config : aircraftConfig) {
-                System.out.printf("%30s%20s%25s%20s\n", config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName());
-            }
-            System.out.print("Enter Aircraft Configuration (BY ID)>  ");
-            Long chosenConfig = sc.nextLong();
-            sc.nextLine();
-            
-            FlightEntity flight = new FlightEntity(flightNum);
-            flight = flightSessionBean.createNewFlight(flight, chosenRoute, chosenConfig);
-            
-            if(flightRoute.getComplementaryRoute() != null) {
-                System.out.print("Would yout like to create a complementary flight as well? (Y/N)> ");
-                if(sc.nextLine().trim().equalsIgnoreCase("Y")) {
-                    System.out.print("Enter return flight number > ");
-                    String returnFlightNum = "ML" + sc.nextLine().trim();
-                    
-                    FlightRouteEntity returnFlightRoute = flightRouteSessionBean.searchForFlightRouteByOriginAndDestination(flightRoute.getDestination().getIATACode(), flightRoute.getOrigin().getIATACode());
-                    FlightEntity returnFlight = new FlightEntity(returnFlightNum);
-                    returnFlight = flightSessionBean.createNewFlight(returnFlight, returnFlightRoute.getFlightRouteID(), chosenConfig);
-                    
-                    flightSessionBean.associateExistingTwoWayFlights(flight.getFlightID(), returnFlight.getFlightID());
-                }
-            }
-        } catch (FlightRouteNotFoundException ex) {
-            System.out.println(ex.getMessage());
-        } catch (FlightExistException ex) {
-            System.out.println(ex.getMessage());
-        } catch (UnknownPersistenceException ex) {
-            System.out.println(ex.getMessage());
         }
+        List<FlightRouteEntity> routes = flightRouteSessionBean.retrieveAllFlightRouteInOrder();
+        System.out.printf("%20s%40s%20s%40s%25s\n", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA");
+        for(FlightRouteEntity rte : routes) {
+            System.out.printf("%20s%40s%20s%40s%25s\n", rte.getFlightRouteID().toString(), rte.getOrigin().getAirportName() ,rte.getOrigin().getIATACode(), rte.getDestination().getAirportName() ,rte.getDestination().getIATACode());
+        }
+        System.out.print("Enter Flight Route (BY ID)>  ");
+        chosenRoute = sc.nextLong();
+        sc.nextLine();
+
+        List<AircraftConfigurationEntity> aircraftConfig = aircraftConfigurationSessionBean.retrieveAllConfiguration();
+        System.out.printf("%30s%20s%25s%20s\n", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type");
+
+        for (AircraftConfigurationEntity config : aircraftConfig) {
+            System.out.printf("%30s%20s%25s%20s\n", config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName());
+        }
+        System.out.print("Enter Aircraft Configuration (BY ID)>  ");
+        chosenConfig = sc.nextLong();
+        sc.nextLine();
+        
+        try {  
+            flight = new FlightEntity(flightNum);
+            flight = flightSessionBean.createNewFlight(flight, chosenRoute, chosenConfig);         
+        } catch (UnknownPersistenceException | FlightRouteNotFoundException | AircraftConfigNotFoundException | FlightExistException ex) {
+            System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
+            return;
+        }
+        System.out.println("Flight created successfully!");
+                   
+        FlightRouteEntity flightRoute;
+        try {
+            flightRoute = flightRouteSessionBean.retreiveFlightRouteById(chosenRoute);
+        } catch (FlightRouteNotFoundException ex) {
+            return; // will never hit this
+        }
+        if(flightRoute.getComplementaryRoute() != null) {
+            System.out.print("Complementary route found!\nWould you like to create a complementary return flight? (Y/N)> ");
+            if (sc.nextLine().trim().equalsIgnoreCase("Y")) {
+                while (true) {
+                    String returnFlightNum;
+                    while (true) {
+                        try {
+                            System.out.print("Enter return flight number > ");
+                            returnFlightNum = "ML" + String.valueOf(Integer.parseInt(sc.nextLine().trim()));
+                            break;
+                        } catch (NumberFormatException ex) {
+                            System.out.println("Please enter a valid number!");
+                        }
+                    }
+                    try {
+                        FlightRouteEntity returnFlightRoute = flightRoute.getComplementaryRoute();
+                        FlightEntity returnFlight = new FlightEntity(returnFlightNum);
+                        returnFlight = flightSessionBean.createNewFlight(returnFlight, returnFlightRoute.getFlightRouteID(), chosenConfig);
+                        flightSessionBean.associateExistingTwoWayFlights(flight.getFlightID(), returnFlight.getFlightID());
+                        System.out.println("Return flight created!\n\n");
+                        break;
+                    } catch (UnknownPersistenceException | FlightNotFoundException | FlightRouteNotFoundException | AircraftConfigNotFoundException | FlightExistException ex) {
+                        System.out.println("Error: " + ex.getMessage() + "\nPlease enter another flight number!"); // only FlightExistException might be caught here
+                    } 
+                }                 
+            }      
+        }  
     }
     
     private void doViewAllFlight() {
         Scanner sc = new Scanner(System.in);
         System.out.println("*** View All Flights ***");
-        System.out.printf("%20s%20s%25s\n", "Flight Number", "Flight Route", "Aircraft Configuration");
+        System.out.printf("%10s%20s%20s%25s\n", "Flight ID", "Flight Number", "Flight Route", "Aircraft Configuration");
         
         List<FlightEntity> list = flightSessionBean.retrieveAllFlight();
         for(FlightEntity flight : list) {
-            System.out.printf("%20s%20s%25s\n", flight.getFlightNum(), flight.getFlightRoute().getFlightRouteID().toString(), flight.getAircraftConfig().getName());
+            System.out.printf("%10s%20s%20s%25s\n", flight.getFlightID() ,flight.getFlightNum(), flight.getFlightRoute().getOrigin().getIATACode() + " -> " + flight.getFlightRoute().getDestination().getIATACode() , flight.getAircraftConfig().getName());
         }
         System.out.print("Press any key to continue...> ");
         sc.nextLine();
@@ -214,9 +238,9 @@ public class FlightOperationModule {
             FlightEntity flight = flightSessionBean.retreiveFlightById(id);
             FlightRouteEntity route = flight.getFlightRoute();
             AircraftConfigurationEntity config = flight.getAircraftConfig();
-            
-            System.out.printf("%20s%20s%35s%20s%35s%25s%30s%20s%25s%20s%30s\n", "Flight Number", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type", "Returning Flight Number");
-            System.out.printf("%20s%20s%35s%20s%35s%25s%30s%20s%25s%20s%30s\n", flight.getFlightNum(), route.getFlightRouteID().toString(), route.getOrigin().getAirportName() ,route.getOrigin().getIATACode(), route.getDestination().getAirportName() ,route.getDestination().getIATACode(), config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName(), flight.getReturningFlight().getFlightNum());
+
+            System.out.printf("%10s%20s%20s%35s%20s%35s%25s%30s%20s%25s%20s%30s\n", "Flight ID", "Flight Number", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type", "Returning Flight Number");
+            System.out.printf("%10s%20s%20s%35s%20s%35s%25s%30s%20s%25s%20s%30s\n", flight.getFlightID(), flight.getFlightNum(), route.getFlightRouteID().toString(), route.getOrigin().getAirportName() ,route.getOrigin().getIATACode(), route.getDestination().getAirportName() ,route.getDestination().getIATACode(), config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName(), flight.getReturningFlight() != null ? flight.getReturningFlight().getFlightNum(): "None");
             System.out.println("--------------------------");
             System.out.println("1: Update Flight");
             System.out.println("2: Delete Flight");
@@ -232,7 +256,7 @@ public class FlightOperationModule {
                 doDeleteFlight(flight);
             }
         } catch (FlightNotFoundException ex) {
-            System.out.println(ex.getMessage());
+            System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
         }
     }
     
@@ -257,9 +281,15 @@ public class FlightOperationModule {
         if(chosenRoute > 0) {
             try {
                 FlightRouteEntity flightRoute = flightRouteSessionBean.retreiveFlightRouteById(chosenRoute);
-                flight.setFlightRoute(flightRoute);
+                if (flightRoute.getOrigin() == flight.getFlightRoute().getOrigin() && flightRoute.getDestination() == flight.getFlightRoute().getDestination()) {            
+                }
+                else { 
+                    flight.setFlightRoute(flightRoute);
+                    flight.setReturningFlight(null);
+                }
             } catch (FlightRouteNotFoundException ex) {
-                System.out.println(ex.getMessage());
+                System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
+                return;
             }
         }
         
@@ -276,7 +306,8 @@ public class FlightOperationModule {
                 AircraftConfigurationEntity config = aircraftConfigurationSessionBean.retriveAircraftConfigByID(chosenConfig);
                 flight.setAircraftConfig(config);
             } catch (AircraftConfigNotFoundException ex) {
-                System.out.println(ex.getMessage());
+                System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
+                return;
             }
         }
         
@@ -285,11 +316,7 @@ public class FlightOperationModule {
             try {
                 flightSessionBean.updateFlight(flight);
                 System.out.println("Flight Updated Successfully");
-            } catch (FlightNotFoundException ex) {
-                System.out.println(ex.getMessage());
-            } catch (UpdateFlightException ex) {
-                System.out.println(ex.getMessage());
-            } catch (InputDataValidationException ex) {
+            } catch (FlightNotFoundException | UpdateFlightException | InputDataValidationException ex) {
                 System.out.println(ex.getMessage());
             }
         } else {
@@ -298,7 +325,6 @@ public class FlightOperationModule {
         
     }
     
-    //JUN HAO SOS PLS
     private void doDeleteFlight(FlightEntity flight) {
         Scanner sc = new Scanner(System.in);
         System.out.println("*** Delete Flight ***");
@@ -310,8 +336,6 @@ public class FlightOperationModule {
                 flightSessionBean.deleteFlight(flight.getFlightID());
                 System.out.println("Flight Deleted Succesfully!\n");
             } catch (FlightNotFoundException ex) {
-                Logger.getLogger(FlightOperationModule.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (DeleteFlightException ex) {
                 Logger.getLogger(FlightOperationModule.class.getName()).log(Level.SEVERE, null, ex);
             }
         }

@@ -5,12 +5,11 @@
  */
 package ejb.session.stateless;
 
-import entity.AircraftConfigurationEntity;
 import entity.FlightEntity;
-import entity.FlightRouteEntity;
-import exceptions.DeleteFlightException;
+import exceptions.AircraftConfigNotFoundException;
 import exceptions.FlightExistException;
 import exceptions.FlightNotFoundException;
+import exceptions.FlightRouteNotFoundException;
 import exceptions.InputDataValidationException;
 import exceptions.UnknownPersistenceException;
 import exceptions.UpdateFlightException;
@@ -24,9 +23,9 @@ import javax.ejb.Remote;
 @Remote
 public interface FlightSessionBeanRemote {
 
-    public FlightEntity createNewFlight(FlightEntity flight, Long chosenRoute, Long chosenConfig) throws FlightExistException, UnknownPersistenceException;
+    public FlightEntity createNewFlight(FlightEntity flight, Long chosenRoute, Long chosenConfig) throws FlightExistException, UnknownPersistenceException, FlightRouteNotFoundException, AircraftConfigNotFoundException;
 
-    public void associateExistingTwoWayFlights(Long flightID, Long returnFlightID);
+    public void associateExistingTwoWayFlights(Long flightID, Long returnFlightID) throws FlightNotFoundException;
     
     public FlightEntity retreiveFlightById(Long id) throws FlightNotFoundException;
 
@@ -34,7 +33,11 @@ public interface FlightSessionBeanRemote {
 
     public void updateFlight(FlightEntity oldFlight) throws FlightNotFoundException, UpdateFlightException, InputDataValidationException;
 
-    public void deleteFlight(Long flightID) throws FlightNotFoundException, DeleteFlightException;
+    public void deleteFlight(Long flightID) throws FlightNotFoundException;
+
+    public FlightEntity enableFlight(String flightNumber) throws FlightNotFoundException;
+
+    public FlightEntity retrieveFlightByFlightNumber(String flightNum) throws FlightNotFoundException;
 
     
     

@@ -55,11 +55,11 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
             em.refresh(flightRoute);
             return flightRoute;
         } catch (AirportNotFoundException ex) {
-            throw new AirportNotFoundException(ex.getMessage());
+            throw new AirportNotFoundException("Airport does not exist in system");
         } catch (PersistenceException ex) {                     
             if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
                 if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {             
-                        throw new FlightRouteExistException("This flight route already exists!"); 
+                        throw new FlightRouteExistException("Flight route already exists"); 
                 } else {
                     throw new UnknownPersistenceException(ex.getMessage());
                 }
@@ -73,7 +73,7 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
     public FlightRouteEntity retreiveFlightRouteById(Long id) throws FlightRouteNotFoundException {
         FlightRouteEntity route = em.find(FlightRouteEntity.class, id);
         if (route == null || route.isDisabled() == true) {
-            throw new FlightRouteNotFoundException("Flight Route does not exist in system!");
+            throw new FlightRouteNotFoundException("Flight Route does not exist in system");
         }
         return route;
     }
@@ -86,7 +86,7 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
         try{
             return (FlightRouteEntity)query.getSingleResult();
         } catch (NoResultException | NonUniqueResultException ex) {
-            throw new FlightRouteNotFoundException("Flight Route does not exist in system!");
+            throw new FlightRouteNotFoundException("Flight Route does not exist in system");
         }
     }
     
@@ -157,7 +157,7 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
             em.flush();
             return flight;
         } catch (NoResultException | NonUniqueResultException ex) {
-            throw new FlightRouteNotFoundException("Disabled Flight Route does not exist in system!");
+            throw new FlightRouteNotFoundException("Disabled Flight Route does not exist in system");
         }
     }
     

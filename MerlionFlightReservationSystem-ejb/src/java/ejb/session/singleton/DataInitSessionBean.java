@@ -79,12 +79,12 @@ public class DataInitSessionBean {
             partnerSessionBean.createNewPartner(new PartnerEntity("Holiday.com", "Partner 01", "password"));
             
             /*Initialise Airport*/
-            airportSessionBean.createNewAirport(new AirportEntity("Changi Airport", "SIN", "Singapore", "Singapore", "Singapore"));
-            airportSessionBean.createNewAirport(new AirportEntity("Narita International Airport", "NRT", "Narita", "Chiba", "Japan"));
-            airportSessionBean.createNewAirport(new AirportEntity("Incheon International Airport", "ICN", "Seoul", "Seoul", "South Korea"));
-            airportSessionBean.createNewAirport(new AirportEntity("Sydney Airport", "SYD", "Sydney", "New South Wales", "Australia"));
-            airportSessionBean.createNewAirport(new AirportEntity("Sendai Airport", "SDJ", "Sendai", "Miyagi", "Japan"));
-            airportSessionBean.createNewAirport(new AirportEntity("Taoyuan International Airport", "TPE", "Taoyuan", "Taipei", "Taiwan"));
+            airportSessionBean.createNewAirport(new AirportEntity("Changi Airport", "SIN", "Singapore", "Singapore", "Singapore", 8));
+            airportSessionBean.createNewAirport(new AirportEntity("Narita International Airport", "NRT", "Narita", "Chiba", "Japan", 9));
+            airportSessionBean.createNewAirport(new AirportEntity("Incheon International Airport", "ICN", "Seoul", "Seoul", "South Korea", 9));
+            airportSessionBean.createNewAirport(new AirportEntity("Sydney Airport", "SYD", "Sydney", "New South Wales", "Australia", 11));
+            airportSessionBean.createNewAirport(new AirportEntity("Sendai Airport", "SDJ", "Sendai", "Miyagi", "Japan", 9));
+            airportSessionBean.createNewAirport(new AirportEntity("Taoyuan International Airport", "TPE", "Taoyuan", "Taipei", "Taiwan", 8));
             
             /*Initialise Aircraft Type*/
             aircraftTypeSessionBean.createNewAircraftType(new AircraftTypeEntity("Boeing 737", 189));

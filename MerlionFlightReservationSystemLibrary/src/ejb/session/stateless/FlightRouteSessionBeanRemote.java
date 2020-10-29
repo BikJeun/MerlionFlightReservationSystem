@@ -12,6 +12,7 @@ import exceptions.FlightRouteNotFoundException;
 import exceptions.UnknownPersistenceException;
 import java.util.List;
 import javax.ejb.Remote;
+import javax.persistence.NoResultException;
 
 /**
  *

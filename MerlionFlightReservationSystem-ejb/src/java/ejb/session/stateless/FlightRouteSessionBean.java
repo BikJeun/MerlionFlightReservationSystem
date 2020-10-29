@@ -1,8 +1,8 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+* To change this license header, choose License Headers in Project Properties.
+* To change this template file, choose Tools | Templates
+* and open the template in the editor.
+*/
 package ejb.session.stateless;
 
 import entity.AirportEntity;
@@ -27,15 +27,15 @@ import javax.persistence.Query;
  */
 @Stateless
 public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, FlightRouteSessionBeanLocal {
-
+    
     @EJB
     private AirportSessionBeanLocal airportSessionBean;
-
+    
     @PersistenceContext(unitName = "MerlionFlightReservationSystem-ejbPU")
     private EntityManager em;
     
     
-
+    
     public FlightRouteSessionBean() {
     }
     
@@ -45,7 +45,7 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
             
             AirportEntity originAirport = airportSessionBean.retrieveAirportById(originAirportID);
             AirportEntity destinationAirport = airportSessionBean.retrieveAirportById(destinationAirportID);
-                       
+            
             em.persist(flightRoute); //unidirectional, so there is no need to associate on airport side
             
             flightRoute.setOrigin(originAirport); // QN: neccesary to set with managed instances? should i set then persist or persist then set?
@@ -56,10 +56,10 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
             return flightRoute;
         } catch (AirportNotFoundException ex) {
             throw new AirportNotFoundException("Airport does not exist in system");
-        } catch (PersistenceException ex) {                     
+        } catch (PersistenceException ex) {
             if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
-                if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {             
-                        throw new FlightRouteExistException("Flight route already exists"); 
+                if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
+                    throw new FlightRouteExistException("Flight route already exists");
                 } else {
                     throw new UnknownPersistenceException(ex.getMessage());
                 }
@@ -101,31 +101,32 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
         other.setSourceRoute(route);
         return other.getFlightRouteID();
     }
-
-   @Override
+    
+    @Override
     public List<FlightRouteEntity> retrieveAllFlightRouteInOrder() {
-      Query query = em.createQuery("SELECT DISTINCT f FROM FlightRouteEntity f WHERE f.disabled=false ORDER BY f.origin.airportName ASC"); 
-      List<FlightRouteEntity> result = query.getResultList();
-      int x = result.size()-1;
-      while (x >= 0) {    
-        FlightRouteEntity flightroute = result.get(x);
-        boolean replaced = false;
-        for (int y = x - 2; y >= 0; y--) {
-          FlightRouteEntity otherflightroute = result.get(y);
-           if (flightroute.getComplementaryRoute()  != null 
-                  && flightroute.getComplementaryRoute().getFlightRouteID() == otherflightroute.getFlightRouteID()) {
-            result.remove(x);
-            result.add(y + 1, flightroute);
-            replaced = true;
-            break;
-              
-          }
+            Query query = em.createQuery("SELECT DISTINCT f FROM FlightRouteEntity f WHERE f.disabled=false ORDER BY f.origin.airportName ASC");
+            List<FlightRouteEntity> result = query.getResultList();
+            int x = result.size()-1;
+            while (x >= 0) {
+                FlightRouteEntity flightroute = result.get(x);
+                boolean replaced = false;
+                for (int y = x - 2; y >= 0; y--) {
+                    FlightRouteEntity otherflightroute = result.get(y);
+                    if (flightroute.getComplementaryRoute()  != null
+                            && flightroute.getComplementaryRoute().getFlightRouteID() == otherflightroute.getFlightRouteID()) {
+                        result.remove(x);
+                        result.add(y + 1, flightroute);
+                        replaced = true;
+                        break;
+                        
+                    }
+                }
+                if (replaced) {continue;}
+                x--;
+            }
+            return result;
         }
-        if (replaced) {continue;}
-        x--;
-      }
-      return result;
-    }
+    
     
     @Override
     public void removeFlightRoute(long flightRouteID) throws FlightRouteNotFoundException {
@@ -143,7 +144,7 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
             em.remove(route);
         } else {
             route.setDisabled(true);
-        } 
+        }
     }
     
     @Override

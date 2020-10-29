@@ -12,6 +12,7 @@ import exceptions.FlightRouteNotFoundException;
 import exceptions.UnknownPersistenceException;
 import java.util.List;
 import javax.ejb.Local;
+import javax.persistence.NoResultException;
 
 /**
  *
@@ -26,7 +27,7 @@ public interface FlightRouteSessionBeanLocal {
     
     public long setComplementaryFlightRoute(long routeID) throws FlightRouteNotFoundException;
      
-    public List<FlightRouteEntity> retrieveAllFlightRouteInOrder();
+    public List<FlightRouteEntity> retrieveAllFlightRouteInOrder() throws NoResultException;;
     
     public void removeFlightRoute(long flightRouteID) throws FlightRouteNotFoundException;
     

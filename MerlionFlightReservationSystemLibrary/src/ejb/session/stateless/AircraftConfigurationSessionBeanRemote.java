@@ -13,6 +13,7 @@ import exceptions.CreateNewAircraftConfigException;
 import exceptions.UnknownPersistenceException;
 import java.util.List;
 import javax.ejb.Remote;
+import javax.persistence.NoResultException;
 
 /**
  * @author Ong Bik Jeun

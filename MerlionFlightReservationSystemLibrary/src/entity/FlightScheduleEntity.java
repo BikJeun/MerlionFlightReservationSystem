@@ -57,11 +57,10 @@ public class FlightScheduleEntity implements Serializable {
         seatInventory = new ArrayList<>();
     }
 
-    public FlightScheduleEntity(Date departureDateTime, int duration, FlightSchedulePlanEntity flightSchedulePlan) {
+    public FlightScheduleEntity(Date departureDateTime, int duration) {
         this();
         this.departureDateTime = departureDateTime;
         this.duration = duration;
-        this.flightSchedulePlan = flightSchedulePlan;
     }
 
     public Date getDepartureDateTime() {

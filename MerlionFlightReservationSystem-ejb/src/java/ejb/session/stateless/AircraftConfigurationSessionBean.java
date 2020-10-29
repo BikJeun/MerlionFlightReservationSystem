@@ -21,6 +21,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -125,13 +126,15 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
             System.out.println(ex.getMessage());
         }
     }
-
+    
     @Override
     public List<AircraftConfigurationEntity> retrieveAllConfiguration() {
-        Query query = em.createQuery("SELECT a FROM AircraftConfigurationEntity a ORDER BY a.aircraftType ASC, a.name ASC ");
-        return query.getResultList();
-    } 
-}
+            Query query = em.createQuery("SELECT a FROM AircraftConfigurationEntity a ORDER BY a.aircraftType ASC, a.name ASC ");
+
+            return query.getResultList();
+        }
+    }
+
 
     
     

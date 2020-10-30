@@ -24,10 +24,10 @@ import javax.ejb.Remote;
 @Remote
 public interface FlightSchedulePlanSessionBeanRemote {
 
-    public FlightSchedulePlanEntity createNewFlightSchedulePlan(FlightSchedulePlanEntity plan, Pair<Date, Integer> pair, int recurrent) throws FlightSchedulePlanExistException, UnknownPersistenceException, InputDataValidationException, FlightScheduleExistException, FlightSchedulePlanNotFoundException;
+    public FlightSchedulePlanEntity createNewFlightSchedulePlan(FlightSchedulePlanEntity plan, long flightID, Pair<Date, Integer> pair, int recurrent) throws InputDataValidationException, UnknownPersistenceException, FlightNotFoundException, FlightSchedulePlanExistException;
 
-    public FlightSchedulePlanEntity createNewFlightSchedulePlanMultiple(FlightSchedulePlanEntity plan, List<Pair<Date, Integer>> info) throws FlightSchedulePlanExistException, UnknownPersistenceException, InputDataValidationException, FlightScheduleExistException, FlightSchedulePlanNotFoundException;
+    public FlightSchedulePlanEntity createNewFlightSchedulePlanMultiple(FlightSchedulePlanEntity plan, long flightID, List<Pair<Date, Integer>> info) throws InputDataValidationException, UnknownPersistenceException, FlightNotFoundException, FlightSchedulePlanExistException;
 
-    public void associateFlightToPlan(Long flightID, Long flightSchedulePlanID) throws FlightNotFoundException, FlightSchedulePlanNotFoundException;
+     public void associateFlightToPlan(Long flightID, Long flightSchedulePlanID) throws FlightNotFoundException, FlightSchedulePlanNotFoundException, FlightSchedulePlanExistException;
     
 }

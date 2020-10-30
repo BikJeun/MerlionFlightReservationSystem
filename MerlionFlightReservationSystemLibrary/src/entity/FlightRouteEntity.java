@@ -7,6 +7,7 @@ package entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -40,7 +41,7 @@ public class FlightRouteEntity implements Serializable {
     private boolean disabled;
     
     @OneToMany(mappedBy = "flightRoute", fetch = FetchType.EAGER)
-    private ArrayList<FlightEntity> flights;
+    private List<FlightEntity> flights;
     
     @ManyToOne
     @JoinColumn(name = "origin")
@@ -105,14 +106,14 @@ public class FlightRouteEntity implements Serializable {
     /**
      * @return the flights
      */
-    public ArrayList<FlightEntity> getFlights() {
+    public List<FlightEntity> getFlights() {
         return flights;
     }
 
     /**
      * @param flights the flights to set
      */
-    public void setFlights(ArrayList<FlightEntity> flights) {
+    public void setFlights(List<FlightEntity> flights) {
         this.flights = flights;
     }
 

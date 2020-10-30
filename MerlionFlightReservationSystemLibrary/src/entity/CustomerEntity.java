@@ -6,15 +6,8 @@
 package entity;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
 
 /**
  *
@@ -98,14 +91,6 @@ public class CustomerEntity extends UserEntity implements Serializable {
 
     public void setPostalCode(String postalCode) {
         this.postalCode = postalCode;
-    }
-
-    public Long getUserID() {
-        return UserID;
-    }
-
-    public void setUserID(Long UserID) {
-        this.UserID = UserID;
     }
 
     @Override

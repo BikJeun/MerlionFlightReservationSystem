@@ -9,6 +9,7 @@ import enumeration.ScheduleTypeEnum;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -18,7 +19,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
@@ -41,24 +41,28 @@ public class FlightSchedulePlanEntity implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ScheduleTypeEnum typeExistingInPlan;
+    
+    @Column(nullable = false)
+    private boolean disabled;
         
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date recurrentEndDate;
     
     @OneToMany(mappedBy = "flightSchedulePlan",  fetch = FetchType.EAGER)
-    private ArrayList<FlightScheduleEntity> flightSchedule;
+    private List<FlightScheduleEntity> flightSchedule;
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private FlightEntity flight;
     
     @OneToMany(mappedBy = "flightSchedulePlan",  fetch = FetchType.EAGER)
-    private ArrayList<FareEntity> fares;
+    private List<FareEntity> fares;
     
     public FlightSchedulePlanEntity() {
         flightSchedule = new ArrayList<>();
         fares = new ArrayList<>();
+        disabled = false;
     }
 
     //For non-recurrent schedules
@@ -87,11 +91,11 @@ public class FlightSchedulePlanEntity implements Serializable {
         this.flightNum = flightNum;
     }
 
-    public ArrayList<FlightScheduleEntity> getFlightSchedule() {
+    public List<FlightScheduleEntity> getFlightSchedule() {
         return flightSchedule;
     }
 
-    public void setFlightSchedule(ArrayList<FlightScheduleEntity> flightSchedule) {
+    public void setFlightSchedule(List<FlightScheduleEntity> flightSchedule) {
         this.flightSchedule = flightSchedule;
     }
     
@@ -159,14 +163,14 @@ public class FlightSchedulePlanEntity implements Serializable {
     /**
      * @return the fares
      */
-    public ArrayList<FareEntity> getFares() {
+    public List<FareEntity> getFares() {
         return fares;
     }
 
     /**
      * @param fares the fares to set
      */
-    public void setFares(ArrayList<FareEntity> fares) {
+    public void setFares(List<FareEntity> fares) {
         this.fares = fares;
     }
 
@@ -182,6 +186,20 @@ public class FlightSchedulePlanEntity implements Serializable {
      */
     public void setRecurrentEndDate(Date recurrentEndDate) {
         this.recurrentEndDate = recurrentEndDate;
+    }
+
+    /**
+     * @return the disabled
+     */
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    /**
+     * @param disabled the disabled to set
+     */
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
     }
     
 }

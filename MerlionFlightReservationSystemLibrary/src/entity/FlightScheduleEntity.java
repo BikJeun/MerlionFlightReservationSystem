@@ -8,6 +8,7 @@ package entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -47,10 +48,10 @@ public class FlightScheduleEntity implements Serializable {
     private FlightSchedulePlanEntity flightSchedulePlan;
     
     @OneToMany(mappedBy = "flightSchedule")
-    private ArrayList<SeatInventoryEntity> seatInventory;
+    private List<SeatInventoryEntity> seatInventory;
     
     @OneToMany(mappedBy = "flightSchedule")
-    private ArrayList<ReservationEntity> reservations;
+    private List<ReservationEntity> reservations;
 
     public FlightScheduleEntity() {
         reservations = new ArrayList<>();
@@ -79,19 +80,19 @@ public class FlightScheduleEntity implements Serializable {
         this.duration = duration;
     }
 
-    public ArrayList<SeatInventoryEntity> getSeatInventory() {
+    public List<SeatInventoryEntity> getSeatInventory() {
         return seatInventory;
     }
 
-    public void setSeatInventory(ArrayList<SeatInventoryEntity> seatInventory) {
+    public void setSeatInventory(List<SeatInventoryEntity> seatInventory) {
         this.seatInventory = seatInventory;
     }
 
-    public ArrayList<ReservationEntity> getReservations() {
+    public List<ReservationEntity> getReservations() {
         return reservations;
     }
 
-    public void setReservations(ArrayList<ReservationEntity> reservations) {
+    public void setReservations(List<ReservationEntity> reservations) {
         this.reservations = reservations;
     }
 
@@ -113,11 +114,12 @@ public class FlightScheduleEntity implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the FlightScheduleID fields are not set
+         // EDIT (BY JUNHAO): Modified to account for when flightScheduleID not set (used in sessionbean)
         if (!(object instanceof FlightScheduleEntity)) {
             return false;
         }
         FlightScheduleEntity other = (FlightScheduleEntity) object;
-        if ((this.FlightScheduleID == null && other.FlightScheduleID != null) || (this.FlightScheduleID != null && !this.FlightScheduleID.equals(other.FlightScheduleID))) {
+        if ((this.FlightScheduleID == null && other.FlightScheduleID != null) || (this.FlightScheduleID != null && !this.FlightScheduleID.equals(other.FlightScheduleID)) || (this.FlightScheduleID == null && other.FlightScheduleID == null)) {
             return false;
         }
         return true;

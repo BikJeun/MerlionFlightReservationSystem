@@ -45,6 +45,12 @@ public class FareEntity implements Serializable {
     public FareEntity() {
     }
 
+    public FareEntity(String fareBasisCode, BigDecimal fareAmount) {
+        this.fareBasisCode = fareBasisCode;
+        this.fareAmount = fareAmount;
+    }
+
+    
     public FareEntity(String fareBasisCode, BigDecimal fareAmount, CabinClassEntity cabinClass, FlightSchedulePlanEntity flightSchedulePlan) {
         this.fareBasisCode = fareBasisCode;
         this.fareAmount = fareAmount;

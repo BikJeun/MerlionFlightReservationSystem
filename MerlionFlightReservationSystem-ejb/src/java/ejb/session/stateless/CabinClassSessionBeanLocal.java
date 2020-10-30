@@ -9,6 +9,7 @@ import entity.AircraftConfigurationEntity;
 import entity.CabinClassEntity;
 import exceptions.AircraftConfigNotFoundException;
 import exceptions.CabinClassExistException;
+import exceptions.CabinClassNotFoundException;
 import exceptions.UnknownPersistenceException;
 import javax.ejb.Local;
 
@@ -21,4 +22,5 @@ public interface CabinClassSessionBeanLocal {
     
     public CabinClassEntity createNewCabinClass(CabinClassEntity cabin, AircraftConfigurationEntity aircraft);
     
+    public CabinClassEntity retrieveCabinByID(Long cabinClassID) throws CabinClassNotFoundException;
 }

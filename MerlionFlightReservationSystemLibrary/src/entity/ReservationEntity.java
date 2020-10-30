@@ -7,6 +7,7 @@ package entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -34,7 +35,7 @@ public class ReservationEntity implements Serializable {
     private String cvv;
     
     @OneToMany(fetch = FetchType.EAGER)
-    private ArrayList<PassengerEntity> passenger;
+    private List<PassengerEntity> passenger;
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
@@ -55,7 +56,7 @@ public class ReservationEntity implements Serializable {
     public ReservationEntity() {
     }
 
-    public ReservationEntity(String creditCardNumber, String cvv, ArrayList<PassengerEntity> passenger, UserEntity user, FlightScheduleEntity flightSchedule, FareEntity fare, CabinClassEntity cabinClass) {
+    public ReservationEntity(String creditCardNumber, String cvv, List<PassengerEntity> passenger, UserEntity user, FlightScheduleEntity flightSchedule, FareEntity fare, CabinClassEntity cabinClass) {
         this.creditCardNumber = creditCardNumber;
         this.cvv = cvv;
         this.passenger = passenger;
@@ -81,11 +82,11 @@ public class ReservationEntity implements Serializable {
         this.cvv = cvv;
     }
 
-    public ArrayList<PassengerEntity> getPassenger() {
+    public List<PassengerEntity> getPassenger() {
         return passenger;
     }
 
-    public void setPassenger(ArrayList<PassengerEntity> passenger) {
+    public void setPassenger(List<PassengerEntity> passenger) {
         this.passenger = passenger;
     }
 

@@ -7,6 +7,7 @@ package entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -32,7 +33,7 @@ public class AircraftTypeEntity implements Serializable {
     private int maxCapacity;
     
     @OneToMany(mappedBy = "aircraftType", fetch = FetchType.EAGER)
-    private ArrayList<AircraftConfigurationEntity> aircraftConfig;
+    private List<AircraftConfigurationEntity> aircraftConfig;
 
     public AircraftTypeEntity() {
         aircraftConfig = new ArrayList<>();
@@ -44,7 +45,7 @@ public class AircraftTypeEntity implements Serializable {
         this.maxCapacity = maxCapacity;
     }
 
-    public AircraftTypeEntity(String typeName, int maxCapacity, ArrayList<AircraftConfigurationEntity> aircraftConfig) {
+    public AircraftTypeEntity(String typeName, int maxCapacity, List<AircraftConfigurationEntity> aircraftConfig) {
         this();
         this.typeName = typeName;
         this.maxCapacity = maxCapacity;
@@ -67,11 +68,11 @@ public class AircraftTypeEntity implements Serializable {
         this.maxCapacity = maxCapacity;
     }
 
-    public ArrayList<AircraftConfigurationEntity> getAircraftConfig() {
+    public List<AircraftConfigurationEntity> getAircraftConfig() {
         return aircraftConfig;
     }
 
-    public void setAircraftConfig(ArrayList<AircraftConfigurationEntity> aircraftConfig) {
+    public void setAircraftConfig(List<AircraftConfigurationEntity> aircraftConfig) {
         this.aircraftConfig = aircraftConfig;
     }
 

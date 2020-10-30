@@ -7,6 +7,7 @@ package entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -43,7 +44,7 @@ public class AircraftConfigurationEntity implements Serializable {
     
     // How to enforce 1..*? (Right now only enforced in session bean)
     @OneToMany(mappedBy = "aircraftConfig", fetch = FetchType.EAGER)
-    private ArrayList<CabinClassEntity> cabin;
+    private List<CabinClassEntity> cabin;
 
     public AircraftConfigurationEntity() {
         cabin = new ArrayList<>();
@@ -79,11 +80,11 @@ public class AircraftConfigurationEntity implements Serializable {
         this.aircraftType = aircraftType;
     }
 
-    public ArrayList<CabinClassEntity> getCabin() {
+    public List<CabinClassEntity> getCabin() {
         return cabin;
     }
 
-    public void setCabin(ArrayList<CabinClassEntity> cabin) {
+    public void setCabin(List<CabinClassEntity> cabin) {
         this.cabin = cabin;
     }  
 

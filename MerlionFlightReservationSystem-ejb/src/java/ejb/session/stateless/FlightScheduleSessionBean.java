@@ -7,19 +7,14 @@ package ejb.session.stateless;
 
 import entity.FlightScheduleEntity;
 import entity.FlightSchedulePlanEntity;
-import exceptions.FlightScheduleExistException;
-import exceptions.FlightSchedulePlanExistException;
-import exceptions.FlightSchedulePlanNotFoundException;
 import exceptions.InputDataValidationException;
-import exceptions.UnknownPersistenceException;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -46,33 +41,21 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
         validator = validatorFactory.getValidator();
     }
 
+    // only exposed in local interface => FlightSchedulePlan passed in is managed
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
-    public FlightScheduleEntity createNewSchedule(Long flightSchedulePlanID, FlightScheduleEntity schedule) throws FlightScheduleExistException, UnknownPersistenceException, InputDataValidationException, FlightSchedulePlanNotFoundException {
+    public FlightScheduleEntity createNewSchedule(FlightSchedulePlanEntity flightSchedulePlan, FlightScheduleEntity schedule) throws InputDataValidationException {
          Set<ConstraintViolation<FlightScheduleEntity>> constraintViolations = validator.validate(schedule);
          if(constraintViolations.isEmpty()) {
-             try{
-                 em.persist(schedule);
-                 
-                 FlightSchedulePlanEntity plan = flightSchedulePlanSessionBean.retrieveFlightSchedulePlanEntityById(flightSchedulePlanID);
-                 schedule.setFlightSchedulePlan(plan);
-                 
-                 em.flush();
-                 em.refresh(schedule);
-                 return schedule;
-                 
-             } catch(PersistenceException ex) {
-                if(ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
-                    if(ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
-                        throw new FlightScheduleExistException();
-                    } else {
-                        throw new UnknownPersistenceException(ex.getMessage());
-                    }
-                } else {
-                    throw new UnknownPersistenceException(ex.getMessage());
+                em.persist(schedule);
+
+                schedule.setFlightSchedulePlan(flightSchedulePlan);
+                if (!flightSchedulePlan.getFlightSchedule().contains(schedule)) {
+                    flightSchedulePlan.getFlightSchedule().add(schedule);
                 }
-            } catch (FlightSchedulePlanNotFoundException ex) {
-                 throw new FlightSchedulePlanNotFoundException(ex.getMessage());
-             }
+
+                return schedule;
+                
         } else {
             throw new InputDataValidationException(prepareInputDataValidationErrorsMessage(constraintViolations));
         }

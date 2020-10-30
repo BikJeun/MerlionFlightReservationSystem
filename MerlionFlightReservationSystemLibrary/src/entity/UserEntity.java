@@ -7,6 +7,7 @@ package entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -15,7 +16,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
 /**
@@ -36,7 +36,7 @@ public class UserEntity implements Serializable {
     private String password;
     
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
-    private ArrayList<ReservationEntity> reservations;
+    private List<ReservationEntity> reservations;
 
     public UserEntity() {
         this.reservations = new ArrayList<>();
@@ -112,14 +112,14 @@ public class UserEntity implements Serializable {
     /**
      * @return the reservations
      */
-    public ArrayList<ReservationEntity> getReservations() {
+    public List<ReservationEntity> getReservations() {
         return reservations;
     }
 
     /**
      * @param reservations the reservations to set
      */
-    public void setReservations(ArrayList<ReservationEntity> reservations) {
+    public void setReservations(List<ReservationEntity> reservations) {
         this.reservations = reservations;
     }
     

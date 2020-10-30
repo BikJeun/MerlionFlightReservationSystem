@@ -10,6 +10,7 @@ import ejb.session.stateless.AircraftTypeSessionBeanRemote;
 import ejb.session.stateless.AirportSessionBeanRemote;
 import ejb.session.stateless.CabinClassSessionBeanRemote;
 import ejb.session.stateless.EmployeeSessionBeanRemote;
+import ejb.session.stateless.FareSessionBeanRemote;
 import ejb.session.stateless.FlightRouteSessionBeanRemote;
 import ejb.session.stateless.FlightSchedulePlanSessionBeanRemote;
 import ejb.session.stateless.FlightSessionBeanRemote;
@@ -19,11 +20,6 @@ import entity.EmployeeEntity;
 import enumeration.EmployeeAccessRightEnum;
 import exceptions.InvalidLoginCredentialException;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 /**
  *
@@ -41,7 +37,7 @@ public class MainApp {
     private FlightRouteSessionBeanRemote flightRouteSessionBean;
     private AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean;
     private EmployeeSessionBeanRemote employeeSessionBean;
-    
+    private FareSessionBeanRemote fareSessionBean;
     
     private boolean login = false;
     private EmployeeEntity currentEmployee;
@@ -50,7 +46,7 @@ public class MainApp {
     private FlightPlanningModule flightPlanningModule;
     private SalesManagementModule salesManagementModule;
     
-    public MainApp(AirportSessionBeanRemote airportSessionBean, AircraftTypeSessionBeanRemote aircraftTypeSessionBean, CabinClassSessionBeanRemote cabinClassSessionBean, ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean) {
+    public MainApp(AirportSessionBeanRemote airportSessionBean, AircraftTypeSessionBeanRemote aircraftTypeSessionBean, CabinClassSessionBeanRemote cabinClassSessionBean, ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean, FareSessionBeanRemote fareSessionBean) {
         this.airportSessionBean = airportSessionBean;
         this.aircraftTypeSessionBean = aircraftTypeSessionBean;
         this.cabinClassSessionBean = cabinClassSessionBean;
@@ -61,6 +57,7 @@ public class MainApp {
         this.flightRouteSessionBean = flightRouteSessionBean;
         this.aircraftConfigurationSessionBean = aircraftConfigurationSessionBean;
         this.employeeSessionBean = employeeSessionBean;
+        this.fareSessionBean = fareSessionBean;
     }
     
     public void runApp() {
@@ -82,7 +79,7 @@ public class MainApp {
                             doLogin();
                             System.out.println("Login Successful!\n");
                             login = true;
-                            flightOperationModule = new FlightOperationModule(currentEmployee, flightSessionBean, flightSchedulePlanSessionBean, flightRouteSessionBean, aircraftConfigurationSessionBean);
+                            flightOperationModule = new FlightOperationModule(currentEmployee, flightSessionBean, flightSchedulePlanSessionBean, flightRouteSessionBean, aircraftConfigurationSessionBean, fareSessionBean);
                             flightPlanningModule = new FlightPlanningModule(currentEmployee, airportSessionBean, aircraftConfigurationSessionBean, flightRouteSessionBean, cabinClassSessionBean, aircraftTypeSessionBean);
                             salesManagementModule = new SalesManagementModule(currentEmployee, seatsInventorySessionBean, reservationSessionBean);
                             mainMenu();

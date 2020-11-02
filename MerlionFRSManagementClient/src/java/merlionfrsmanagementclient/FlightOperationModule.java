@@ -26,6 +26,7 @@ import exceptions.FareExistException;
 import exceptions.FlightExistException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightRouteNotFoundException;
+import exceptions.FlightScheduleNotFoundException;
 import exceptions.FlightSchedulePlanExistException;
 import exceptions.FlightSchedulePlanNotFoundException;
 import exceptions.InputDataValidationException;
@@ -40,6 +41,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.util.Pair;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -172,7 +175,7 @@ public class FlightOperationModule {
             System.out.print("Enter Flight Route (BY ID)>  ");
             chosenRoute = sc.nextLong();
             sc.nextLine();
-                    
+            
             List<AircraftConfigurationEntity> aircraftConfig = aircraftConfigurationSessionBean.retrieveAllConfiguration();
             if(aircraftConfig.isEmpty()) {
                 System.out.println("No Aircraft Configuration created!\nPlease create a configuration first!");
@@ -213,9 +216,9 @@ public class FlightOperationModule {
                     System.out.print("Complementary route found!\nWould you like to create a complementary return flight? (Y/N)> ");
                     if (sc.nextLine().trim().equalsIgnoreCase("Y")) {
                         while (true) {
-                            String returnFlightNum;                       
+                            String returnFlightNum;
                             System.out.print("Enter return flight number > ");
-                            returnFlightNum = "ML" + sc.nextLine().trim();      
+                            returnFlightNum = "ML" + sc.nextLine().trim();
                             FlightRouteEntity returnFlightRoute = flightRoute.getComplementaryRoute();
                             try {
                                 FlightEntity returnFlight = new FlightEntity(returnFlightNum);
@@ -397,9 +400,9 @@ public class FlightOperationModule {
                 if(response == 1) {
                     doCreateFlightSchedulePlan();
                 } else if(response == 2) {
-                    //doViewAllFlightSchedulePlan();
+                    doViewAllFlightSchedulePlan();
                 } else if(response == 3) {
-                    //doViewFlightSchedulePlanDetails();
+                    doViewFlightSchedulePlanDetails();
                 } else if(response == 4) {
                     break;
                 } else {
@@ -459,7 +462,7 @@ public class FlightOperationModule {
                     case 3:
                         plan.setTypeExistingInPlan(ScheduleTypeEnum.RECURRENTDAY);
                         pair = getFlightScheduleInfo();
-                        System.out.print("Enter recurrent end date (dd/mm/yyyy)> ");                         
+                        System.out.print("Enter recurrent end date (dd/mm/yyyy)> ");
                         String date = sc.nextLine().trim();
                         Date dailyEnd = recurrentInputFormat.parse(date);
                         plan.setRecurrentEndDate(dailyEnd);
@@ -483,14 +486,14 @@ public class FlightOperationModule {
                         System.out.print("Enter interval of recurrence (1-6)> ");
                         int days = sc.nextInt();
                         sc.nextLine();
-                        plan = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(plan, flight.getFlightID(), pair, days);                
+                        plan = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(plan, flight.getFlightID(), pair, days);
                     } else if (plan.getTypeExistingInPlan().equals(ScheduleTypeEnum.RECURRENTWEEK)) {
                         plan = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(plan, flight.getFlightID(), pair, 7);
                     } else {
                         plan = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(plan, flight.getFlightID(), pair, 0);
                     }
-                    System.out.println("New Flight Schedule Plan for Flight " + plan.getFlightNum() + " created successfully!");
-        
+                    System.out.println("New Flight Schedule Plan for Flight " + plan.getFlightNum() + " created successfully!\n");
+                    
                 } else {
                     showInputDataValidationErrorsForSchedulePlanEntity(constraintViolations);
                     return;
@@ -528,7 +531,7 @@ public class FlightOperationModule {
                             String reply = sc.nextLine().trim();
                             if(!reply.equals("Y") && !reply.equals("y")) {
                                 break;
-                            } 
+                            }
                         } catch (FlightSchedulePlanNotFoundException | CabinClassNotFoundException | FareExistException ex) {
                             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!");
                         }
@@ -544,9 +547,9 @@ public class FlightOperationModule {
                     if(reply.equals("Y") || reply.equals("y")) {
                         System.out.print("Enter layover time (HRS)> ");
                         int layover;
-                        while (true) { 
+                        while (true) {
                             try {
-                                layover = Integer.parseInt(sc.nextLine().trim()); 
+                                layover = Integer.parseInt(sc.nextLine().trim());
                                 break;
                             } catch (NumberFormatException ex) {
                                 System.out.print("Please enter a valid value!\n> ");
@@ -559,24 +562,28 @@ public class FlightOperationModule {
                             // this technically would be the recurrent end date of the original plan
                             // which may not be entirely accurate for this returnPlan (due to the layover time)
                             // but it doesnt matter because we calling the createMultiplePlan method below
-                            returnPlan.setRecurrentEndDate(plan.getRecurrentEndDate()); 
+                            returnPlan.setRecurrentEndDate(plan.getRecurrentEndDate());
                         }
                         
                         List<Pair<Date,Integer>> info2 = new ArrayList<>();
                         for (FlightScheduleEntity fs: plan.getFlightSchedule()) {
-                            Calendar c = Calendar.getInstance();                              
+                            Calendar c = Calendar.getInstance();
                             c.setTime(fs.getDepartureDateTime());
                             c.add(Calendar.HOUR_OF_DAY, fs.getDuration() + layover);
                             Date newDeparture = c.getTime();
                             info2.add(new Pair<>(newDeparture, fs.getDuration()));
                         }
                         returnPlan = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnPlan, returnFlight.getFlightID(), info2);
-                        System.out.println("New Flight Schedule Plan for Return Flight " + plan.getFlightNum() + " created successfully!");
+                        System.out.println("New Flight Schedule Plan for Return Flight " + plan.getFlightNum() + " created successfully!\n");
+                        
+                        if(returnPlan != null) {
+                            flightSchedulePlanSessionBean.associateExistingPlanToComplementaryPlan(plan.getFlightSchedulePlanID(), returnPlan.getFlightSchedulePlanID()); 
+                        }
                         
                         List<CabinClassEntity> returnCabinClass = returnFlight.getAircraftConfig().getCabin();
                         System.out.println("Aircraft Configuration for flight " + returnFlight.getFlightNum() + " contains " + returnCabinClass.size() + " cabins");
                         System.out.println("Please enter fares for each cabin class!\n");
-
+                        
                         for (CabinClassEntity cc: returnCabinClass) {
                             String type = "";
                             if (null != cc.getCabinClassType()) switch (cc.getCabinClassType()) {
@@ -605,7 +612,7 @@ public class FlightOperationModule {
                                     String reply2 = sc.nextLine().trim();
                                     if(!reply2.equals("Y") && !reply2.equals("y")) {
                                         break;
-                                    } 
+                                    }
                                 } catch (FlightSchedulePlanNotFoundException | CabinClassNotFoundException | FareExistException ex) {
                                     System.out.println("Error: " + ex.getMessage() + "\nPlease try again!");
                                 }
@@ -618,9 +625,12 @@ public class FlightOperationModule {
                 }
                 
                 
+                
             }
         } catch (FlightNotFoundException | ParseException | UnknownPersistenceException | InputDataValidationException | FlightSchedulePlanExistException  ex) {
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n\n");
+        } catch (FlightSchedulePlanNotFoundException ex) {
+            System.out.println(ex.getMessage());
         }
     }
     
@@ -638,11 +648,11 @@ public class FlightOperationModule {
     private Pair<Date, Integer> getFlightScheduleInfo() throws ParseException {
         Date departure = null;
         int duration = 0;
-
+        
         Scanner sc = new Scanner(System.in);
         SimpleDateFormat formatter = new SimpleDateFormat("dd/M/yyyy hh:mm:ss a");
         SimpleDateFormat outputFormatter = new SimpleDateFormat("dd/M/yyyy hh:mm:ss a");
-
+        
         System.out.print("Enter departure Date and Time (dd/mm/yyyy hh:mm:ss AM/PM)> ");
         String input = sc.nextLine().trim();
         departure = formatter.parse(input);
@@ -651,6 +661,95 @@ public class FlightOperationModule {
         return new Pair<>(departure, duration);
     }
     
+    private void doViewAllFlightSchedulePlan() {
+        try {
+            Scanner sc = new Scanner(System.in);
+            System.out.println("*** View All Flight Schedule Plans ***");
+            System.out.printf("%10s%15s%20s%40s%25s\n", "Plan ID", "Flight Number", "Type Plan", "Recurrent End Date", "Number of Flight Schedule");
+            
+            List<FlightSchedulePlanEntity> list = flightSchedulePlanSessionBean.retrieveAllFlightSchedulePlan();
+            for(FlightSchedulePlanEntity plan : list) {
+                System.out.printf("%10s%20s%20s%40s%25s\n", plan.getFlightSchedulePlanID(), plan.getFlightNum(), plan.getTypeExistingInPlan(), plan.getRecurrentEndDate(), plan.getFlightSchedule().size());
+            }
+            System.out.print("Press any key to continue...> ");
+            sc.nextLine();
+        } catch (FlightSchedulePlanNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        } catch (FlightScheduleNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    private void doViewFlightSchedulePlanDetails() {
+        try {
+            Scanner sc = new Scanner(System.in);
+            int response = 0;
+            System.out.println("*** View Flight Schedule Plan details ***");
+            System.out.print("Enter Flight Schedule Plan ID> ");
+            Long id = sc.nextLong();
+            
+            FlightSchedulePlanEntity plan = flightSchedulePlanSessionBean.retrieveFlightSchedulePlanEntityById(id);
+            FlightEntity flight = plan.getFlight();
+            FlightRouteEntity route = flight.getFlightRoute();
+            List<FlightScheduleEntity> schedule = plan.getFlightSchedule();
+            List<FareEntity> fare = plan.getFares();
+            
+            //List<FlightSchedulePlanEntity> list = flightSchedulePlanSessionBean.retrieveNecessaryDetails();
+            //List<FlightScheduleEntity> listSchedule = flightSchedulePlanSessionBean.retrieveNecessaryDetailsFromSchedule();
+            //List<FlightRouteEntity> listRoute = flightRouteSessionBean.retrieveNecessaryDetails();
+            //List<FareEntity> listFare = fareSessionBean.retrieveNecessaryDetails();
+            
+            System.out.printf("%10s%15s%20s%25s%30s%25s%40s%40s%20s%30s\n", "Plan ID", "Flight Number", "Type Plan", "Flight Schedule ID", "Departure Date", "Duration", "Origin", "Destination", "Cabin Class ID", "Fare");
+            
+            for(FlightScheduleEntity list : schedule) { 
+                for(FareEntity fares : fare) {
+            System.out.printf("%10s%15s%20s%25s%30s%25s%40s%40s%20s%30s\n", plan.getFlightSchedulePlanID(), plan.getFlightNum(), plan.getTypeExistingInPlan(), list.getFlightScheduleID(), list.getDepartureDateTime(), list.getDuration(), route.getOrigin().getAirportName(), route.getDestination().getAirportName(), fares.getCabinClass().getCabinClassID(), fares.getFareAmount());
+                }
+            }
+            System.out.println("--------------------------");
+            System.out.println("1: Update Flight Schedule Plan");
+            System.out.println("2: Delete Flight Schedule Plan");
+            System.out.println("3: Back\n");
+            
+            System.out.print("> ");
+            response = sc.nextInt();
+            
+            if(response == 1) {
+                //doUpdateFlightSchedulePlan(plan, schedule, fare);
+            }
+            else if(response == 2) {
+                doDeleteFlightSchedulePlan(plan);
+            }
+    }   catch (FlightSchedulePlanNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    //WHAT EXACTLY DO U WANT TO UPDATE???
+    /*private void doUpdateFlightSchedulePlan(FlightSchedulePlanEntity plan, List<FlightScheduleEntity> schedule, List<FareEntity> fare) {
+    Scanner sc = new Scanner(System.in);
+    System.out.println("*** Update Flight Schedule Plan ***");
+    
+    System.out.print("Enter new duration (negative if no change)> ");
+    int duration = sc.nextInt();
+    if(duration > 0) {
+    schedule.forEach(sched -> sched.setDuration(duration));
+    }
+    
+    }*/
+        
+    private void doDeleteFlightSchedulePlan(FlightSchedulePlanEntity plan) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("*** Delete Flight Schedule Plan ***");
+        System.out.println("Are you sure you want to delete (Y/N)> ");
+        String response = sc.nextLine().trim();
+        
+        if(response.equalsIgnoreCase("Y")) {
+            flightSchedulePlanSessionBean.deleteFlightSchedulePlan(plan.getFlightSchedulePlanID());
+            System.out.println("Deletion successful!");
+        }
+    }
+
     private void showInputDataValidationErrorsForSchedulePlanEntity(Set<ConstraintViolation<FlightSchedulePlanEntity>> constraintViolations) {
         System.out.println("\nInput data validation error!:");
         for(ConstraintViolation constraintViolation:constraintViolations) {
@@ -658,4 +757,10 @@ public class FlightOperationModule {
         }
         System.out.println("\nPlease try again......\n");
     }
+
+    
+    
+
+    
+    
 }

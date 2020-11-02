@@ -11,8 +11,10 @@ import entity.FlightSchedulePlanEntity;
 import exceptions.AircraftConfigExistException;
 import exceptions.CabinClassNotFoundException;
 import exceptions.FareExistException;
+import exceptions.FareNotFoundException;
 import exceptions.FlightSchedulePlanNotFoundException;
 import exceptions.UnknownPersistenceException;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -65,5 +67,23 @@ public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLo
             }
         }
     }
-           
+    
+    private FareEntity retrieveFareById(Long fareID) throws FareNotFoundException {
+        FareEntity fare = em.find(FareEntity.class, fareID);
+        if(fare != null) {
+            return fare;
+        } else {
+            throw new FareNotFoundException("Fare " + fareID + " not found!");
+        }
+    }
+    
+    @Override
+    public void deleteFares(List<FareEntity> fares) throws FareNotFoundException {
+        for(FareEntity fare : fares) {
+            fare = retrieveFareById(fare.getFareID());
+            em.remove(fare);
+        }
+    }
 }
+
+

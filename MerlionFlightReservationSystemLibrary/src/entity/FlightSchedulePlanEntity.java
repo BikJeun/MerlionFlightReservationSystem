@@ -21,6 +21,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -58,6 +59,11 @@ public class FlightSchedulePlanEntity implements Serializable {
     
     @OneToMany(mappedBy = "flightSchedulePlan",  fetch = FetchType.EAGER)
     private List<FareEntity> fares;
+    
+    @OneToOne(mappedBy = "complementary")
+    private FlightSchedulePlanEntity source;
+    @OneToOne
+    private FlightSchedulePlanEntity complementary;
     
     public FlightSchedulePlanEntity() {
         flightSchedule = new ArrayList<>();
@@ -201,5 +207,22 @@ public class FlightSchedulePlanEntity implements Serializable {
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
     }
+
+    public FlightSchedulePlanEntity getSource() {
+        return source;
+    }
+
+    public void setSource(FlightSchedulePlanEntity source) {
+        this.source = source;
+    }
+
+    public FlightSchedulePlanEntity getComplementary() {
+        return complementary;
+    }
+
+    public void setComplementary(FlightSchedulePlanEntity complementary) {
+        this.complementary = complementary;
+    }
+    
     
 }

@@ -7,8 +7,12 @@ package ejb.session.stateless;
 
 import entity.FlightScheduleEntity;
 import entity.FlightSchedulePlanEntity;
+import exceptions.FlightScheduleNotFoundException;
 import exceptions.InputDataValidationException;
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -69,7 +73,45 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
         }
         
         return msg;
+    } 
+    
+    @Override
+    public FlightScheduleEntity retrieveFlightScheduleById(Long flightScheduleID) throws FlightScheduleNotFoundException {
+        FlightScheduleEntity schedule = em.find(FlightScheduleEntity.class, flightScheduleID);
+        
+        if(schedule != null) {
+            return schedule;
+        } else {
+            throw new FlightScheduleNotFoundException("Flight Schedule " + flightScheduleID + " not found!");
+        
+        }
     }
+
+    @Override
+    public FlightScheduleEntity retrieveEarliestDepartureSchedule(List<FlightScheduleEntity> list) throws FlightScheduleNotFoundException {
+        FlightScheduleEntity result = null;
+        for(int i = 0; i<list.size(); i++) {
+            try {
+                FlightScheduleEntity test = retrieveFlightScheduleById(list.get(i).getFlightScheduleID());
+                if(result == null || result.getDepartureDateTime().compareTo(test.getDepartureDateTime()) > 0) {
+                    result = test;
+                }
+            } catch (FlightScheduleNotFoundException ex) {
+                throw new FlightScheduleNotFoundException(ex.getMessage());
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void deleteSchedule(List<FlightScheduleEntity> flightSchedule) throws FlightScheduleNotFoundException {
+       for(FlightScheduleEntity sched : flightSchedule) {
+           sched = retrieveFlightScheduleById(sched.getFlightScheduleID());
+           em.remove(sched);
+       }
+    }
+
+   
 }
     
     

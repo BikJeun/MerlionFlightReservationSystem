@@ -13,7 +13,6 @@ import exceptions.CreateNewAircraftConfigException;
 import exceptions.UnknownPersistenceException;
 import java.util.List;
 import javax.ejb.Remote;
-import javax.persistence.NoResultException;
 
 /**
  * @author Ong Bik Jeun
@@ -26,7 +25,7 @@ public interface AircraftConfigurationSessionBeanRemote {
 
     public void associateTypeWithConfig(Long valueOf, Long aircraftConfigID);
 
-    public List<AircraftConfigurationEntity> retrieveAllConfiguration();
+    public List<AircraftConfigurationEntity> retrieveAllConfiguration() throws AircraftConfigNotFoundException;
     
     public AircraftConfigurationEntity retriveAircraftConfigByID(Long aircraftConfigID) throws AircraftConfigNotFoundException;
     

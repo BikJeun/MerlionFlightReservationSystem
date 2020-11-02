@@ -5,7 +5,11 @@
  */
 package ejb.session.stateless;
 
+import entity.SeatInventoryEntity;
+import java.util.List;
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 /**
  *
@@ -14,6 +18,17 @@ import javax.ejb.Stateless;
 @Stateless
 public class SeatsInventorySessionBean implements SeatsInventorySessionBeanRemote, SeatsInventorySessionBeanLocal {
 
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
+    @PersistenceContext(unitName = "MerlionFlightReservationSystem-ejbPU")
+    private EntityManager em;
+
+    public SeatsInventorySessionBean() {
+    }
+
+    @Override
+    public void deleteSeatInventory(List<SeatInventoryEntity> seats) {
+        for (SeatInventoryEntity seat: seats) {
+            em.remove(seat);
+        }
+    }
+    
 }

@@ -49,7 +49,7 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
     private final Validator validator;
     
     public FlightSessionBean() {
-         validatorFactory = Validation.buildDefaultValidatorFactory();
+        validatorFactory = Validation.buildDefaultValidatorFactory();
         validator = validatorFactory.getValidator();
     }
     
@@ -66,7 +66,6 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
                 flight.setFlightRoute(flightRoute);
                 
                 em.flush();
-                em.refresh(flight);
 
             } catch (PersistenceException ex) {              
                 if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
@@ -124,28 +123,29 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
     }
 
     @Override
-    public void associateExistingTwoWayFlights(Long flightID, Long returnFlightID) throws FlightNotFoundException {
-        FlightEntity flight = retreiveFlightById(flightID);
+    public void associateExistingFlightWithReturnFlight(Long sourceFlightID, Long returnFlightID) throws FlightNotFoundException {
+        FlightEntity sourceFlight = retreiveFlightById(sourceFlightID);
         FlightEntity returnFlight = retreiveFlightById(returnFlightID);
 
-        flight.setReturningFlight(returnFlight); // this or the one in flightRoute? both seem to work?
-        flight.setSourceFlight(flight);
-
-        returnFlight.setSourceFlight(returnFlight);
-        returnFlight.setReturningFlight(flight);
+        // Bidirection association
+        sourceFlight.setReturningFlight(returnFlight);
+        returnFlight.setSourceFlight(sourceFlight);
     }
     
     @Override
-    public List<FlightEntity> retrieveAllFlight() {
+    public List<FlightEntity> retrieveAllFlight() throws FlightNotFoundException {
         Query query = em.createQuery("SELECT f FROM FlightEntity f WHERE f.disabled=false ORDER BY SUBSTRING(f.flightNum, 3) ASC");
         List<FlightEntity> result =  query.getResultList();
+        if (result.isEmpty()) {
+            throw new FlightNotFoundException("No flights found in system");
+        }
         int x = result.size()-1;
         while (x >= 0) {          
             FlightEntity flight = result.get(x);
             boolean replaced = false;
             for (int y = x - 2; y >= 0; y--) {           
                 FlightEntity otherFlight = result.get(y);                             
-                if (flight.getReturningFlight()!= null && flight.getReturningFlight().getFlightID() == otherFlight.getFlightID()) {
+                if (otherFlight.getReturningFlight()!= null && otherFlight.getReturningFlight().getFlightID() == flight.getFlightID()) {
                     result.remove(x);
                     result.add(y + 1, flight);
                     replaced = true;
@@ -159,30 +159,109 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
     }
     
     @Override
-    public void updateFlight(FlightEntity oldFlight) throws FlightNotFoundException, UpdateFlightException, InputDataValidationException {
-        if(oldFlight != null && oldFlight.getFlightID()!= null) {
-            Set<ConstraintViolation<FlightEntity>>constraintViolations = validator.validate(oldFlight);
-            
-            if(constraintViolations.isEmpty()) {
+     public List<FlightEntity> retrieveAllFlightByFlightRoute(String originIATACode, String destinationIATACode) throws FlightNotFoundException {
+        Query query = em.createQuery("SELECT f FROM FlightEntity f WHERE f.disabled=false AND f.flightRoute.origin.IATACode = :origin AND f.flightRoute.destination.IATACode = :dest ORDER BY SUBSTRING(f.flightNum, 3) ASC");
+        query.setParameter("origin", originIATACode);
+        query.setParameter("dest", destinationIATACode);
+        List<FlightEntity> result =  query.getResultList();
+        if (result.isEmpty()) {
+            throw new FlightNotFoundException("No flights with flight route from " + originIATACode + " to " +  destinationIATACode + " found in system");
+        }
+        return result;
+    }
+    
+    
+    @Override
+    public void updateFlight(FlightEntity oldFlight) throws FlightNotFoundException, UpdateFlightException, InputDataValidationException, FlightRouteNotFoundException, UnknownPersistenceException, AircraftConfigNotFoundException {
+
+        Set<ConstraintViolation<FlightEntity>>constraintViolations = validator.validate(oldFlight);
+        if (constraintViolations.isEmpty()) {
+            try {
                 FlightEntity flightEntityToUpdate = retreiveFlightById(oldFlight.getFlightID());
                 
-                if(flightEntityToUpdate.getFlightID().equals(oldFlight.getFlightID())) {
-                    flightEntityToUpdate.setFlightNum(oldFlight.getFlightNum());
-                    flightEntityToUpdate.setFlightRoute(oldFlight.getFlightRoute());
-                    flightEntityToUpdate.setAircraftConfig(oldFlight.getAircraftConfig());
-                    flightEntityToUpdate.setSourceFlight(oldFlight.getSourceFlight());
-                    flightEntityToUpdate.setReturningFlight(oldFlight.getReturningFlight());
+                if (flightEntityToUpdate.getFlightNum() != oldFlight.getFlightNum()) {
+                    throw new FlightNotFoundException("Flight not found");
                 }
-                else {
-                    throw new UpdateFlightException("ID of flight record to be updated does not match the existing record");
+                
+                // Flight Number (edit: not allowing update of flightnumber)
+                // flightEntityToUpdate.setFlightNum(oldFlight.getFlightNum());
+                
+                // Flight Route
+                if (flightEntityToUpdate.getFlightRoute().getFlightRouteID() != oldFlight.getFlightRoute().getFlightRouteID()) {
+                    flightRouteSessionBean.retreiveFlightRouteById(flightEntityToUpdate.getFlightRoute().getFlightRouteID()).getFlights().remove(flightEntityToUpdate);
+                    flightRouteSessionBean.retreiveFlightRouteById(oldFlight.getFlightRoute().getFlightRouteID()).getFlights().add(flightEntityToUpdate);
+                    flightEntityToUpdate.setFlightRoute(flightRouteSessionBean.retreiveFlightRouteById(oldFlight.getFlightRoute().getFlightRouteID()));
                 }
+                
+                // Aircraft Config
+                if (flightEntityToUpdate.getAircraftConfig().getAircraftConfigID() != oldFlight.getAircraftConfig().getAircraftConfigID()) {
+                    flightEntityToUpdate.setAircraftConfig(aircraftConfigurationSessionBean.retriveAircraftConfigByID(oldFlight.getAircraftConfig().getAircraftConfigID()));
+                }
+                
+                // Source Flight
+                if (flightEntityToUpdate.getSourceFlight() != null) {
+                    if (oldFlight.getSourceFlight() != null && flightEntityToUpdate.getSourceFlight().getFlightID() != oldFlight.getSourceFlight().getFlightID()) {
+                        // Dissassociation of old
+                        flightEntityToUpdate.getSourceFlight().setReturningFlight(null);
+                        flightEntityToUpdate.setSourceFlight(null);
+                        
+                        // Association of new
+                        FlightEntity newSource = retreiveFlightById(oldFlight.getSourceFlight().getFlightID());
+                        newSource.setReturningFlight(flightEntityToUpdate);
+                        flightEntityToUpdate.setSourceFlight(newSource);
+                    } else if (oldFlight.getSourceFlight() == null) {
+                        // Dissassociation of old
+                        flightEntityToUpdate.getSourceFlight().setReturningFlight(null);
+                        flightEntityToUpdate.setSourceFlight(null);
+                    }                   
+                } else {
+                    if (oldFlight.getSourceFlight() != null) {
+                        // Association of new
+                        FlightEntity newSource = retreiveFlightById(oldFlight.getSourceFlight().getFlightID());
+                        newSource.setReturningFlight(flightEntityToUpdate);
+                        flightEntityToUpdate.setSourceFlight(newSource);
+                    }
+                }
+                
+                // Returning flight
+                if (flightEntityToUpdate.getReturningFlight() != null) {
+                    if (oldFlight.getReturningFlight() != null && flightEntityToUpdate.getReturningFlight().getFlightID() != oldFlight.getReturningFlight().getFlightID()) {
+                        // Dissassociation of old
+                        flightEntityToUpdate.getReturningFlight().setSourceFlight(null);
+                        flightEntityToUpdate.setReturningFlight(null);
+                        
+                        // Association of new
+                        FlightEntity newReturning = retreiveFlightById(oldFlight.getReturningFlight().getFlightID());
+                        newReturning.setSourceFlight(flightEntityToUpdate);
+                        flightEntityToUpdate.setReturningFlight(newReturning);
+                    } else if (oldFlight.getReturningFlight() == null) {
+                        // Dissassociation of old
+                        flightEntityToUpdate.getReturningFlight().setSourceFlight(null);
+                        flightEntityToUpdate.setReturningFlight(null);
+                    }                   
+                } else {
+                    if (oldFlight.getReturningFlight() != null) {
+                        // Association of new
+                        FlightEntity newReturning = retreiveFlightById(oldFlight.getReturningFlight().getFlightID());
+                        newReturning.setSourceFlight(flightEntityToUpdate);
+                        flightEntityToUpdate.setReturningFlight(newReturning);
+                    }
+                }
+                
+                em.flush();
+            } catch (PersistenceException ex) {              
+                if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
+                    if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
+                         throw new UpdateFlightException("Flight with " + oldFlight.getFlightNum() + " already exist");
+                    } else {
+                        throw new UnknownPersistenceException(ex.getMessage());
+                    }
+                } else {
+                    throw new UnknownPersistenceException(ex.getMessage());
+                }                          
             }
-            else {
-                throw new InputDataValidationException(prepareInputDataValidationErrorsMessage(constraintViolations));
-            }
-        }
-        else {
-            throw new FlightNotFoundException("Flight ID not provided for flight to be updated");
+        } else {
+            throw new InputDataValidationException(prepareInputDataValidationErrorsMessage(constraintViolations));
         }
     }
     
@@ -191,15 +270,17 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
         FlightEntity flight = retreiveFlightById(flightID);
         if (flight.getFlightSchedulePlan().isEmpty()) {
             
-            // Disassociation of FK before removal
+            // Disassociation of FK before removal            
             flight.getFlightRoute().getFlights().remove(flight);
             if (flight.getReturningFlight() != null) {
-                flight.getReturningFlight().setReturningFlight(null);
                 flight.getReturningFlight().setSourceFlight(null);
             }
-            flight.setSourceFlight(null);
             flight.setReturningFlight(null);
 
+            if (flight.getSourceFlight() != null) {
+                flight.getSourceFlight().setReturningFlight(null);
+            }
+            flight.setSourceFlight(null);
 
             em.remove(flight);
         } else {

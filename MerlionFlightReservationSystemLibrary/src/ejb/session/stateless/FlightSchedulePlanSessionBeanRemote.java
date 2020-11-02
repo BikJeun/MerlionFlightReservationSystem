@@ -8,7 +8,6 @@ package ejb.session.stateless;
 import entity.FlightSchedulePlanEntity;
 import exceptions.FareNotFoundException;
 import exceptions.FlightNotFoundException;
-import exceptions.FlightScheduleExistException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.FlightSchedulePlanExistException;
 import exceptions.FlightSchedulePlanNotFoundException;
@@ -30,9 +29,9 @@ public interface FlightSchedulePlanSessionBeanRemote {
     
     public FlightSchedulePlanEntity createNewFlightSchedulePlanMultiple(FlightSchedulePlanEntity plan, long flightID, List<Pair<Date, Integer>> info) throws InputDataValidationException, UnknownPersistenceException, FlightNotFoundException, FlightSchedulePlanExistException;
     
-    public List<FlightSchedulePlanEntity> retrieveAllFlightSchedulePlan() throws FlightSchedulePlanNotFoundException, FlightScheduleNotFoundException;
+    public List<FlightSchedulePlanEntity> retrieveAllFlightSchedulePlan() throws FlightSchedulePlanNotFoundException;
     
-    public void associateExistingPlanToComplementaryPlan(Long flightSchedulePlanID, Long flightSchedulePlanID0) throws FlightSchedulePlanNotFoundException;
+    public void associateExistingPlanToComplementaryPlan(Long sourcFlightSchedulePlanID, Long returnFlightSchedulePlanID) throws FlightSchedulePlanNotFoundException;
     
     public FlightSchedulePlanEntity retrieveFlightSchedulePlanEntityById(Long flightSchedulePlanID) throws FlightSchedulePlanNotFoundException;
     

@@ -25,19 +25,21 @@ public interface FlightSessionBeanRemote {
 
     public FlightEntity createNewFlight(FlightEntity flight, Long chosenRoute, Long chosenConfig) throws FlightExistException, UnknownPersistenceException, FlightRouteNotFoundException, AircraftConfigNotFoundException;
 
-    public void associateExistingTwoWayFlights(Long flightID, Long returnFlightID) throws FlightNotFoundException;
+    public void associateExistingFlightWithReturnFlight(Long flightID, Long returnFlightID) throws FlightNotFoundException;
     
     public FlightEntity retreiveFlightById(Long id) throws FlightNotFoundException;
 
-    public List<FlightEntity> retrieveAllFlight();
+    public List<FlightEntity> retrieveAllFlight() throws FlightNotFoundException;
 
-    public void updateFlight(FlightEntity oldFlight) throws FlightNotFoundException, UpdateFlightException, InputDataValidationException;
+    public void updateFlight(FlightEntity oldFlight) throws FlightNotFoundException, UpdateFlightException, InputDataValidationException, FlightRouteNotFoundException, UnknownPersistenceException, AircraftConfigNotFoundException;
 
     public void deleteFlight(Long flightID) throws FlightNotFoundException;
 
     public FlightEntity enableFlight(String flightNumber, long routeID, long configID) throws FlightNotFoundException;
 
     public FlightEntity retrieveFlightByFlightNumber(String flightNum) throws FlightNotFoundException;
+
+    public List<FlightEntity> retrieveAllFlightByFlightRoute(String originIATACode, String destinationIATACode) throws FlightNotFoundException;
 
     
     

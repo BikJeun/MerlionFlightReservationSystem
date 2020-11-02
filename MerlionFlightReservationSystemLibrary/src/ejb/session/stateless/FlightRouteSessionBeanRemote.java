@@ -12,7 +12,6 @@ import exceptions.FlightRouteNotFoundException;
 import exceptions.UnknownPersistenceException;
 import java.util.List;
 import javax.ejb.Remote;
-import javax.persistence.NoResultException;
 
 /**
  *
@@ -26,11 +25,11 @@ public interface FlightRouteSessionBeanRemote {
 
     public long setComplementaryFlightRoute(long routeID) throws FlightRouteNotFoundException;
 
-    public List<FlightRouteEntity> retrieveAllFlightRouteInOrder();
+    public List<FlightRouteEntity> retrieveAllFlightRouteInOrder() throws FlightRouteNotFoundException;
 
     public void removeFlightRoute(long flightRouteID) throws FlightRouteNotFoundException;
 
     public FlightRouteEntity enableFlightRoute(long originAirportID, long destinationAirportID) throws FlightRouteNotFoundException;
     
-     public FlightRouteEntity retreiveFlightRouteById(Long id) throws FlightRouteNotFoundException;
+    public FlightRouteEntity retreiveFlightRouteById(Long id) throws FlightRouteNotFoundException;
 }

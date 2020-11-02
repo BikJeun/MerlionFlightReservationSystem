@@ -17,6 +17,6 @@ import javax.ejb.Local;
 @Local
 public interface FareSessionBeanLocal {
 
-    public void deleteFares(List<FareEntity> fares) throws FareNotFoundException;
+    public void deleteFares(List<FareEntity> fares);
     
 }

@@ -127,12 +127,19 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
     }
     
     @Override
-    public List<AircraftConfigurationEntity> retrieveAllConfiguration() {
-            Query query = em.createQuery("SELECT a FROM AircraftConfigurationEntity a ORDER BY a.aircraftType ASC, a.name ASC ");
+    public List<AircraftConfigurationEntity> retrieveAllConfiguration() throws AircraftConfigNotFoundException {
+        Query query = em.createQuery("SELECT a FROM AircraftConfigurationEntity a ORDER BY a.aircraftType ASC, a.name ASC ");
 
-            return query.getResultList();
+        List<AircraftConfigurationEntity> result = query.getResultList();
+        if (result.isEmpty()) {
+            throw new AircraftConfigNotFoundException("No aircraft configurations in system");
+        } else {
+            return result;
         }
+       
     }
+   
+}
 
 
     

@@ -11,8 +11,6 @@ import exceptions.FlightScheduleNotFoundException;
 import exceptions.InputDataValidationException;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -32,8 +30,11 @@ import javax.validation.ValidatorFactory;
 public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemote, FlightScheduleSessionBeanLocal {
 
     @EJB
-    private FlightSchedulePlanSessionBeanLocal flightSchedulePlanSessionBean;
+    private SeatsInventorySessionBeanLocal seatsInventorySessionBean;
 
+    @EJB
+    private FlightSchedulePlanSessionBeanLocal flightSchedulePlanSessionBean;
+    
     @PersistenceContext(unitName = "MerlionFlightReservationSystem-ejbPU")
     private EntityManager em;
     
@@ -87,6 +88,7 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
         }
     }
 
+    /* wat is this for ah
     @Override
     public FlightScheduleEntity retrieveEarliestDepartureSchedule(List<FlightScheduleEntity> list) throws FlightScheduleNotFoundException {
         FlightScheduleEntity result = null;
@@ -101,12 +103,14 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
             }
         }
         return result;
-    }
+    } */
 
+    // only exposed in local (managed instances passed in)
     @Override
-    public void deleteSchedule(List<FlightScheduleEntity> flightSchedule) throws FlightScheduleNotFoundException {
-       for(FlightScheduleEntity sched : flightSchedule) {
-           sched = retrieveFlightScheduleById(sched.getFlightScheduleID());
+    public void deleteSchedule(List<FlightScheduleEntity> flightSchedule) {
+       
+        for(FlightScheduleEntity sched : flightSchedule) {           
+           seatsInventorySessionBean.deleteSeatInventory(sched.getSeatInventory()); 
            em.remove(sched);
        }
     }

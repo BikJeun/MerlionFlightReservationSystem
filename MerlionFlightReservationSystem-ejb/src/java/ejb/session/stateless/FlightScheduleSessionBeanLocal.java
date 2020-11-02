@@ -20,11 +20,9 @@ import javax.ejb.Local;
 public interface FlightScheduleSessionBeanLocal {
 
     public FlightScheduleEntity createNewSchedule(FlightSchedulePlanEntity flightSchedulePlan, FlightScheduleEntity schedule) throws InputDataValidationException;
-
-    public FlightScheduleEntity retrieveEarliestDepartureSchedule(List<FlightScheduleEntity> list) throws FlightScheduleNotFoundException;
     
     public FlightScheduleEntity retrieveFlightScheduleById(Long flightScheduleID) throws FlightScheduleNotFoundException;
 
-    public void deleteSchedule(List<FlightScheduleEntity> flightSchedule) throws FlightScheduleNotFoundException;
+    public void deleteSchedule(List<FlightScheduleEntity> flightSchedule);
     
 }

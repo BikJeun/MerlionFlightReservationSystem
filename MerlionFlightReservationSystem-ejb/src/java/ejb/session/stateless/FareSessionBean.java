@@ -77,10 +77,10 @@ public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLo
         }
     }
     
+    // only exposed in local interface, managed instances passed in
     @Override
-    public void deleteFares(List<FareEntity> fares) throws FareNotFoundException {
+    public void deleteFares(List<FareEntity> fares) {
         for(FareEntity fare : fares) {
-            fare = retrieveFareById(fare.getFareID());
             em.remove(fare);
         }
     }

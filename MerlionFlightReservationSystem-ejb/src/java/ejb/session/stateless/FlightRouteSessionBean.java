@@ -103,17 +103,20 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
     }
     
     @Override
-    public List<FlightRouteEntity> retrieveAllFlightRouteInOrder() {
+    public List<FlightRouteEntity> retrieveAllFlightRouteInOrder() throws FlightRouteNotFoundException {
             Query query = em.createQuery("SELECT DISTINCT f FROM FlightRouteEntity f WHERE f.disabled=false ORDER BY f.origin.airportName ASC");
             List<FlightRouteEntity> result = query.getResultList();
+            if (result.isEmpty()) {
+                throw new FlightRouteNotFoundException("No flight routes in system");
+            }
             int x = result.size()-1;
             while (x >= 0) {
                 FlightRouteEntity flightroute = result.get(x);
                 boolean replaced = false;
                 for (int y = x - 2; y >= 0; y--) {
                     FlightRouteEntity otherflightroute = result.get(y);
-                    if (flightroute.getComplementaryRoute()  != null
-                            && flightroute.getComplementaryRoute().getFlightRouteID() == otherflightroute.getFlightRouteID()) {
+                    if (otherflightroute.getComplementaryRoute()  != null
+                            && otherflightroute.getComplementaryRoute().getFlightRouteID() == flightroute.getFlightRouteID()) {
                         result.remove(x);
                         result.add(y + 1, flightroute);
                         replaced = true;

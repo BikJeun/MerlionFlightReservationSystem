@@ -5,6 +5,8 @@
  */
 package ejb.session.stateless;
 
+import entity.SeatInventoryEntity;
+import java.util.List;
 import javax.ejb.Local;
 
 /**
@@ -13,5 +15,7 @@ import javax.ejb.Local;
  */
 @Local
 public interface SeatsInventorySessionBeanLocal {
+
+    public void deleteSeatInventory(List<SeatInventoryEntity> seats);
     
 }

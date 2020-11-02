@@ -8,9 +8,7 @@ package ejb.session.stateless;
 import entity.FlightEntity;
 import entity.FlightScheduleEntity;
 import entity.FlightSchedulePlanEntity;
-import exceptions.FareNotFoundException;
 import exceptions.FlightNotFoundException;
-import exceptions.FlightScheduleNotFoundException;
 import exceptions.FlightSchedulePlanExistException;
 import exceptions.FlightSchedulePlanNotFoundException;
 import exceptions.InputDataValidationException;
@@ -19,8 +17,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.util.Pair;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
@@ -29,8 +25,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -144,10 +138,10 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
                 associateFlightToPlan(flightID, plan);
                 em.flush();
                 return plan;
-            } catch(PersistenceException ex) {
+            } catch (PersistenceException ex) {
                 eJBContext.setRollbackOnly();
-                if(ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
-                    if(ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
+                if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
+                    if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
                         throw new FlightSchedulePlanExistException();
                     } else {
                         throw new UnknownPersistenceException(ex.getMessage());
@@ -175,48 +169,14 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
     public FlightSchedulePlanEntity retrieveFlightSchedulePlanEntityById(Long flightSchedulePlanID) throws FlightSchedulePlanNotFoundException {
         FlightSchedulePlanEntity plan = em.find(FlightSchedulePlanEntity.class, flightSchedulePlanID);
         
-        if(plan != null) {
+        if (plan != null && plan.isDisabled() == false) {
             return plan;
         } else {
             throw new FlightSchedulePlanNotFoundException("Flight Schedule Plan ID " + flightSchedulePlanID.toString() + " does not exist!" );
         }
     }
     
-    // Not in use anymore
-    /*@Override
-    public void associateFlightToPlan(Long flightID, Long flightSchedulePlanID) throws FlightNotFoundException, FlightSchedulePlanNotFoundException, FlightSchedulePlanExistException {
-    
-    FlightEntity flight = flightSessionBean.retreiveFlightById(flightID);
-    FlightSchedulePlanEntity plan = retrieveFlightSchedulePlanEntityById(flightSchedulePlanID);
-    
-    
-    
-    for (FlightSchedulePlanEntity fsp: flight.getFlightSchedulePlan()) {
-    for (FlightScheduleEntity fs: fsp.getFlightSchedule()) {
-    Date start1 = fs.getDepartureDateTime();
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(start1);
-    calendar.add(Calendar.HOUR_OF_DAY, fs.getDuration());
-    Date end1 = calendar.getTime();
-    for (FlightScheduleEntity fs2: plan.getFlightSchedule()) {
-    Date start2 = fs2.getDepartureDateTime();
-    Calendar calendar2 = Calendar.getInstance();
-    calendar2.setTime(start2);
-    calendar2.add(Calendar.HOUR_OF_DAY, fs2.getDuration());
-    Date end2 = calendar2.getTime();
-    
-    if (isOverlapping(start1, end1, start2, end2)) {
-    throw new FlightSchedulePlanExistException("Flight schedule overlaps with existing flight schedules");
-    }
-    }
-    }
-    }
-    flight.getFlightSchedulePlan().add(plan);
-    plan.setFlight(flight);
-    
-    }*/
-    
-    // flightscheduleplan passed in should be managed
+    // flightscheduleplan passed in is managed
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     private void associateFlightToPlan(Long flightID, FlightSchedulePlanEntity flightSchedulePlan) throws FlightNotFoundException, FlightSchedulePlanExistException {
 
@@ -280,44 +240,21 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
     private String prepareInputDataValidationErrorsMessage(Set<ConstraintViolation<FlightSchedulePlanEntity>> constraintViolations) {
         String msg = "Input data validation error!:";
             
-        for(ConstraintViolation constraintViolation:constraintViolations) {
+        for (ConstraintViolation constraintViolation:constraintViolations) {
             msg += "\n\t" + constraintViolation.getPropertyPath() + " - " + constraintViolation.getInvalidValue() + "; " + constraintViolation.getMessage();
         }
         
         return msg;
     }
 
-    //still needs to be edited pls invoke ur godly abilities 
     @Override
-    public List<FlightSchedulePlanEntity> retrieveAllFlightSchedulePlan() throws FlightSchedulePlanNotFoundException, FlightScheduleNotFoundException {
-        Query query = em.createQuery("SELECT DISTINCT p FROM FlightScheduleEntity f, FlightSchedulePlanEntity p WHERE f.flightSchedulePlan.flightSchedulePlanID = p.flightSchedulePlanID AND p.disabled = false ORDER BY p.flightNum ASC, f.departureDateTime DESC");
-       
+    public List<FlightSchedulePlanEntity> retrieveAllFlightSchedulePlan() throws FlightSchedulePlanNotFoundException {
+        Query query = em.createQuery("SELECT DISTINCT p FROM FlightScheduleEntity f, FlightSchedulePlanEntity p WHERE f.flightSchedulePlan.flightSchedulePlanID = p.flightSchedulePlanID AND p.disabled = false ORDER BY p.flightNum ASC, f.departureDateTime DESC");  
         List<FlightSchedulePlanEntity> result = query.getResultList();
+        if (result.isEmpty()) {
+            throw new FlightSchedulePlanNotFoundException("No flight schedule plans in system");
+        }
         int x = result.size()-1;
-        
-        /* //sort departure
-        for (int i = 1; i < result.size(); i++) {
-        boolean isSorted = true;
-        for (int j = 0; j < result.size() - i; j++) {
-        if(result.get(j).getFlightNum().equals(result.get(j+1).getFlightNum())) {
-        try {
-        FlightScheduleEntity source = flightScheduleSessionBean.retrieveEarliestDepartureSchedule(result.get(j).getFlightSchedule());
-        FlightScheduleEntity next = flightScheduleSessionBean.retrieveEarliestDepartureSchedule(result.get(j+1).getFlightSchedule());
-        
-        if(source.getDepartureDateTime().compareTo(next.getDepartureDateTime()) < 0) {
-        FlightSchedulePlanEntity toBeSwapped = result.get(j);
-        
-        result.remove(j);
-        result.add(j+1, toBeSwapped);
-        isSorted = false;
-        }
-        } catch (FlightScheduleNotFoundException ex) {
-        throw new FlightScheduleNotFoundException(ex.getMessage());
-        }
-        }
-        }
-        if(isSorted) {break;}
-        }*/
         
         //sort complementary
         while (x >= 0) {
@@ -330,53 +267,46 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
                     result.add(y + 1, plan);
                     replaced = true;
                     break;
-                }
-                
+                }            
             }
             if (replaced) {continue;}
             x--;
-        }
-        
-        try{        
+        }      
         return result;
-    } catch (NoResultException | NonUniqueResultException ex) {
-        throw new FlightSchedulePlanNotFoundException("Flight Schedule Plan does not exist in system!");
-    }
     }
 
     @Override
-    public void associateExistingPlanToComplementaryPlan(Long flightSchedulePlanID, Long flightSchedulePlanID0) throws FlightSchedulePlanNotFoundException {
-        FlightSchedulePlanEntity source = retrieveFlightSchedulePlanEntityById(flightSchedulePlanID);
-        FlightSchedulePlanEntity complementary = retrieveFlightSchedulePlanEntityById(flightSchedulePlanID0);
+    public void associateExistingPlanToComplementaryPlan(Long sourcFlightSchedulePlanID, Long returnFlightSchedulePlanID) throws FlightSchedulePlanNotFoundException {
+        FlightSchedulePlanEntity source = retrieveFlightSchedulePlanEntityById(sourcFlightSchedulePlanID);
+        FlightSchedulePlanEntity complementary = retrieveFlightSchedulePlanEntityById(returnFlightSchedulePlanID);
         
-        if(source != null && complementary != null) {
-            source.setSource(source);
-            source.setComplementary(complementary);
-        } else {
-            throw new FlightSchedulePlanNotFoundException("Flight Schedule Plan not found!");
-        }
+        // Bidirectional association
+        source.setComplementary(complementary);
+        complementary.setSource(source);
+        
     }
     
     @Override
-    public void deleteFlightSchedulePlan(Long flightSchedulePlanID) throws FlightSchedulePlanNotFoundException, FlightScheduleNotFoundException, FareNotFoundException {
+    public void deleteFlightSchedulePlan(Long flightSchedulePlanID) throws FlightSchedulePlanNotFoundException {
         FlightSchedulePlanEntity plan = retrieveFlightSchedulePlanEntityById(flightSchedulePlanID);
-        
+                    
         if(plan.getFlightSchedule().stream().allMatch(sched -> sched.getReservations().isEmpty())) {
-            plan.setFlightSchedule(null);
+            
             flightScheduleSessionBean.deleteSchedule(plan.getFlightSchedule());
             
             plan.getFlight().getFlightSchedulePlan().remove(plan);
             
             fareSessionBean.deleteFares(plan.getFares());
             
-            List<FlightSchedulePlanEntity> fsp = retrieveAllFlightSchedulePlan();
-            for (FlightSchedulePlanEntity planList: fsp) {
-                if (planList.getComplementary().getFlightSchedulePlanID() == plan.getFlightSchedulePlanID()) {
-                    planList.setComplementary(null);
-                    planList.setSource(null);
-                }
+            if (plan.getSource() != null) {
+                plan.getSource().setComplementary(null);
+                plan.setSource(null);
             }
-            
+            if (plan.getComplementary() != null) {
+                plan.getComplementary().setSource(null);
+                plan.setComplementary(null);
+            }
+                       
             em.remove(plan);
             
         } else {

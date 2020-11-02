@@ -54,10 +54,7 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
             em.persist(aircraftConfig);
             
             // Bidirectional association between aircraftType <-> aircraftConfig
-            AircraftTypeEntity aircraftType = em.find(AircraftTypeEntity.class, aircraftTypeID);
-            if (aircraftType == null) {
-                throw new AircraftTypeNotFoundException("Aircraft Type does not exist!");
-            }
+            AircraftTypeEntity aircraftType = aircraftTypeSessionBean.retrieveAircraftTypeById(aircraftTypeID);
             aircraftType.getAircraftConfig().add(aircraftConfig);
             aircraftConfig.setAircraftType(aircraftType);
             
@@ -101,7 +98,7 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
         }
     }
     
-    public int calculateMaxCapacity(AircraftConfigurationEntity aircraftConfig) {
+    private int calculateMaxCapacity(AircraftConfigurationEntity aircraftConfig) {
         int max = 0;
         System.out.println("Number of cabins: " + aircraftConfig.getCabin().size());
         for (CabinClassEntity cabin: aircraftConfig.getCabin()) {
@@ -109,21 +106,6 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
         }
         System.out.println("/nTesting max: " + max);
         return max;
-    }
-
-    @Override
-    public void associateTypeWithConfig(Long i, Long aircraftConfigID) {
-        try {
-            AircraftTypeEntity type = aircraftTypeSessionBean.retrieveAircraftTypeById(i);
-            AircraftConfigurationEntity config = retriveAircraftConfigByID(aircraftConfigID);
-            
-            if(type != null && config != null) {
-                type.getAircraftConfig().add(config);
-                config.setAircraftType(type);
-            }
-        } catch (AircraftTypeNotFoundException | AircraftConfigNotFoundException ex) {
-            System.out.println(ex.getMessage());
-        }
     }
     
     @Override

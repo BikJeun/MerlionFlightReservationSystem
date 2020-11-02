@@ -5,9 +5,11 @@
  */
 package ejb.session.stateless;
 
+import entity.CabinClassEntity;
 import entity.FlightEntity;
 import entity.FlightScheduleEntity;
 import entity.FlightSchedulePlanEntity;
+import entity.SeatInventoryEntity;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightSchedulePlanExistException;
 import exceptions.FlightSchedulePlanNotFoundException;
@@ -40,6 +42,8 @@ import javax.validation.ValidatorFactory;
 @Stateless
 public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionBeanRemote, FlightSchedulePlanSessionBeanLocal {
 
+    @EJB
+    private SeatsInventorySessionBeanLocal seatsInventorySessionBean;
     @EJB
     private FareSessionBeanLocal fareSessionBean;
     @EJB
@@ -90,6 +94,14 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
                 }
                 
                 associateFlightToPlan(flightID, plan);
+                
+                for (CabinClassEntity cc: plan.getFlight().getAircraftConfig().getCabin()) {
+                    SeatInventoryEntity seats = new SeatInventoryEntity(cc.getMaxSeatCapacity(), 0 , cc.getMaxSeatCapacity());
+                    for (FlightScheduleEntity fse: plan.getFlightSchedule()) {
+                        seatsInventorySessionBean.createSeatInventory(seats, fse, cc);
+                    }
+                }
+                
                 em.flush();
                 return plan;
             } catch(PersistenceException ex) {
@@ -136,6 +148,14 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
                 }
                 
                 associateFlightToPlan(flightID, plan);
+                
+                for (CabinClassEntity cc: plan.getFlight().getAircraftConfig().getCabin()) {
+                    SeatInventoryEntity seats = new SeatInventoryEntity(cc.getMaxSeatCapacity(), 0 , cc.getMaxSeatCapacity());
+                    for (FlightScheduleEntity fse: plan.getFlightSchedule()) {
+                        seatsInventorySessionBean.createSeatInventory(seats, fse, cc);
+                    }
+                }
+                 
                 em.flush();
                 return plan;
             } catch (PersistenceException ex) {

@@ -31,6 +31,8 @@ public class SeatInventoryEntity implements Serializable {
     private int reserved;
     @Column(nullable = false)
     private int balance;
+    @Column(nullable = false)
+    private char[][] seats;
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
@@ -43,13 +45,13 @@ public class SeatInventoryEntity implements Serializable {
     public SeatInventoryEntity() {
     }
 
-    public SeatInventoryEntity(int available, CabinClassEntity cabin, FlightScheduleEntity flightSchedule) {
+    public SeatInventoryEntity(int available, int reserved, int balance) {
+        this();
         this.available = available;
-        this.reserved = 0;
-        this.balance = 0;
-        this.cabin = cabin;
-        this.flightSchedule = flightSchedule;
+        this.reserved = reserved;
+        this.balance = balance;
     }
+
 
     public int getAvailable() {
         return available;
@@ -122,6 +124,20 @@ public class SeatInventoryEntity implements Serializable {
     @Override
     public String toString() {
         return "entity.SeatInventoryEntity[ id=" + seatInventoryID + " ]";
+    }
+
+    /**
+     * @return the seats
+     */
+    public char[][] getSeats() {
+        return seats;
+    }
+
+    /**
+     * @param seats the seats to set
+     */
+    public void setSeats(char[][] seats) {
+        this.seats = seats;
     }
     
 }

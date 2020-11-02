@@ -7,10 +7,7 @@ package ejb.session.stateless;
 
 import entity.AircraftConfigurationEntity;
 import entity.CabinClassEntity;
-import exceptions.AircraftConfigNotFoundException;
-import exceptions.CabinClassExistException;
 import exceptions.CabinClassNotFoundException;
-import exceptions.UnknownPersistenceException;
 import javax.ejb.Local;
 
 /**

@@ -36,6 +36,5 @@ public interface FlightSchedulePlanSessionBeanRemote {
     public FlightSchedulePlanEntity retrieveFlightSchedulePlanEntityById(Long flightSchedulePlanID) throws FlightSchedulePlanNotFoundException;
     
     public void deleteFlightSchedulePlan(Long flightSchedulePlanID) throws FlightSchedulePlanNotFoundException, FlightScheduleNotFoundException, FareNotFoundException;
-        
-        
+ 
     }

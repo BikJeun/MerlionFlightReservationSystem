@@ -23,8 +23,6 @@ public interface AircraftConfigurationSessionBeanRemote {
 
     public AircraftConfigurationEntity createNewAircraftConfig(AircraftConfigurationEntity aircraftConfig, long aircraftTypeID, List<CabinClassEntity> cabinClasses) throws CreateNewAircraftConfigException, AircraftConfigExistException, UnknownPersistenceException;
 
-    public void associateTypeWithConfig(Long valueOf, Long aircraftConfigID);
-
     public List<AircraftConfigurationEntity> retrieveAllConfiguration() throws AircraftConfigNotFoundException;
     
     public AircraftConfigurationEntity retriveAircraftConfigByID(Long aircraftConfigID) throws AircraftConfigNotFoundException;

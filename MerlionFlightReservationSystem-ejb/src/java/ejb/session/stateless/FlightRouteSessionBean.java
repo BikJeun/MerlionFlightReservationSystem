@@ -48,11 +48,10 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
             
             em.persist(flightRoute); //unidirectional, so there is no need to associate on airport side
             
-            flightRoute.setOrigin(originAirport); // QN: neccesary to set with managed instances? should i set then persist or persist then set?
+            flightRoute.setOrigin(originAirport); 
             flightRoute.setDestination(destinationAirport);
             
             em.flush();
-            em.refresh(flightRoute);
             return flightRoute;
         } catch (AirportNotFoundException ex) {
             throw new AirportNotFoundException("Airport does not exist in system");
@@ -95,6 +94,8 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
     public long setComplementaryFlightRoute(long routeID) throws FlightRouteNotFoundException {
         FlightRouteEntity route = retreiveFlightRouteById(routeID);
         FlightRouteEntity other =  searchForFlightRouteByOriginAndDestination(route.getDestination().getIATACode(), route.getOrigin().getIATACode());
+        
+        // Since complementary flight routes always come as a pair
         route.setSourceRoute(other);
         route.setComplementaryRoute(other);
         other.setComplementaryRoute(route);

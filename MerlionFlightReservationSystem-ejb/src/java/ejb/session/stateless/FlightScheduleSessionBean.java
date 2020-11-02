@@ -53,7 +53,7 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
          Set<ConstraintViolation<FlightScheduleEntity>> constraintViolations = validator.validate(schedule);
          if(constraintViolations.isEmpty()) {
                 em.persist(schedule);
-
+                
                 schedule.setFlightSchedulePlan(flightSchedulePlan);
                 if (!flightSchedulePlan.getFlightSchedule().contains(schedule)) {
                     flightSchedulePlan.getFlightSchedule().add(schedule);

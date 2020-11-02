@@ -5,14 +5,10 @@
  */
 package ejb.session.stateless;
 
-import entity.AircraftConfigurationEntity;
 import entity.CabinClassEntity;
 import enumeration.CabinClassTypeEnum;
-import exceptions.AircraftConfigNotFoundException;
-import exceptions.CabinClassExistException;
 import exceptions.CabinClassNotFoundException;
 import exceptions.CabinClassTypeEnumNotFoundException;
-import exceptions.UnknownPersistenceException;
 import javax.ejb.Remote;
 
 /**
@@ -23,8 +19,6 @@ import javax.ejb.Remote;
 public interface CabinClassSessionBeanRemote {
 
     public CabinClassTypeEnum findEnumType(String trim) throws CabinClassTypeEnumNotFoundException;
-
-    public int computeMaxSeatCapacity(int rows, int seatsAbreast);
     
     public CabinClassEntity retrieveCabinByID(Long cabinClassID) throws CabinClassNotFoundException;
     

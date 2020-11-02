@@ -81,7 +81,7 @@ public class MainApp {
                             login = true;
                             flightOperationModule = new FlightOperationModule(currentEmployee, flightSessionBean, flightSchedulePlanSessionBean, flightRouteSessionBean, aircraftConfigurationSessionBean, fareSessionBean);
                             flightPlanningModule = new FlightPlanningModule(currentEmployee, airportSessionBean, aircraftConfigurationSessionBean, flightRouteSessionBean, cabinClassSessionBean, aircraftTypeSessionBean);
-                            salesManagementModule = new SalesManagementModule(currentEmployee, seatsInventorySessionBean, reservationSessionBean);
+                            salesManagementModule = new SalesManagementModule(currentEmployee, seatsInventorySessionBean, reservationSessionBean, flightSessionBean);
                             mainMenu();
                         } catch (InvalidLoginCredentialException ex) {
                             System.out.println(ex.getMessage());

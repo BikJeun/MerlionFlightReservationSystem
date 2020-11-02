@@ -251,8 +251,7 @@ public class FlightPlanningModule {
             }
         }
 
-        int maxCapacity = cabinClassSessionBean.computeMaxSeatCapacity(rows, seatsAbreast);
-        cabin = new CabinClassEntity(type, aisles, rows, seatsAbreast, config, maxCapacity);
+        cabin = new CabinClassEntity(type, aisles, rows, seatsAbreast, config, rows * seatsAbreast);
         return cabin;
     }
 

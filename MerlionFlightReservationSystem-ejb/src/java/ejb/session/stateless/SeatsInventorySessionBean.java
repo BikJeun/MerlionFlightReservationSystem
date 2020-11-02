@@ -5,9 +5,13 @@
  */
 package ejb.session.stateless;
 
+import entity.CabinClassEntity;
+import entity.FlightScheduleEntity;
 import entity.SeatInventoryEntity;
 import java.util.List;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -22,6 +26,31 @@ public class SeatsInventorySessionBean implements SeatsInventorySessionBeanRemot
     private EntityManager em;
 
     public SeatsInventorySessionBean() {
+    }
+    
+    // only exposed in local interface
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    @Override
+    public SeatInventoryEntity createSeatInventory(SeatInventoryEntity seatInventory, FlightScheduleEntity flightSchedule, CabinClassEntity cabinClass) {
+        
+        em.persist(seatInventory);
+        
+        int noOfRows = cabinClass.getNumOfRows();
+        int noOfSeatsAbreast = cabinClass.getNumOfSeatsAbreast();
+        char[][] seats = new char[noOfRows][noOfSeatsAbreast];
+        
+        for (int i = 0; i < noOfRows; i++) {
+            for (int j = 0; j < noOfSeatsAbreast; j++) {
+                seats[i][j] = '-';
+            }
+        }
+        seatInventory.setSeats(seats);
+        
+        seatInventory.setCabin(cabinClass);
+        seatInventory.setFlightSchedule(flightSchedule);
+        flightSchedule.getSeatInventory().add(seatInventory);
+        
+        return seatInventory;
     }
 
     @Override

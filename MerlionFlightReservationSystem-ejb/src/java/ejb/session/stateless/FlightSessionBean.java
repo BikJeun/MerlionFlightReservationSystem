@@ -16,6 +16,7 @@ import exceptions.InputDataValidationException;
 import exceptions.UnknownPersistenceException;
 import exceptions.UpdateFlightException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -179,7 +180,7 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
             try {
                 FlightEntity flightEntityToUpdate = retreiveFlightById(oldFlight.getFlightID());
                 
-                if (flightEntityToUpdate.getFlightNum() != oldFlight.getFlightNum()) {
+                if (!flightEntityToUpdate.getFlightNum().equals(oldFlight.getFlightNum())) {
                     throw new FlightNotFoundException("Flight not found");
                 }
                 
@@ -187,20 +188,20 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
                 // flightEntityToUpdate.setFlightNum(oldFlight.getFlightNum());
                 
                 // Flight Route
-                if (flightEntityToUpdate.getFlightRoute().getFlightRouteID() != oldFlight.getFlightRoute().getFlightRouteID()) {
+                if (!Objects.equals(flightEntityToUpdate.getFlightRoute().getFlightRouteID(), oldFlight.getFlightRoute().getFlightRouteID())) {
                     flightRouteSessionBean.retreiveFlightRouteById(flightEntityToUpdate.getFlightRoute().getFlightRouteID()).getFlights().remove(flightEntityToUpdate);
                     flightRouteSessionBean.retreiveFlightRouteById(oldFlight.getFlightRoute().getFlightRouteID()).getFlights().add(flightEntityToUpdate);
                     flightEntityToUpdate.setFlightRoute(flightRouteSessionBean.retreiveFlightRouteById(oldFlight.getFlightRoute().getFlightRouteID()));
                 }
                 
                 // Aircraft Config
-                if (flightEntityToUpdate.getAircraftConfig().getAircraftConfigID() != oldFlight.getAircraftConfig().getAircraftConfigID()) {
+                if (!Objects.equals(flightEntityToUpdate.getAircraftConfig().getAircraftConfigID(), oldFlight.getAircraftConfig().getAircraftConfigID())) {
                     flightEntityToUpdate.setAircraftConfig(aircraftConfigurationSessionBean.retriveAircraftConfigByID(oldFlight.getAircraftConfig().getAircraftConfigID()));
                 }
                 
                 // Source Flight
                 if (flightEntityToUpdate.getSourceFlight() != null) {
-                    if (oldFlight.getSourceFlight() != null && flightEntityToUpdate.getSourceFlight().getFlightID() != oldFlight.getSourceFlight().getFlightID()) {
+                    if (oldFlight.getSourceFlight() != null && !Objects.equals(flightEntityToUpdate.getSourceFlight().getFlightID(), oldFlight.getSourceFlight().getFlightID())) {
                         // Dissassociation of old
                         flightEntityToUpdate.getSourceFlight().setReturningFlight(null);
                         flightEntityToUpdate.setSourceFlight(null);
@@ -225,7 +226,7 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
                 
                 // Returning flight
                 if (flightEntityToUpdate.getReturningFlight() != null) {
-                    if (oldFlight.getReturningFlight() != null && flightEntityToUpdate.getReturningFlight().getFlightID() != oldFlight.getReturningFlight().getFlightID()) {
+                    if (oldFlight.getReturningFlight() != null && !Objects.equals(flightEntityToUpdate.getReturningFlight().getFlightID(), oldFlight.getReturningFlight().getFlightID())) {
                         // Dissassociation of old
                         flightEntityToUpdate.getReturningFlight().setSourceFlight(null);
                         flightEntityToUpdate.setReturningFlight(null);
@@ -292,7 +293,7 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
         
         String msg = "Input data validation error!:";
         
-        for(ConstraintViolation constraintViolation:constraintViolations) {
+        for (ConstraintViolation constraintViolation:constraintViolations) {
             msg += "\n\t" + constraintViolation.getPropertyPath() + " - " + constraintViolation.getInvalidValue() + "; " + constraintViolation.getMessage();
         }
         

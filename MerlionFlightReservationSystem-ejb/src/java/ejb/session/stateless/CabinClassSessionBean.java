@@ -73,9 +73,5 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
         }
     } 
 
-    @Override
-    public int computeMaxSeatCapacity(int rows, int seatsAbreast) {
-        return rows * seatsAbreast;
-    }
 }
     

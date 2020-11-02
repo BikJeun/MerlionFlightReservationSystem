@@ -6,7 +6,6 @@
 package ejb.session.stateless;
 
 import entity.FareEntity;
-import exceptions.FareNotFoundException;
 import java.util.List;
 import javax.ejb.Local;
 

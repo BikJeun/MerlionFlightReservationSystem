@@ -8,7 +8,6 @@ package ejb.session.stateless;
 import entity.CabinClassEntity;
 import entity.FareEntity;
 import entity.FlightSchedulePlanEntity;
-import exceptions.AircraftConfigExistException;
 import exceptions.CabinClassNotFoundException;
 import exceptions.FareExistException;
 import exceptions.FareNotFoundException;
@@ -68,6 +67,7 @@ public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLo
         }
     }
     
+    // Not used for now (maybe later on)
     private FareEntity retrieveFareById(Long fareID) throws FareNotFoundException {
         FareEntity fare = em.find(FareEntity.class, fareID);
         if(fare != null) {

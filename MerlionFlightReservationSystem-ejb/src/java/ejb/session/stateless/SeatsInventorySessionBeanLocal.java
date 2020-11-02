@@ -5,6 +5,8 @@
  */
 package ejb.session.stateless;
 
+import entity.CabinClassEntity;
+import entity.FlightScheduleEntity;
 import entity.SeatInventoryEntity;
 import java.util.List;
 import javax.ejb.Local;
@@ -17,5 +19,7 @@ import javax.ejb.Local;
 public interface SeatsInventorySessionBeanLocal {
 
     public void deleteSeatInventory(List<SeatInventoryEntity> seats);
+
+    public SeatInventoryEntity createSeatInventory(SeatInventoryEntity seatInventory, FlightScheduleEntity flightSchedule, CabinClassEntity cabinClass);
     
 }

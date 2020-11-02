@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -47,10 +48,10 @@ public class FlightScheduleEntity implements Serializable {
     @JoinColumn(nullable = false)
     private FlightSchedulePlanEntity flightSchedulePlan;
     
-    @OneToMany(mappedBy = "flightSchedule")
+    @OneToMany(mappedBy = "flightSchedule", fetch = FetchType.EAGER)
     private List<SeatInventoryEntity> seatInventory;
     
-    @OneToMany(mappedBy = "flightSchedule")
+    @OneToMany(mappedBy = "flightSchedule", fetch = FetchType.EAGER)
     private List<ReservationEntity> reservations;
 
     public FlightScheduleEntity() {

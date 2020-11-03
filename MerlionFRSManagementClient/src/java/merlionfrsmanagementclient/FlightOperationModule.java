@@ -282,9 +282,11 @@ public class FlightOperationModule {
             FlightEntity flight = flightSessionBean.retreiveFlightById(id);
             FlightRouteEntity route = flight.getFlightRoute();
             AircraftConfigurationEntity config = flight.getAircraftConfig();
-            
-            System.out.printf("%10s%20s%20s%35s%20s%35s%25s%30s%20s%25s%20s%30s\n", "Flight ID", "Flight Number", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type", "Returning Flight Number");
-            System.out.printf("%10s%20s%20s%35s%20s%35s%25s%30s%20s%25s%20s%30s\n", flight.getFlightID(), flight.getFlightNum(), route.getFlightRouteID().toString(), route.getOrigin().getAirportName() ,route.getOrigin().getIATACode(), route.getDestination().getAirportName() ,route.getDestination().getIATACode(), config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName(), flight.getReturningFlight() != null ? flight.getReturningFlight().getFlightNum(): "None");
+
+            System.out.printf("%10s%20s%20s%35s%20s%35s%25s%30s%20s%25s%20s%20s%30s\n", "Flight ID", "Flight Number", "Flight Route ID", "Origin Airport Name", "Origin Airport IATA", "Destination Airport Name", "Destination Airport IATA", "Aircraft Configuration ID", "Name", "Cabin Class ID", "Max Seats Capacity", "Aircraft Type", "Returning Flight Number");
+            for(int i = 0; i< config.getNumberOfCabinClasses(); i++) {
+            System.out.printf("%10s%20s%20s%35s%20s%35s%25s%30s%20s%25s%20s%20s%30s\n", flight.getFlightID(), flight.getFlightNum(), route.getFlightRouteID().toString(), route.getOrigin().getAirportName() ,route.getOrigin().getIATACode(), route.getDestination().getAirportName() ,route.getDestination().getIATACode(), config.getAircraftConfigID().toString(), config.getName(), config.getCabin().get(i).getCabinClassID(), config.getCabin().get(i).getMaxSeatCapacity(), config.getAircraftType().getTypeName(), flight.getReturningFlight() != null ? flight.getReturningFlight().getFlightNum(): "None");
+            }
             System.out.println("--------------------------");
             System.out.println("1: Update Flight");
             System.out.println("2: Delete Flight");

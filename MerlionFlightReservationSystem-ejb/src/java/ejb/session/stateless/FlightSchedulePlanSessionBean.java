@@ -94,10 +94,11 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
                 }
                 
                 associateFlightToPlan(flightID, plan);
-                
-                for (CabinClassEntity cc: plan.getFlight().getAircraftConfig().getCabin()) {
-                    SeatInventoryEntity seats = new SeatInventoryEntity(cc.getMaxSeatCapacity(), 0 , cc.getMaxSeatCapacity());
-                    for (FlightScheduleEntity fse: plan.getFlightSchedule()) {
+                System.out.print("test" + plan.getFlightSchedule().size());
+                 
+                for (FlightScheduleEntity fse: plan.getFlightSchedule()) {               
+                    for (CabinClassEntity cc: plan.getFlight().getAircraftConfig().getCabin()) {                    
+                        SeatInventoryEntity seats = new SeatInventoryEntity(cc.getMaxSeatCapacity(), 0 , cc.getMaxSeatCapacity());                       
                         seatsInventorySessionBean.createSeatInventory(seats, fse, cc);
                     }
                 }

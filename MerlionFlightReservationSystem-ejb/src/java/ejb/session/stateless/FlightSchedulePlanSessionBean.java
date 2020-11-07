@@ -27,6 +27,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -334,6 +336,19 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
             plan.setDisabled(true);
         }
     }
+
+    /*@Override
+    public List<FlightSchedulePlanEntity> retrieveFlightSchedulePlanByFlight(FlightEntity fli) throws FlightSchedulePlanNotFoundException, FlightNotFoundException{
+    FlightEntity flight = flightSessionBean.retreiveFlightById(fli.getFlightID());
+    Query query = em.createQuery("SELECT f FROM FlightSchedulePlanEntity f WHERE f.flight.FlightID = :flight AND f.disabled = false");
+    query.setParameter("flight", flight.getFlightID());
+    
+    try {
+    return query.getResultList();
+    } catch (NoResultException | NonUniqueResultException ex) {
+    throw new FlightSchedulePlanNotFoundException("Flight Schedule Plan does not exist!");
+    }
+    }*/
     
 }
 

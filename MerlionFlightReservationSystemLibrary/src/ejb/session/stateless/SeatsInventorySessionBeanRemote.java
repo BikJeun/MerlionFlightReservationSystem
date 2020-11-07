@@ -5,6 +5,11 @@
  */
 package ejb.session.stateless;
 
+import entity.CabinClassEntity;
+import entity.FlightScheduleEntity;
+import entity.SeatInventoryEntity;
+import enumeration.CabinClassTypeEnum;
+import java.util.List;
 import javax.ejb.Remote;
 
 /**
@@ -13,5 +18,6 @@ import javax.ejb.Remote;
  */
 @Remote
 public interface SeatsInventorySessionBeanRemote {
-    
+
+    /*    public List<SeatInventoryEntity> retrieveInventoryByCabin(FlightScheduleEntity flight, CabinClassTypeEnum cabin);*/    
 }

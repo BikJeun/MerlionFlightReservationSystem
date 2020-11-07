@@ -165,5 +165,4 @@ public class FlightRouteSessionBean implements FlightRouteSessionBeanRemote, Fli
             throw new FlightRouteNotFoundException("Disabled Flight Route does not exist in system");
         }
     }
-    
 }

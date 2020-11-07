@@ -5,6 +5,7 @@
  */
 package ejb.session.stateless;
 
+import entity.AirportEntity;
 import entity.FlightRouteEntity;
 import exceptions.AirportNotFoundException;
 import exceptions.FlightRouteExistException;

@@ -5,6 +5,7 @@
 */
 package ejb.session.stateless;
 
+import entity.FlightEntity;
 import entity.FlightSchedulePlanEntity;
 import exceptions.FareNotFoundException;
 import exceptions.FlightNotFoundException;
@@ -36,5 +37,6 @@ public interface FlightSchedulePlanSessionBeanRemote {
     public FlightSchedulePlanEntity retrieveFlightSchedulePlanEntityById(Long flightSchedulePlanID) throws FlightSchedulePlanNotFoundException;
     
     public void deleteFlightSchedulePlan(Long flightSchedulePlanID) throws FlightSchedulePlanNotFoundException, FlightScheduleNotFoundException, FareNotFoundException;
- 
+
+    /*    public List<FlightSchedulePlanEntity> retrieveFlightSchedulePlanByFlight(FlightEntity fli) throws FlightSchedulePlanNotFoundException, FlightNotFoundException;*/ 
     }

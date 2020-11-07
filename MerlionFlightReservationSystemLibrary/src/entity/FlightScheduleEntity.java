@@ -7,6 +7,8 @@ package entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.Column;
@@ -145,4 +147,21 @@ public class FlightScheduleEntity implements Serializable {
         this.flightSchedulePlan = flightSchedulePlan;
     }
     
-}
+    public static class FlightScheduleComparator implements Comparator<FlightScheduleEntity> { 
+    @Override
+        public int compare(FlightScheduleEntity o1, FlightScheduleEntity o2) {
+            if(o1.getDepartureDateTime().compareTo(o2.getDepartureDateTime()) > 0) {
+                return 1;
+            } else if(o1.getDepartureDateTime().compareTo(o2.getDepartureDateTime()) < 0) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
+        
+        }
+
+        
+    
+

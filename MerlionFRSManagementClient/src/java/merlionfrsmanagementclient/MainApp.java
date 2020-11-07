@@ -66,7 +66,7 @@ public class MainApp {
                 Scanner sc = new Scanner(System.in);
                 Integer response = 0;
                 
-                System.out.println("=== Welcome to Merlion Flight Reservation System ===\n");
+                System.out.println("=== Welcome to Merlion Flight Reservation System (Management)===\n");
                 System.out.println("1: Login");
                 System.out.println("2: Exit\n");
                 

@@ -7,16 +7,25 @@ package ejb.session.stateless;
 
 import entity.FlightScheduleEntity;
 import entity.FlightSchedulePlanEntity;
+import entity.SeatInventoryEntity;
+import enumeration.CabinClassTypeEnum;
+import exceptions.CustomerNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.InputDataValidationException;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -113,6 +122,38 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
            seatsInventorySessionBean.deleteSeatInventory(sched.getSeatInventory()); 
            em.remove(sched);
        }
+    }
+
+    @Override
+    public List<FlightScheduleEntity> retrieveFlightScheduleByDate(Long flightSchedule, Date departureDate) throws FlightScheduleNotFoundException {
+        Query query = em.createQuery("SELECT s FROM FlightScheduleEntity s WHERE S.flightSchedulePlan.flightSchedulePlanID = :schedID AND s.departureDateTime = :date");
+        query.setParameter("schedID", flightSchedule);
+        query.setParameter("date", departureDate);
+        
+        try {
+            return query.getResultList();
+        } catch (NoResultException | NonUniqueResultException ex) {
+            throw new FlightScheduleNotFoundException("Flight Schedule does not exist!");
+        }
+        
+        
+    }
+
+    @Override
+    public boolean checkIfHaveCabin(Long schedID, CabinClassTypeEnum cabin) {
+        try {
+            FlightScheduleEntity sched = retrieveFlightScheduleById(schedID);
+            List<SeatInventoryEntity> seats = sched.getSeatInventory();
+            for(SeatInventoryEntity seat : seats) {
+                if(seat.getCabin().getCabinClassType().equals(cabin)) {
+                    return true;  
+                }
+            }
+            
+        } catch (FlightScheduleNotFoundException ex) {
+            System.out.println("No Flight Schedule Found!");
+        }
+        return false;
     }
 
    

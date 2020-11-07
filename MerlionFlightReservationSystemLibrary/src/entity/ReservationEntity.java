@@ -6,6 +6,7 @@
 package entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -53,16 +54,12 @@ public class ReservationEntity implements Serializable {
     private CabinClassEntity cabinClass;
 
     public ReservationEntity() {
+        passenger = new ArrayList<>(); 
     }
 
-    public ReservationEntity(String creditCardNumber, String cvv, List<PassengerEntity> passenger, UserEntity user, FlightScheduleEntity flightSchedule, FareEntity fare, CabinClassEntity cabinClass) {
+    public ReservationEntity(String creditCardNumber, String cvv) {
         this.creditCardNumber = creditCardNumber;
         this.cvv = cvv;
-        this.passenger = passenger;
-        this.user = user;
-        this.flightSchedule = flightSchedule;
-        this.fare = fare;
-        this.cabinClass = cabinClass;
     }
 
     public String getCreditCardNumber() {

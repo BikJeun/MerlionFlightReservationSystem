@@ -10,6 +10,7 @@ import exceptions.CabinClassNotFoundException;
 import exceptions.FareExistException;
 import exceptions.FlightSchedulePlanNotFoundException;
 import exceptions.UnknownPersistenceException;
+import java.util.List;
 import javax.ejb.Remote;
 
 /**
@@ -20,5 +21,6 @@ import javax.ejb.Remote;
 public interface FareSessionBeanRemote {
 
     public FareEntity createFareEntity(FareEntity fare, long flightSchedulePlanID, long cabinClassID) throws FlightSchedulePlanNotFoundException, CabinClassNotFoundException, FareExistException, UnknownPersistenceException;
-    
+
+    /*    public FareEntity retrieveFareByCabinAndFsp(Long cabinClassID, Long flightScheduleID);*/    
 }

@@ -8,12 +8,14 @@ package ejb.session.stateless;
 import entity.CabinClassEntity;
 import entity.FlightScheduleEntity;
 import entity.SeatInventoryEntity;
+import enumeration.CabinClassTypeEnum;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 /**
  *
@@ -59,5 +61,14 @@ public class SeatsInventorySessionBean implements SeatsInventorySessionBeanRemot
             em.remove(seat);
         }
     }
+
+    /*@Override
+    public List<SeatInventoryEntity> retrieveInventoryByCabin(FlightScheduleEntity flight, CabinClassTypeEnum cabin) {
+    Query query = em.createQuery("SELECT s FROM SeatInventoryEntity s WHERE s.flightSchedule = :flight AND s.cabin.cabinClassType = :type");
+    query.setParameter("flight", flight);
+    query.setParameter("type", cabin);
+    
+    return query.getResultList();
+    }*/
     
 }

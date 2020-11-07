@@ -19,6 +19,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 
 /**
  *
@@ -84,6 +85,24 @@ public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLo
             em.remove(fare);
         }
     }
+
+    /*@Override
+    public FareEntity retrieveFareByCabinAndFsp(Long cabinClassID, Long flightScheduleID) {
+    Query query = em.createQuery("SELECT f FROM FareEntity f WHERE f.cabinClass.cabinClassID = :cabin AND f.flightSchedulePlan.flightSchedule.FlightScheduleID = :sched");
+    query.setParameter("cabin", cabinClassID);
+    query.setParameter("sched", flightScheduleID);
+    
+    List<FareEntity> fares = query.getResultList();
+    FareEntity smallest = fares.get(0);
+    for(int i = 1; i < fares.size(); i++) {
+    if(fares.get(i).getFareAmount().compareTo(smallest.getFareAmount())<0) {
+    smallest = fares.get(i);
+    }
+    }
+    return smallest;
+    
+    
+    }*/
 }
 
 

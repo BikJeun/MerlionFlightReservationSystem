@@ -1,13 +1,14 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+* To change this license header, choose License Headers in Project Properties.
+* To change this template file, choose Tools | Templates
+* and open the template in the editor.
+*/
 package ejb.session.stateless;
 
 import entity.CabinClassEntity;
 import entity.FlightScheduleEntity;
 import entity.SeatInventoryEntity;
+import exceptions.SeatInventoryNotFoundException;
 import java.util.List;
 import javax.ejb.Local;
 
@@ -17,9 +18,11 @@ import javax.ejb.Local;
  */
 @Local
 public interface SeatsInventorySessionBeanLocal {
-
+    
     public void deleteSeatInventory(List<SeatInventoryEntity> seats);
-
+    
     public SeatInventoryEntity createSeatInventory(SeatInventoryEntity seatInventory, FlightScheduleEntity flightSchedule, CabinClassEntity cabinClass);
+    
+    public SeatInventoryEntity retrieveSeatsById(Long seatInventoryID) throws SeatInventoryNotFoundException;
     
 }

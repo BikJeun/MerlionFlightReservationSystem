@@ -5,11 +5,10 @@
  */
 package ejb.session.stateless;
 
-import entity.CabinClassEntity;
-import entity.FlightScheduleEntity;
 import entity.SeatInventoryEntity;
-import enumeration.CabinClassTypeEnum;
-import java.util.List;
+import exceptions.InputDataValidationException;
+import exceptions.SeatInventoryNotFoundException;
+import exceptions.UpdateSeatsException;
 import javax.ejb.Remote;
 
 /**
@@ -19,5 +18,9 @@ import javax.ejb.Remote;
 @Remote
 public interface SeatsInventorySessionBeanRemote {
 
+    public void updateSeatInventory(SeatInventoryEntity sched) throws SeatInventoryNotFoundException, UpdateSeatsException, InputDataValidationException;
+
     /*    public List<SeatInventoryEntity> retrieveInventoryByCabin(FlightScheduleEntity flight, CabinClassTypeEnum cabin);*/    
+
+    public boolean checkIfBooked(SeatInventoryEntity sched, String reserve);
 }

@@ -5,7 +5,23 @@
  */
 package ejb.session.stateless;
 
+import entity.CustomerEntity;
+import entity.FlightScheduleEntity;
+import entity.ReservationEntity;
+import entity.UserEntity;
+import exceptions.FlightScheduleNotFoundException;
+import exceptions.ReservationExistException;
+import exceptions.ReservationNotFoundException;
+import exceptions.UnknownPersistenceException;
+import exceptions.UserNotFoundException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 /**
  *
@@ -14,6 +30,58 @@ import javax.ejb.Stateless;
 @Stateless
 public class ReservationSessionBean implements ReservationSessionBeanRemote, ReservationSessionBeanLocal {
 
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
+    @EJB
+    private UserSessionBeanLocal userSessionBean;
+
+    @EJB
+    private FlightScheduleSessionBeanLocal flightScheduleSessionBean;
+
+    @PersistenceContext(unitName = "MerlionFlightReservationSystem-ejbPU")
+    private EntityManager em;
+    
+    
+
+    public ReservationSessionBean() {
+    }
+
+    @Override
+    public ReservationEntity createNewReservation(FlightScheduleEntity flightSchedule, CustomerEntity currentCustomer, ReservationEntity reservation) throws ReservationExistException, UnknownPersistenceException, FlightScheduleNotFoundException, UserNotFoundException {
+        try {
+            flightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(flightSchedule.getFlightScheduleID());
+            UserEntity user = userSessionBean.retrieveUserById(currentCustomer.getUserID());
+            
+            em.persist(reservation);
+            em.flush();
+            
+            flightSchedule.getReservations().add(reservation);
+            user.getReservations().add(reservation);
+            
+        } catch (FlightScheduleNotFoundException ex) {
+            throw new FlightScheduleNotFoundException(ex.getMessage());
+        } catch (UserNotFoundException ex) {
+            throw new UserNotFoundException(ex.getMessage());
+        }
+        em.refresh(reservation);
+        return reservation;     
+    } 
+
+    //prob with jpql
+    @Override
+    public List<ReservationEntity> retrieveReservationsByCustomerId(Long userID) {
+        Query query = em.createQuery("SELECT r FROM ReservationEntity r WHERE r.user.userID = :id");
+        query.setParameter("id", userID);
+        
+        return query.getResultList();
+    }
+
+    @Override
+    public ReservationEntity retrieveReservationById(long id) throws ReservationNotFoundException {
+        ReservationEntity res = em.find(ReservationEntity.class, id);
+        
+        if(res != null) {
+            return res;
+        } else {
+            throw new ReservationNotFoundException("Reservation does not exist!");
+        }
+    }
 }

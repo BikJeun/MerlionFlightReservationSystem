@@ -1,8 +1,8 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+* To change this license header, choose License Headers in Project Properties.
+* To change this template file, choose Tools | Templates
+* and open the template in the editor.
+*/
 package merlionfrsmanagementclient;
 
 import ejb.session.stateless.FlightSessionBeanRemote;
@@ -29,14 +29,14 @@ public class SalesManagementModule {
     private SeatsInventorySessionBeanRemote seatsInventorySessionBean;
     private ReservationSessionBeanRemote reservationSessionBean;
     private FlightSessionBeanRemote flightSessionBean;
-
+    
     public SalesManagementModule(EmployeeEntity currentEmployee, SeatsInventorySessionBeanRemote seatsInventorySessionBean, ReservationSessionBeanRemote reservationSessionBean, FlightSessionBeanRemote flightSessionBean) {
         this.currentEmployee = currentEmployee;
         this.seatsInventorySessionBean = seatsInventorySessionBean;
         this.reservationSessionBean = reservationSessionBean;
         this.flightSessionBean = flightSessionBean;
     }
-
+    
     public void mainMenu() {
         Scanner sc = new Scanner(System.in);
         int response = 0;
@@ -76,7 +76,7 @@ public class SalesManagementModule {
             }
         }
     }
-
+    
     private void viewSeatsInventory() {
         
         try {
@@ -125,22 +125,23 @@ public class SalesManagementModule {
                 String cabinClassConfig = seatInventory.getCabin().getSeatingConfigPerColumn();
                 
                 String type = "";
-                if (null !=  seatInventory.getCabin().getCabinClassType()) switch (seatInventory.getCabin().getCabinClassType()) {
-                    case F:
-                        type = "First Class";
-                        break;
-                    case J:
-                        type = "Business Class";
-                        break;
-                    case W:
-                        type = "Premium Economy Class";
-                        break;
-                    case Y:
-                        type = "Economy Class";
-                        break;
-                    default:
-                        break;
-                }
+                if (null !=  seatInventory.getCabin().getCabinClassType())
+                    switch (seatInventory.getCabin().getCabinClassType()) {
+                        case F:
+                            type = "First Class";
+                            break;
+                        case J:
+                            type = "Business Class";
+                            break;
+                        case W:
+                            type = "Premium Economy Class";
+                            break;
+                        case Y:
+                            type = "Economy Class";
+                            break;
+                        default:
+                            break;
+                    }
                 
                 System.out.println(" -- " + type + " -- ");
                 System.out.print("Row  ");
@@ -152,10 +153,10 @@ public class SalesManagementModule {
                         while (count < no) {
                             System.out.print((char)('A' + count) + "  ");
                             count++;
-                        }          
+                        }
                     } else {
                         System.out.print("   ");
-                    }               
+                    }
                 }
                 System.out.println();
                 
@@ -169,10 +170,10 @@ public class SalesManagementModule {
                             while (count2 < no2) {
                                 System.out.print(seats[j][count2] + "  ");
                                 count2++;
-                            }          
+                            }
                         } else {
                             System.out.print("   ");
-                        }               
+                        }
                     }
                     System.out.println();
                 }
@@ -180,7 +181,7 @@ public class SalesManagementModule {
                 System.out.println("\nNumber of available seats: " + seatInventory.getAvailable());
                 System.out.println("Number of reserved seats: " + seatInventory.getReserved());
                 System.out.println("Number of balance seats: " + seatInventory.getBalance() + "\n");
-               
+                
             }
             
             System.out.println(" --- Total --- ");
@@ -192,7 +193,7 @@ public class SalesManagementModule {
             
         } catch (FlightNotFoundException ex) {
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n");
-        } 
+        }
     }
     
     

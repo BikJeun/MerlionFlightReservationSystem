@@ -20,7 +20,7 @@
                     <path-in-war>/</path-in-war>
                 </library>
                 <library>
-                    <file>${reference.HolidayReservationSystemClient.j2ee-module-car}</file>
+                    <file>${reference.HolidayReservationSystemClient.jar}</file>
                     <path-in-war>/</path-in-war>
                 </library>
             </web-module-additional-libraries>
@@ -28,11 +28,11 @@
         <references xmlns="http://www.netbeans.org/ns/ant-project-references/1">
             <reference>
                 <foreign-project>HolidayReservationSystemClient</foreign-project>
-                <artifact-type>j2ee_ear_archive</artifact-type>
+                <artifact-type>jar</artifact-type>
                 <script>build.xml</script>
-                <target>dist-ear</target>
-                <clean-target>clean-ear</clean-target>
-                <id>j2ee-module-car</id>
+                <target>jar</target>
+                <clean-target>clean</clean-target>
+                <id>jar</id>
             </reference>
             <reference>
                 <foreign-project>MerlionFRSManagementClient</foreign-project>

@@ -198,7 +198,7 @@ public class MainApp {
          
         CabinClassTypeEnum cabin;
         while (true) {
-            System.out.print("Enter preference for cabin class (1. First Class 2. Business Class 3. Premium Economy Class 4.Economy Class 0.No Preference)> ");
+            System.out.print("Enter preference for cabin class (0.No Preference 1. First Class 2. Business Class 3. Premium Economy Class 4.Economy Class)> ");
             int cabinPref = sc.nextInt();
             sc.nextLine();
             if (cabinPref == 1) {

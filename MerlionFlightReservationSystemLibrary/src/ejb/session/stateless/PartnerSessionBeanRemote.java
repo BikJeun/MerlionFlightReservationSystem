@@ -18,4 +18,6 @@ public interface PartnerSessionBeanRemote {
 
     public PartnerEntity retrievePartnerById(Long id) throws PartnerNotFoundException;
     
+    public PartnerEntity retrievePartnerByUsername(String username) throws PartnerNotFoundException;
+    
 }

@@ -11,7 +11,7 @@ import javax.ejb.Local;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Local
 public interface UserSessionBeanLocal {

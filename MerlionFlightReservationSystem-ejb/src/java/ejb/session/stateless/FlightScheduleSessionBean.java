@@ -240,6 +240,29 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
         }
         return smallest;
     }
+
+    @Override
+    public FareEntity getBiggestFare(FlightScheduleEntity flightScheduleEntity, CabinClassTypeEnum type) throws FlightScheduleNotFoundException, CabinClassNotFoundException {
+        FlightScheduleEntity flightSchedule = retrieveFlightScheduleById(flightScheduleEntity.getFlightScheduleID());
+        List<FareEntity> fares = flightSchedule.getFlightSchedulePlan().getFares();
+        List<FareEntity> ccfares = new ArrayList<>();
+        for(FareEntity fare : fares) {
+            if(fare.getCabinClass().getCabinClassType() == type) {
+                ccfares.add(fare);
+            }
+        }
+        if(ccfares.isEmpty()) {
+            throw new CabinClassNotFoundException("Cabin Class not found");
+        }
+        
+        FareEntity biggest = ccfares.get(0);
+        for(FareEntity fare : ccfares) {
+            if(fare.getFareAmount().compareTo(biggest.getFareAmount()) > 0) {
+                biggest = fare;
+            }
+        }
+        return biggest;
+    }
    
 }
     

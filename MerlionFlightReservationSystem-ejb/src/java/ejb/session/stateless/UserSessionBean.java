@@ -13,7 +13,7 @@ import javax.persistence.PersistenceContext;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Stateless
 public class UserSessionBean implements UserSessionBeanRemote, UserSessionBeanLocal {

@@ -17,7 +17,7 @@ import javax.persistence.Query;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Stateless
 public class PassengerSessionBean implements PassengerSessionBeanRemote, PassengerSessionBeanLocal {

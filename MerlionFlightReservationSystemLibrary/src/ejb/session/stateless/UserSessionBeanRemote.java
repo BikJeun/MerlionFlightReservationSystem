@@ -9,7 +9,7 @@ import javax.ejb.Remote;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Remote
 public interface UserSessionBeanRemote {

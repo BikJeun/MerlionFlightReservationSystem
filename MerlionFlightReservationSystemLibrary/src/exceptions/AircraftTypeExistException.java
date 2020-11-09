@@ -7,7 +7,7 @@ package exceptions;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 public class AircraftTypeExistException extends Exception {
 

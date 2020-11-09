@@ -9,6 +9,7 @@ import ejb.session.stateless.AircraftTypeSessionBeanLocal;
 import ejb.session.stateless.AirportSessionBeanLocal;
 import ejb.session.stateless.EmployeeSessionBeanLocal;
 import ejb.session.stateless.PartnerSessionBeanLocal;
+import ejb.session.stateless.UserSessionBeanLocal;
 import entity.AircraftTypeEntity;
 import entity.AirportEntity;
 import entity.EmployeeEntity;
@@ -46,8 +47,7 @@ public class DataInitSessionBean {
     
     @EJB
     private EmployeeSessionBeanLocal employeeSessionBean;
-    
-    
+
     
     public DataInitSessionBean() {
     }

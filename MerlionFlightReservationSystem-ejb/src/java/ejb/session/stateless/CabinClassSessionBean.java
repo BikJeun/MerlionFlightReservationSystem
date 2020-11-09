@@ -19,7 +19,7 @@ import javax.persistence.PersistenceContext;
 
 /**
  *
- * @author Mitsuki
+ * @author Ong Bik Jeun
  */
 @Stateless
 public class CabinClassSessionBean implements CabinClassSessionBeanRemote, CabinClassSessionBeanLocal {
@@ -41,7 +41,7 @@ public class CabinClassSessionBean implements CabinClassSessionBeanRemote, Cabin
         if(!aircraft.getCabin().contains(cabin)) {
             aircraft.getCabin().add(cabin);
         }
-        // To Mitsuki: Do not use refresh here, 
+        // To Ong Bik Jeun: Do not use refresh here, 
         //             because we are not commiting into DB until end of transaction,
         //             so calling an explicit refresh will result in EntityNotFound 
         //em.refresh(cabin); 

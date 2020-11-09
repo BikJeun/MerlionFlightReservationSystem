@@ -16,6 +16,7 @@ import exceptions.CustomerNotFoundException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.InputDataValidationException;
+import exceptions.SeatInventoryNotFoundException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -239,6 +240,17 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
             }
         }
         return smallest;
+    }
+    
+    @Override
+    public SeatInventoryEntity getCorrectSeatInventory(FlightScheduleEntity flightSchedule, CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, SeatInventoryNotFoundException {
+        FlightScheduleEntity flightScheduleEntity = retrieveFlightScheduleById(flightSchedule.getFlightScheduleID());
+        for (SeatInventoryEntity seat: flightScheduleEntity.getSeatInventory()) {
+            if (seat.getCabin().getCabinClassType() == cabinClassType) {
+                return seat;
+            }
+        }
+        throw new SeatInventoryNotFoundException("No such seat inventory");
     }
    
 }

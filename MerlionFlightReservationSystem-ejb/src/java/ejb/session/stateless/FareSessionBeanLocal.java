@@ -6,6 +6,7 @@
 package ejb.session.stateless;
 
 import entity.FareEntity;
+import exceptions.FareNotFoundException;
 import java.util.List;
 import javax.ejb.Local;
 
@@ -17,5 +18,7 @@ import javax.ejb.Local;
 public interface FareSessionBeanLocal {
 
     public void deleteFares(List<FareEntity> fares);
+
+    public FareEntity retrieveFareById(Long fareID) throws FareNotFoundException;
     
 }

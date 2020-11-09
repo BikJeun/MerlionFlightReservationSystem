@@ -27,16 +27,19 @@ public class PassengerEntity implements Serializable {
     private String firstName;
     @Column(nullable = false, length = 64)
     private String lastName;
-    @Column(nullable = false, unique = true, length = 64) //this might lead to issues later depending on how we implement our session bean
+    @Column(nullable = false, length = 64) 
     private String passportNumber;
+    @Column(nullable = false, length = 64) 
+    private String seatNumber;
     
     public PassengerEntity() {
     }
     
-    public PassengerEntity(String firstName, String lastName, String passportNumber) {
+    public PassengerEntity(String firstName, String lastName, String passportNumber, String seatNumber) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.passportNumber = passportNumber;
+        this.seatNumber = seatNumber;
     }
     
     public String getFirstName() {
@@ -95,6 +98,20 @@ public class PassengerEntity implements Serializable {
     @Override
     public String toString() {
         return "entity.PassengerEntity[ id=" + passengerID + " ]";
+    }
+
+    /**
+     * @return the seatNumber
+     */
+    public String getSeatNumber() {
+        return seatNumber;
+    }
+
+    /**
+     * @param seatNumber the seatNumber to set
+     */
+    public void setSeatNumber(String seatNumber) {
+        this.seatNumber = seatNumber;
     }
     
 }

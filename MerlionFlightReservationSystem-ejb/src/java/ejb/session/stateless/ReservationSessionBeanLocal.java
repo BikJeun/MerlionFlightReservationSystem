@@ -5,6 +5,8 @@
  */
 package ejb.session.stateless;
 
+import exceptions.SeatInventoryNotFoundException;
+import exceptions.UpdateSeatsException;
 import javax.ejb.Local;
 
 /**
@@ -13,5 +15,5 @@ import javax.ejb.Local;
  */
 @Local
 public interface ReservationSessionBeanLocal {
-    
+        
 }

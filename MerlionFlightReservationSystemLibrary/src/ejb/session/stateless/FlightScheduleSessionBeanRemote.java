@@ -7,10 +7,12 @@ package ejb.session.stateless;
 
 import entity.FareEntity;
 import entity.FlightScheduleEntity;
+import entity.SeatInventoryEntity;
 import enumeration.CabinClassTypeEnum;
 import exceptions.CabinClassNotFoundException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
+import exceptions.SeatInventoryNotFoundException;
 import java.util.Date;
 import java.util.List;
 import javafx.util.Pair;
@@ -23,10 +25,14 @@ import javax.ejb.Remote;
 @Remote
 public interface FlightScheduleSessionBeanRemote {
 
+    public FlightScheduleEntity retrieveFlightScheduleById(Long flightScheduleID) throws FlightScheduleNotFoundException;
+    
     public List<FlightScheduleEntity> getFlightSchedules(String departure, String destination, Date date, CabinClassTypeEnum cabin) throws FlightNotFoundException;
 
     public List<Pair<FlightScheduleEntity, FlightScheduleEntity>> getIndirectFlightSchedules(String departure, String destination, Date date, CabinClassTypeEnum cabin) throws FlightNotFoundException;
 
     public FareEntity getSmallestFare(FlightScheduleEntity flightSchedule, CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, CabinClassNotFoundException;
+
+    public SeatInventoryEntity getCorrectSeatInventory(FlightScheduleEntity flightSchedule, CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, SeatInventoryNotFoundException;
 
 }

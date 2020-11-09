@@ -68,10 +68,10 @@ public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLo
         }
     }
     
-    // Not used for now (maybe later on)
-    private FareEntity retrieveFareById(Long fareID) throws FareNotFoundException {
+    
+    public FareEntity retrieveFareById(Long fareID) throws FareNotFoundException {
         FareEntity fare = em.find(FareEntity.class, fareID);
-        if(fare != null) {
+        if (fare != null) {
             return fare;
         } else {
             throw new FareNotFoundException("Fare " + fareID + " not found!");

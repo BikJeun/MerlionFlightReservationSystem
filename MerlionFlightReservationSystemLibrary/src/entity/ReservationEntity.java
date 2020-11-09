@@ -58,6 +58,7 @@ public class ReservationEntity implements Serializable {
     }
 
     public ReservationEntity(String creditCardNumber, String cvv) {
+        this();
         this.creditCardNumber = creditCardNumber;
         this.cvv = cvv;
     }

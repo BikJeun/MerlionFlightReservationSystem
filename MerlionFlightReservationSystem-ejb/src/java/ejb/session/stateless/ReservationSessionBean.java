@@ -15,8 +15,6 @@ import exceptions.ReservationNotFoundException;
 import exceptions.UnknownPersistenceException;
 import exceptions.UserNotFoundException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -65,10 +63,9 @@ public class ReservationSessionBean implements ReservationSessionBeanRemote, Res
         return reservation;     
     } 
 
-    //prob with jpql
     @Override
     public List<ReservationEntity> retrieveReservationsByCustomerId(Long userID) {
-        Query query = em.createQuery("SELECT r FROM ReservationEntity r WHERE r.user.userID = :id");
+        Query query = em.createQuery("SELECT r FROM ReservationEntity r WHERE r.user.UserID = :id");
         query.setParameter("id", userID);
         
         return query.getResultList();

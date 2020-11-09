@@ -18,6 +18,7 @@ import exceptions.UpdateFlightException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javafx.util.Pair;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -160,13 +161,26 @@ public class FlightSessionBean implements FlightSessionBeanRemote, FlightSession
     }
     
     @Override
-     public List<FlightEntity> retrieveAllFlightByFlightRoute(String originIATACode, String destinationIATACode) throws FlightNotFoundException {
+    public List<FlightEntity> retrieveAllFlightByFlightRoute(String originIATACode, String destinationIATACode) throws FlightNotFoundException {
         Query query = em.createQuery("SELECT f FROM FlightEntity f WHERE f.disabled=false AND f.flightRoute.origin.IATACode = :origin AND f.flightRoute.destination.IATACode = :dest ORDER BY SUBSTRING(f.flightNum, 3) ASC");
         query.setParameter("origin", originIATACode);
         query.setParameter("dest", destinationIATACode);
         List<FlightEntity> result =  query.getResultList();
         if (result.isEmpty()) {
             throw new FlightNotFoundException("No flights with flight route from " + originIATACode + " to " +  destinationIATACode + " found in system");
+        }
+        return result;
+    }
+     
+
+    @Override
+    public List<FlightEntity[]> retrieveAllIndirectFlightByFlightRoute(String originIATACode, String destinationIATACode) throws FlightNotFoundException {
+        Query query = em.createQuery("SELECT f1, f2 FROM FlightEntity f1, FlightEntity f2 WHERE f1.disabled=false AND f2.disabled=false AND f1.flightRoute.origin.IATACode = :origin AND f2.flightRoute.destination.IATACode = :dest AND f1.flightRoute.destination.IATACode=f2.flightRoute.origin.IATACode");
+        query.setParameter("origin", originIATACode);
+        query.setParameter("dest", destinationIATACode);
+        List<FlightEntity[]> result =  query.getResultList();
+        if (result.isEmpty()) {
+            throw new FlightNotFoundException("No indirect flights with flight route from " + originIATACode + " to " +  destinationIATACode + " found in system");
         }
         return result;
     }

@@ -7,6 +7,8 @@ package ejb.session.stateless;
 
 import entity.FlightEntity;
 import exceptions.FlightNotFoundException;
+import java.util.List;
+import javafx.util.Pair;
 import javax.ejb.Local;
 
 /**
@@ -17,5 +19,9 @@ import javax.ejb.Local;
 public interface FlightSessionBeanLocal {
 
     public FlightEntity retreiveFlightById(Long id) throws FlightNotFoundException;
+    
+    public List<FlightEntity> retrieveAllFlightByFlightRoute(String originIATACode, String destinationIATACode) throws FlightNotFoundException;
+    
+    public List<FlightEntity[]> retrieveAllIndirectFlightByFlightRoute(String originIATACode, String destinationIATACode) throws FlightNotFoundException;
     
 }

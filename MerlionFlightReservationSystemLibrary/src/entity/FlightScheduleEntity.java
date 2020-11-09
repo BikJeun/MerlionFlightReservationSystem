@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import javafx.util.Pair;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -148,19 +149,35 @@ public class FlightScheduleEntity implements Serializable {
     }
     
     public static class FlightScheduleComparator implements Comparator<FlightScheduleEntity> { 
-    @Override
+        
+        @Override
         public int compare(FlightScheduleEntity o1, FlightScheduleEntity o2) {
-            if(o1.getDepartureDateTime().compareTo(o2.getDepartureDateTime()) > 0) {
+            if (o1.getDepartureDateTime().compareTo(o2.getDepartureDateTime()) > 0) {
                 return 1;
-            } else if(o1.getDepartureDateTime().compareTo(o2.getDepartureDateTime()) < 0) {
+            } else if (o1.getDepartureDateTime().compareTo(o2.getDepartureDateTime()) < 0) {
                 return -1;
             } else {
                 return 0;
             }
         }
     }
-        
+    
+    public static class IndirectFlightScheduleComparator implements Comparator<Pair<FlightScheduleEntity,FlightScheduleEntity>> {
+
+        @Override
+        public int compare(Pair<FlightScheduleEntity, FlightScheduleEntity> o1, Pair<FlightScheduleEntity, FlightScheduleEntity> o2) {
+            if (o1.getKey().getDepartureDateTime().compareTo(o2.getKey().getDepartureDateTime()) > 0) {
+                return 1;
+            } else if (o1.getKey().getDepartureDateTime().compareTo(o2.getKey().getDepartureDateTime()) < 0) {
+                return -1;
+            } else {
+                return 0;
+            }
         }
+        
+    }
+        
+}
 
         
     

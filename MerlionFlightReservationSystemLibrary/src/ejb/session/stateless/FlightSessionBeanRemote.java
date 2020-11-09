@@ -40,7 +40,6 @@ public interface FlightSessionBeanRemote {
     public FlightEntity retrieveFlightByFlightNumber(String flightNum) throws FlightNotFoundException;
 
     public List<FlightEntity> retrieveAllFlightByFlightRoute(String originIATACode, String destinationIATACode) throws FlightNotFoundException;
-
-    
+   
     
 }

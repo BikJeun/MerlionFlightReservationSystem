@@ -15,6 +15,8 @@ import exceptions.CabinClassNotFoundException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.InvalidLoginCredentialException;
+import helper.MyPair;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javafx.util.Pair;
@@ -54,9 +56,16 @@ public class FlightReservationWebService {
     }
     
     @WebMethod(operationName = "getIndirectFlightSchedules")
-    public List<Pair<FlightScheduleEntity, FlightScheduleEntity>> getIndirectFlightSchedules(@WebParam String departure, @WebParam String destination, @WebParam Date date, @WebParam CabinClassTypeEnum cabin) throws FlightNotFoundException {
-        return flightScheduleSessionBean.getIndirectFlightSchedules(departure, destination, date, cabin);
+    public List<MyPair> getIndirectFlightSchedules(@WebParam String departure, @WebParam String destination, @WebParam Date date, @WebParam CabinClassTypeEnum cabin) throws FlightNotFoundException {
+        List<Pair<FlightScheduleEntity, FlightScheduleEntity>> list = flightScheduleSessionBean.getIndirectFlightSchedules(departure, destination, date, cabin);
+        List<MyPair> newList = new ArrayList<>();
+        for(Pair<FlightScheduleEntity, FlightScheduleEntity> pairs : list) {
+            MyPair newPair = new MyPair(pairs.getKey(), pairs.getValue());
+            newList.add(newPair);
+        }
+        return newList;
     }
-    
-    
 }
+    
+    
+

@@ -26,6 +26,7 @@ import entity.SeatInventoryEntity;
 import enumeration.CabinClassTypeEnum;
 import exceptions.CabinClassNotFoundException;
 import exceptions.CustomerExistException;
+import exceptions.FareNotFoundException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.InputDataValidationException;
@@ -1352,12 +1353,10 @@ public class MainApp {
         System.out.println("\n");
 
         if (type == 2 && flightPref == 1) {
-            System.out.print("Enter return date (dd/mm/yyyy)> ");
-
             Date returnDate;
             while (true) {
                 try { 
-                    System.out.print("Enter departure date (dd/mm/yyyy)> ");
+                    System.out.print("Enter return date (dd/mm/yyyy)> ");
                     String date = sc.nextLine().trim();
                     returnDate = inputFormat.parse(date);
                     break;
@@ -1734,12 +1733,10 @@ public class MainApp {
         }        
         
         if (type == 2 && flightPref == 2) {
-            System.out.print("Enter return date (dd/mm/yyyy)> ");
-
             Date returnDate;
             while (true) {
                 try { 
-                    System.out.print("Enter departure date (dd/mm/yyyy)> ");
+                    System.out.print("Enter return date (dd/mm/yyyy)> ");
                     String date = sc.nextLine().trim();
                     returnDate = inputFormat.parse(date);
                     break;
@@ -1772,7 +1769,7 @@ public class MainApp {
                 System.out.println("                      ============= Available Inbound Flights ============= ");
 
                 System.out.println("                             ============ On Desired Date =========== ");
-                System.out.printf("%%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
+                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
                         "Flight Number", 
                         "Departure Airport", 
                         "Arrival Airport", 
@@ -2526,16 +2523,42 @@ public class MainApp {
             }
         }
                
-        System.out.print("Enter flight you would like to reserve (Enter by Index Number)> ");
-        int index = sc.nextInt();
-        sc.nextLine();
-        //reserveFlight(schedWithDesiredCabinOnly.get(index - 1), passengers, fares.get(index - 1));
-        
-        if (type == 2) {
-            System.out.println("Enter return flight you would like to reserve (Enter by Index Number)> ");
-            int returnIndex = sc.nextInt();
-            //reserveFlight(schedWithDesiredCabinOnlyReturn.get(returnIndex - 1), passengers, faresReturn.get(index - 1));
+        Long outbound1, outbound2, inbound1, inbound2;
+        if (type == 1  && flightPref == 1) {
+            outbound2 = null;
+            inbound2 = null;
+            inbound1 = null;
+            System.out.print("Enter flight you would like to reserve (Flight ID)> ");
+            outbound1 = sc.nextLong();
+            sc.nextLine();
+        } else if (type == 1 && flightPref == 2) {
+            outbound2 = null;
+            inbound2 = null;
+            System.out.print("Enter the outbound flight you would like to reserve (Flight ID)> ");
+            outbound1 = sc.nextLong();
+            System.out.print("Enter the inbound flight you would like to reserve (Flight ID)> ");
+            inbound1 = sc.nextLong();
+            sc.nextLine();
+        } else if (type == 2 && flightPref == 1) {
+            inbound1 = null;
+            inbound2 = null;
+            System.out.print("Enter the first outbound flight you would like to reserve (Flight ID)> ");
+            outbound1 = sc.nextLong();
+            System.out.print("Enter the connecting outbound flight you would like to reserve (Flight ID)> ");
+            outbound2 = sc.nextLong();
+        } else if (type == 2 && flightPref == 2) {
+            System.out.print("Enter the first outbound flight you would like to reserve (Flight ID)> ");
+            outbound1 = sc.nextLong();
+            System.out.print("Enter the connecting outbound flight you would like to reserve (Flight ID)> ");
+            outbound2 = sc.nextLong();
+            System.out.print("Enter the first inbound flight you would like to reserve (Flight ID)> ");
+            inbound1 = sc.nextLong();
+            System.out.print("Enter the connecting inbound flight you would like to reserve (Flight ID)> ");
+            inbound2 = sc.nextLong();
+        } else {
+            return;
         }
+        reserveFlight(outbound1, outbound2, inbound1, inbound2, cabin, passengers);   
     }
     
     private void doRegisterCustomer() throws InvalidLoginCredentialException, CustomerExistException, UnknownPersistenceException {
@@ -2628,150 +2651,392 @@ public class MainApp {
         }
     }
     
-    private void reserveFlight(SeatInventoryEntity sched, int passengers, FareEntity fare) {
+    private void reserveFlight(Long outbound1, Long outbound2, Long inbound1, Long inbound2, CabinClassTypeEnum cabinClassType, int noOfPassengers) {
         try {
             Scanner sc = new Scanner(System.in);
             System.out.println("*** Reserve Flight ***\n");
             
-            int totalAvailSeats = 0;
-            int totalReservedSeats = 0;
-            int totalBalanceSeats = 0;
+            FlightScheduleEntity outbound1FlightSchedule;
+            List<String> outbound1SeatSelection;   
+            FareEntity outbound1Fare;
+            SeatInventoryEntity outbound1Seats;
             
-            totalAvailSeats += sched.getAvailable();
-            totalReservedSeats += sched.getReserved();
-            totalBalanceSeats += sched.getBalance();
+            FlightScheduleEntity outbound2FlightSchedule;
+            List<String> outbound2SeatSelection;
+            FareEntity outbound2Fare;
+            SeatInventoryEntity outbound2Seats;
             
-            char[][] seats = sched.getSeats();
-            String cabinClassConfig = sched.getCabin().getSeatingConfigPerColumn();
+            FlightScheduleEntity inbound1FlightSchedule;
+            List<String> inbound1SeatSelection;
+            FareEntity inbound1Fare; 
+            SeatInventoryEntity inbound1Seats;
             
-            //Display Seats
-            String type = "";
-            if (null !=  sched.getCabin().getCabinClassType())
-                switch (sched.getCabin().getCabinClassType()) {
-                    case F:
-                        type = "First Class";
-                        break;
-                    case J:
-                        type = "Business Class";
-                        break;
-                    case W:
-                        type = "Premium Economy Class";
-                        break;
-                    case Y:
-                        type = "Economy Class";
-                        break;
-                    default:
-                        break;
+            FlightScheduleEntity inbound2FlightSchedule;
+            List<String> inbound2SeatSelection;
+            FareEntity inbound2Fare;
+            SeatInventoryEntity inbound2Seats;        
+            
+            BigDecimal pricePerPax;
+
+            if (outbound2 == null && inbound1 == null && inbound2 == null) {
+                outbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound1);
+                System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
+                if (cabinClassType == null) {
+                    outbound1Seats = getDesiredSeatInventory(outbound1FlightSchedule);  
+                } else {
+                    outbound1Seats = flightScheduleSessionBean.getCorrectSeatInventory(outbound1FlightSchedule, cabinClassType);
                 }
+                outbound1Fare = flightScheduleSessionBean.getSmallestFare(outbound1FlightSchedule, outbound1Seats.getCabin().getCabinClassType());
+                outbound1SeatSelection = getSeatBookings(outbound1Seats, noOfPassengers);
+                
+                List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
+                
+                for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
+                }
+                
+                pricePerPax = outbound1Fare.getFareAmount();
+                System.out.println("Price per person : $" + pricePerPax.toString() + "\nTotal Amount : $" + pricePerPax.multiply(new BigDecimal(noOfPassengers)));
+                
+                System.out.print("Enter Credit Card Number> ");
+                String creditCardNum = sc.nextLine().trim();
+                System.out.print("Enter cvv> ");
+                String cvv = sc.nextLine().trim();
+
+                ReservationEntity reservation = new ReservationEntity(creditCardNum, cvv);
+                
+                long reservationId = reservationSessionBean.createNewReservation(reservation, 
+                         passengers, outbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
+                         outbound1Fare.getFareID(), outbound1Seats.getCabin().getCabinClassID());        
+                
+                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+            } else if (outbound2 == null && inbound2 == null) {
+                outbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound1);
+                System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
+                if (cabinClassType == null) {
+                    outbound1Seats = getDesiredSeatInventory(outbound1FlightSchedule);  
+                } else {
+                    outbound1Seats = flightScheduleSessionBean.getCorrectSeatInventory(outbound1FlightSchedule, cabinClassType);
+                }
+                outbound1Fare = flightScheduleSessionBean.getSmallestFare(outbound1FlightSchedule, outbound1Seats.getCabin().getCabinClassType());
+                outbound1SeatSelection = getSeatBookings(outbound1Seats, noOfPassengers);
+                
+                inbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(inbound1);
+                System.out.println("Seat Selection for inbound flight " + inbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
+                if (cabinClassType == null) {
+                    inbound1Seats = getDesiredSeatInventory(inbound1FlightSchedule);   
+                } else {
+                    inbound1Seats = flightScheduleSessionBean.getCorrectSeatInventory(inbound1FlightSchedule, cabinClassType);
+                }
+                inbound1Fare = flightScheduleSessionBean.getSmallestFare(inbound1FlightSchedule, inbound1Seats.getCabin().getCabinClassType());
+                inbound1SeatSelection = getSeatBookings(inbound1Seats, noOfPassengers);           
+                
+                pricePerPax = outbound1Fare.getFareAmount().add(inbound1Fare.getFareAmount());
+                List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
+                
+                System.out.println("Price per person : $" + pricePerPax.toString() + "\nTotal Amount : $" + pricePerPax.multiply(new BigDecimal(noOfPassengers)));
+                
+                System.out.print("Enter Credit Card Number> ");
+                String creditCardNum = sc.nextLine().trim();
+                System.out.print("Enter cvv> ");
+                String cvv = sc.nextLine().trim();
+
+                ReservationEntity reservation = new ReservationEntity(creditCardNum, cvv);
+                
+                for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
+                }
+                long reservationId = reservationSessionBean.createNewReservation(reservation, 
+                         passengers, outbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
+                         outbound1Fare.getFareID(), outbound1Seats.getCabin().getCabinClassID());                 
+                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+                
+                for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(inbound1SeatSelection.get(i));
+                }  
+                reservationId = reservationSessionBean.createNewReservation(reservation, 
+                         passengers, inbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
+                         inbound1Fare.getFareID(), inbound1Seats.getCabin().getCabinClassID());                      
+                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for return flight " + inbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");        
+            } else if (inbound1 == null && inbound2 == null) {
+                outbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound1);
+                System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
+                if (cabinClassType == null) {
+                    outbound1Seats = getDesiredSeatInventory(outbound1FlightSchedule);  
+                } else {
+                    outbound1Seats = flightScheduleSessionBean.getCorrectSeatInventory(outbound1FlightSchedule, cabinClassType);
+                }
+                outbound1Fare = flightScheduleSessionBean.getSmallestFare(outbound1FlightSchedule, outbound1Seats.getCabin().getCabinClassType());
+                outbound1SeatSelection = getSeatBookings(outbound1Seats, noOfPassengers);
+                
+                outbound2FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound2);
+                System.out.println("Seat Selection for outbound connecting flight " + outbound2FlightSchedule.getFlightSchedulePlan().getFlightNum());
+                if (cabinClassType == null) {
+                    outbound2Seats = getDesiredSeatInventory(outbound2FlightSchedule);  
+                } else {
+                   outbound2Seats = flightScheduleSessionBean.getCorrectSeatInventory(outbound2FlightSchedule, cabinClassType);
+                }    
+                outbound2Fare = flightScheduleSessionBean.getSmallestFare(outbound2FlightSchedule, outbound2Seats.getCabin().getCabinClassType());
+                outbound2SeatSelection = getSeatBookings(outbound2Seats, noOfPassengers);
+                
+                pricePerPax = outbound1Fare.getFareAmount().add(outbound2Fare.getFareAmount());
+                List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
+                
+                System.out.println("Price per person : $" + pricePerPax.toString() + "\nTotal Amount : $" + pricePerPax.multiply(new BigDecimal(noOfPassengers)));
+                
+                System.out.print("Enter Credit Card Number> ");
+                String creditCardNum = sc.nextLine().trim();
+                System.out.print("Enter cvv> ");
+                String cvv = sc.nextLine().trim();
+
+                ReservationEntity reservation = new ReservationEntity(creditCardNum, cvv);
+                
+                for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
+                }
+                long reservationId = reservationSessionBean.createNewReservation(reservation, 
+                        passengers, outbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
+                        outbound1Fare.getFareID(), outbound1Seats.getCabin().getCabinClassID());                 
+                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
             
-            System.out.println(" -- " + type + " -- ");
-            System.out.print("Row  ");
-            int count = 0;
-            int no = 0;
+                for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(outbound2SeatSelection.get(i));
+                }
+                reservationId = reservationSessionBean.createNewReservation(reservation, 
+                         passengers, outbound2FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
+                         outbound2Fare.getFareID(), outbound2Seats.getCabin().getCabinClassID());                 
+                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for connecting flight " + outbound2FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+            } else {
+                outbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound1);
+                System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
+                if (cabinClassType == null) {
+                    outbound1Seats = getDesiredSeatInventory(outbound1FlightSchedule);  
+                } else {
+                    outbound1Seats = flightScheduleSessionBean.getCorrectSeatInventory(outbound1FlightSchedule, cabinClassType);
+                }
+                outbound1Fare = flightScheduleSessionBean.getSmallestFare(outbound1FlightSchedule, outbound1Seats.getCabin().getCabinClassType());
+                outbound1SeatSelection = getSeatBookings(outbound1Seats, noOfPassengers);
+                
+                outbound2FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound2);
+                System.out.println("Seat Selection for outbound connecting flight " + outbound2FlightSchedule.getFlightSchedulePlan().getFlightNum());
+                if (cabinClassType == null) {
+                    outbound2Seats = getDesiredSeatInventory(outbound2FlightSchedule);  
+                } else {
+                   outbound2Seats = flightScheduleSessionBean.getCorrectSeatInventory(outbound2FlightSchedule, cabinClassType);
+                }
+                outbound2Fare = flightScheduleSessionBean.getSmallestFare(outbound2FlightSchedule, outbound2Seats.getCabin().getCabinClassType());
+                outbound2SeatSelection = getSeatBookings(outbound2Seats, noOfPassengers);
+                
+                inbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(inbound1);
+                System.out.println("Seat Selection for inbound flight " + inbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
+                if (cabinClassType == null) {
+                    inbound1Seats = getDesiredSeatInventory(inbound1FlightSchedule);   
+                } else {
+                    inbound1Seats = flightScheduleSessionBean.getCorrectSeatInventory(inbound1FlightSchedule, cabinClassType);
+                }
+                inbound1Fare = flightScheduleSessionBean.getSmallestFare(inbound1FlightSchedule, inbound1Seats.getCabin().getCabinClassType());
+                inbound1SeatSelection = getSeatBookings(inbound1Seats, noOfPassengers);   
+                
+                inbound2FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(inbound2);
+                System.out.println("Seat Selection for inbound connecting flight " + inbound2FlightSchedule.getFlightSchedulePlan().getFlightNum());
+                if (cabinClassType == null) {
+                    inbound2Seats = getDesiredSeatInventory(inbound2FlightSchedule);
+                } else {
+                    inbound2Seats = flightScheduleSessionBean.getCorrectSeatInventory(inbound2FlightSchedule, cabinClassType);
+                }
+                inbound2Fare = flightScheduleSessionBean.getSmallestFare(inbound2FlightSchedule, inbound2Seats.getCabin().getCabinClassType());
+                inbound2SeatSelection = getSeatBookings(inbound2Seats, noOfPassengers);
+                
+                pricePerPax = outbound1Fare.getFareAmount().add(outbound2Fare.getFareAmount()).add(inbound1Fare.getFareAmount()).add(inbound2Fare.getFareAmount());
+                List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
+                
+                System.out.println("Price per person : $" + pricePerPax.toString() + "\nTotal Amount : $" + pricePerPax.multiply(new BigDecimal(noOfPassengers)));
+                
+                System.out.print("Enter Credit Card Number> ");
+                String creditCardNum = sc.nextLine().trim();
+                System.out.print("Enter cvv> ");
+                String cvv = sc.nextLine().trim();
+
+                ReservationEntity reservation = new ReservationEntity(creditCardNum, cvv);
+                
+                 for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
+                }
+                long reservationId = reservationSessionBean.createNewReservation(reservation, 
+                        passengers, outbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
+                        outbound1Fare.getFareID(), outbound1Seats.getCabin().getCabinClassID());                 
+                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+            
+                for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(outbound2SeatSelection.get(i));
+                }
+                reservationId = reservationSessionBean.createNewReservation(reservation, 
+                         passengers, outbound2FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
+                         outbound2Fare.getFareID(), outbound2Seats.getCabin().getCabinClassID());                 
+                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for connecting flight " + outbound2FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+            
+                for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(inbound1SeatSelection.get(i));
+                }  
+                reservationId = reservationSessionBean.createNewReservation(reservation, 
+                         passengers, inbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
+                         inbound1Fare.getFareID(), inbound1Seats.getCabin().getCabinClassID());                      
+                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for return flight " + inbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");        
+                
+                for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(inbound2SeatSelection.get(i));
+                }  
+                reservationId = reservationSessionBean.createNewReservation(reservation, 
+                         passengers, inbound2FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
+                         inbound2Fare.getFareID(), inbound2Seats.getCabin().getCabinClassID());                      
+                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for connecting return flight " + inbound2FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");        
+            }           
+        } catch (FlightScheduleNotFoundException | CabinClassNotFoundException | ReservationExistException | UnknownPersistenceException | UserNotFoundException | FareNotFoundException | SeatInventoryNotFoundException | UpdateSeatsException ex) {
+            System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n");
+        }
+    }
+    
+    private List<PassengerEntity> obtainPassengerDetails(int noOfPassengers) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("*** Passenger Details ***\n");
+        List<PassengerEntity> passengers = new ArrayList<>();
+        for (int i = 1; i <= noOfPassengers; i++) {
+            System.out.print("Enter passenger " + (i) + " first name> ");
+            String firstName = sc.nextLine().trim();
+            System.out.print("Enter passenger " + (i) + " last name> ");
+            String lastName = sc.nextLine().trim();
+            System.out.print("Enter passenger " + (i) + " passport number> ");
+            String passport = sc.nextLine().trim();
+            passengers.add(new PassengerEntity(firstName, lastName, passport, null));
+        }
+        return passengers;
+    } 
+    
+    private List<String> getSeatBookings(SeatInventoryEntity seatInventory, int noOfPassengers) {
+        Scanner sc = new Scanner(System.in);
+        int totalAvailSeats = seatInventory.getAvailable();
+        int totalReservedSeats = seatInventory.getReserved();
+        int totalBalanceSeats = seatInventory.getBalance();
+
+        char[][] seats = seatInventory.getSeats();
+        String cabinClassConfig = seatInventory.getCabin().getSeatingConfigPerColumn();
+
+        //Display Seats
+        String type = "";
+        if (null !=  seatInventory.getCabin().getCabinClassType())
+            switch (seatInventory.getCabin().getCabinClassType()) {
+                case F:
+                    type = "First Class";
+                    break;
+                case J:
+                    type = "Business Class";
+                    break;
+                case W:
+                    type = "Premium Economy Class";
+                    break;
+                case Y:
+                    type = "Economy Class";
+                    break;
+                default:
+                    break;
+            }
+
+        System.out.println(" -- " + type + " -- ");
+        System.out.print("Row  ");
+        int count = 0;
+        int no = 0;
+        for (int i = 0; i < cabinClassConfig.length(); i++) {
+            if (Character.isDigit(cabinClassConfig.charAt(i))) {
+                no += Integer.parseInt(String.valueOf(cabinClassConfig.charAt(i)));
+                while (count < no) {
+                    System.out.print((char)('A' + count) + "  ");
+                    count++;
+                }
+            } else {
+                System.out.print("   ");
+            }
+        }
+        System.out.println();
+
+        for (int j = 0; j < seats.length; j++) {
+            System.out.printf("%-5s", String.valueOf(j+1));
+            int count2 = 0;
+            int no2 = 0;
             for (int i = 0; i < cabinClassConfig.length(); i++) {
                 if (Character.isDigit(cabinClassConfig.charAt(i))) {
-                    no += Integer.parseInt(String.valueOf(cabinClassConfig.charAt(i)));
-                    while (count < no) {
-                        System.out.print((char)('A' + count) + "  ");
-                        count++;
+                    no2 += Integer.parseInt(String.valueOf(cabinClassConfig.charAt(i)));
+                    while (count2 < no2) {
+                        System.out.print(seats[j][count2] + "  ");
+                        count2++;
                     }
                 } else {
                     System.out.print("   ");
                 }
             }
             System.out.println();
-            
-            for (int j = 0; j < seats.length; j++) {
-                System.out.printf("%-5s", String.valueOf(j+1));
-                int count2 = 0;
-                int no2 = 0;
-                for (int i = 0; i < cabinClassConfig.length(); i++) {
-                    if (Character.isDigit(cabinClassConfig.charAt(i))) {
-                        no2 += Integer.parseInt(String.valueOf(cabinClassConfig.charAt(i)));
-                        while (count2 < no2) {
-                            System.out.print(seats[j][count2] + "  ");
-                            count2++;
-                        }
+        }
+        System.out.println(" --- Total --- ");
+        System.out.println("Number of available seats: " + totalAvailSeats);
+        System.out.println("Number of reserved seats: " + totalReservedSeats);
+        System.out.println("Number of balance seats: " + totalBalanceSeats);
+
+        List<String> seatSelection = new ArrayList<>();
+        while (true) {        
+            for (int i = 0; i < noOfPassengers; i++) {                   
+                String seatNumber;
+                while (true) {
+                    System.out.print("\nEnter seat to reserve for Passenger " +  (i + 1) + "(Eg. A5)> ");
+                    seatNumber = sc.nextLine().trim();               
+                    boolean booked = seatsInventorySessionBean.checkIfBooked(seatInventory, seatNumber);
+                    if (booked) {
+                        System.out.println("Seat already taken!\nPlease choose another seat");
                     } else {
-                        System.out.print("   ");
+                        break;
                     }
-                }
-                System.out.println();
+                }    
+                seatSelection.add(seatNumber);
             }
-            System.out.println(" --- Total --- ");
-            System.out.println("Number of available seats: " + totalAvailSeats);
-            System.out.println("Number of reserved seats: " + totalReservedSeats);
-            System.out.println("Number of balance seats: " + totalBalanceSeats);
-            
-            
-            //Reservation Process
-            List<PassengerEntity> passengerList = new ArrayList<>();
-            
-            for(int i = 0; i < passengers; i++) {
-                boolean proceed = true;
-                while(proceed) {
-                    System.out.print("\nEnter seat to reserve for Passenger " +  i+1 + "(Eg. A5)> ");
-                    String  reserve = sc.nextLine().trim();
-                    boolean booked = seatsInventorySessionBean.checkIfBooked(sched, reserve);
-                    if(booked) {
-                        System.out.println("Seat already taken!\nPlease choose another seat.");
-                    } else {
-                        sched = blockOutReservedSeats(sched, reserve);
-                        System.out.print("Enter passenger first name> ");
-                        String firstName = sc.nextLine().trim();
-                        System.out.print("Enter passenger last name> ");
-                        String lastName = sc.nextLine().trim();
-                        System.out.print("Enter passport number> ");
-                        String passport = sc.nextLine().trim();
-                        
-                        PassengerEntity passenger = new PassengerEntity(firstName, lastName, passport);
-                        try {
-                            passenger = passengerSessionBean.createNewPassenger(passenger);
-                        } catch (PassengerAlreadyExistException ex) {
-                            passenger = passengerSessionBean.retrievePassengerByPassport(passport);
-                        }
-                        passengerList.add(passenger);
-                        proceed = false;
-                    }
-                }
+            boolean distinct = seatSelection.stream().distinct().count() ==  seatSelection.size();
+            if (distinct) {
+                return seatSelection;
+            } else {
+                System.out.println("Duplicate seats detected!\nPlease try again");
             }
-            
-            System.out.println("*** Payment ***\n");
-            System.out.println("Price per person : $" + fare.getFareAmount() + ".\nTotal Amount : $" + fare.getFareAmount().multiply(BigDecimal.valueOf(passengers)));
-            System.out.print("Enter Credit Card Number> ");
-            String creditCardNum = sc.nextLine().trim();
-            System.out.print("Enter cvv> ");
-            String cvv = sc.nextLine().trim();
-            
-            ReservationEntity reservation = new ReservationEntity(creditCardNum, cvv);
-            reservation.setFare(fare);
-            reservation.setFlightSchedule(sched.getFlightSchedule());
-            reservation.setCabinClass(sched.getCabin());
-            reservation.setPassenger(passengerList);
-            reservation.setUser(currentCustomer);
-            
-            //may need transaction here??
-            reservation = reservationSessionBean.createNewReservation(sched.getFlightSchedule(), currentCustomer,reservation);
-            seatsInventorySessionBean.updateSeatInventory(sched);
-            
-            System.out.println("Reservation " + reservation.getReservationID() + " created successfully for User " + reservation.getUser().getUserID() + " !\n");
-            
-            
-        } catch (SeatInventoryNotFoundException | UpdateSeatsException | InputDataValidationException | UnknownPersistenceException | ReservationExistException | FlightScheduleNotFoundException | UserNotFoundException ex) {
-            System.out.println(ex.getMessage());
         }
     }
     
-    private SeatInventoryEntity blockOutReservedSeats(SeatInventoryEntity sched, String reserve) {
-        char[][] seats = sched.getSeats();
-        int col = reserve.charAt(0) - 'A';
-        int row = Integer.parseInt(reserve.substring(1));
-        
-        seats[row-1][col] = 'X';
-        sched.setSeats(seats);
-        return sched;
-    }
+    private SeatInventoryEntity getDesiredSeatInventory(FlightScheduleEntity flightSchedule) {
+        Scanner sc = new Scanner(System.in);
+        int i = 1;
+        System.out.println(" * Available Cabin Classes * ");
+        for (SeatInventoryEntity seats: flightSchedule.getSeatInventory()) {
+            String cabinClass;
+            if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
+                cabinClass = "First Class"; 
+            } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
+                cabinClass = "Business Class";
+            } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
+                cabinClass = "Premium Economy Class";
+            } else {
+                cabinClass = "Economy Class";  
+            }
 
+            System.out.println(i + ") " + cabinClass);
+            i++;
+        }
+        while (true) {
+            System.out.print("Select desired cabin class> ");
+            int choice = sc.nextInt();
+            sc.nextLine();
+            if (choice <= flightSchedule.getSeatInventory().size() && choice >= 1) {
+                return flightSchedule.getSeatInventory().get(choice - 1);
+            } else {
+                System.out.println("Error: Please enter a valid input");
+            }
+        }   
+                
+    }
+ 
     private void viewFlightReservation() {
         Scanner sc = new Scanner(System.in);
         System.out.println("*** View Flight Reservations ***\n");
@@ -2783,7 +3048,8 @@ public class MainApp {
         System.out.print("Press any key to continue...> ");
         sc.nextLine();
     }
-    //probably need something to record the seat number of each passenger reservation?
+    
+   
     private void viewFlightReservationDetails() {
         try {
             Scanner sc = new Scanner(System.in);
@@ -2807,9 +3073,9 @@ public class MainApp {
                     "Duration", "Passenger Name", "Cabin Type", "Seat Number", "Total amount paid");
             
             for(int i = 0; i<passengers.size(); i++) {
-                System.out.printf("%35s%25s%25s%35s%25s%15s%30s%20s%35s\n", sched.getFlightScheduleID(), sched.getFlightSchedulePlan().getFlightNum(), sched.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin(),
-                        sched.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination(), sched.getDepartureDateTime(), sched.getDuration(), passengers.get(i).getFirstName() + passengers.get(i).getLastName(),
-                        cabin.getCabinClassType(), amt);
+                System.out.printf("%35s%25s%25s%35s%25s%15s%30s%20s%20s%35s\n", sched.getFlightScheduleID(), sched.getFlightSchedulePlan().getFlightNum(), sched.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin(),
+                        sched.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination(), sched.getDepartureDateTime().toString().substring(0,19), sched.getDuration(), passengers.get(i).getFirstName() + " " + passengers.get(i).getLastName(),
+                        cabin.getCabinClassType(), passengers.get(i).getSeatNumber(), amt);
             }
         } catch (ReservationNotFoundException ex) {
             System.out.println(ex.getMessage());

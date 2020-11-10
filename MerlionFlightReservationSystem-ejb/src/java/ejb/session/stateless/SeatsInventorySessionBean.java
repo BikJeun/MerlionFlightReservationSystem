@@ -98,58 +98,33 @@ public class SeatsInventorySessionBean implements SeatsInventorySessionBeanRemot
     return query.getResultList();
     }*/
     
+   
     @Override
-    public void updateSeatInventory(SeatInventoryEntity sched) throws SeatInventoryNotFoundException, UpdateSeatsException, InputDataValidationException {
-        if(sched != null && sched.getSeatInventoryID() != null) {
-            Set<ConstraintViolation<SeatInventoryEntity>> constraintViolations = validator.validate(sched);
-            
-            if(constraintViolations.isEmpty())
-            {
-                SeatInventoryEntity schedToUpdate = retrieveSeatsById(sched.getSeatInventoryID());
-
-                int reserved = 0;
-                int balanced = 0;
-                
-                char[][] mtx = sched.getSeats();
-                for(int i = 0; i< mtx.length; i++) {
-                    for(int j = 0; j<mtx[0].length; j++) {
-                        if(mtx[i][j] == '-') {
-                            balanced++;
-                        } else if( mtx[i][j] == 'X') {
-                            reserved++;
-                        }
-                    }
-                }
-                
-                if(schedToUpdate.getSeatInventoryID().equals(sched.getSeatInventoryID())) {
-                    schedToUpdate.setSeats(sched.getSeats());
-                    schedToUpdate.setAvailable(sched.getAvailable());
-                    schedToUpdate.setBalance(balanced);
-                    schedToUpdate.setReserved(reserved);
-                    schedToUpdate.setFlightSchedule(sched.getFlightSchedule());
-                    schedToUpdate.setSeats(sched.getSeats());
-                    
-                }
-                else {
-                    throw new UpdateSeatsException("ID of seats inventory to be updated does not match the existing record");
-                }
-            }
-            else {
-                throw new InputDataValidationException(prepareInputDataValidationErrorsMessage(constraintViolations));
-            }
+    public void bookSeat(long seatInventoryId, String seatNumber) throws SeatInventoryNotFoundException, UpdateSeatsException {
+             
+        SeatInventoryEntity seatInventory = retrieveSeatsById(seatInventoryId);
+        
+        int col = seatNumber.charAt(0) - 'A';
+        int row = Integer.parseInt(seatNumber.substring(1)) - 1;
+        
+        char[][] seats = seatInventory.getSeats();
+        if (seats[row][col] == '-' ){
+            seats[row][col] = 'X';
+            seatInventory.setSeats(seats);
+        } else {
+            throw new UpdateSeatsException("Seat already booked");
         }
-        else {
-            throw new SeatInventoryNotFoundException("Inventory ID not provided for invnetory to be updated");
-        }
+        seatInventory.setReserved(seatInventory.getReserved() + 1);
+        seatInventory.setBalance(seatInventory.getBalance() - 1);       
     }
     
     @Override
-    public boolean checkIfBooked(SeatInventoryEntity sched, String reserve) {
+    public boolean checkIfBooked(SeatInventoryEntity seatInventory, String seatNumber) {
         try {
-            SeatInventoryEntity scheds = retrieveSeatsById(sched.getSeatInventoryID());
+            SeatInventoryEntity scheds = retrieveSeatsById(seatInventory.getSeatInventoryID());
             char[][] mtx = scheds.getSeats();
-            int col = reserve.charAt(0) - 'A';
-            int row = Integer.parseInt(reserve.substring(1));
+            int col = seatNumber.charAt(0) - 'A';
+            int row = Integer.parseInt(seatNumber.substring(1)) - 1;
             
             if(mtx[row][col] == 'X') {
                 return true;

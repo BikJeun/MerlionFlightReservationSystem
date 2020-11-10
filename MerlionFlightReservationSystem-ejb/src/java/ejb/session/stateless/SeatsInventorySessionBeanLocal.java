@@ -9,6 +9,7 @@ import entity.CabinClassEntity;
 import entity.FlightScheduleEntity;
 import entity.SeatInventoryEntity;
 import exceptions.SeatInventoryNotFoundException;
+import exceptions.UpdateSeatsException;
 import java.util.List;
 import javax.ejb.Local;
 
@@ -24,5 +25,7 @@ public interface SeatsInventorySessionBeanLocal {
     public SeatInventoryEntity createSeatInventory(SeatInventoryEntity seatInventory, FlightScheduleEntity flightSchedule, CabinClassEntity cabinClass);
     
     public SeatInventoryEntity retrieveSeatsById(Long seatInventoryID) throws SeatInventoryNotFoundException;
+    
+    public void bookSeat(long seatInventoryId, String seatNumber) throws SeatInventoryNotFoundException, UpdateSeatsException;
     
 }

@@ -18,9 +18,7 @@ import javax.ejb.Remote;
 @Remote
 public interface SeatsInventorySessionBeanRemote {
 
-    public void updateSeatInventory(SeatInventoryEntity sched) throws SeatInventoryNotFoundException, UpdateSeatsException, InputDataValidationException;
+    public boolean checkIfBooked(SeatInventoryEntity seatInventory, String seatNumber);
 
-    /*    public List<SeatInventoryEntity> retrieveInventoryByCabin(FlightScheduleEntity flight, CabinClassTypeEnum cabin);*/    
-
-    public boolean checkIfBooked(SeatInventoryEntity sched, String reserve);
+    public void bookSeat(long seatInventoryId, String seatNumber) throws SeatInventoryNotFoundException, UpdateSeatsException;
 }

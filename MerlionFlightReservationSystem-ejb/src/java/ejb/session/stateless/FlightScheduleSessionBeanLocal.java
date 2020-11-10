@@ -8,11 +8,13 @@ package ejb.session.stateless;
 import entity.FareEntity;
 import entity.FlightScheduleEntity;
 import entity.FlightSchedulePlanEntity;
+import entity.SeatInventoryEntity;
 import enumeration.CabinClassTypeEnum;
 import exceptions.CabinClassNotFoundException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.InputDataValidationException;
+import exceptions.SeatInventoryNotFoundException;
 import java.util.Date;
 import java.util.List;
 import javafx.util.Pair;
@@ -36,5 +38,7 @@ public interface FlightScheduleSessionBeanLocal {
     public FareEntity getBiggestFare(FlightScheduleEntity flightScheduleEntity, CabinClassTypeEnum type) throws FlightScheduleNotFoundException, CabinClassNotFoundException;
 
     public List<Pair<FlightScheduleEntity, FlightScheduleEntity>> getIndirectFlightSchedules(String departure, String destination, Date date, CabinClassTypeEnum cabin)  throws FlightNotFoundException;
+
+    public SeatInventoryEntity getCorrectSeatInventory(FlightScheduleEntity flightSchedule, CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, SeatInventoryNotFoundException;
     
 }

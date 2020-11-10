@@ -7,14 +7,26 @@ package ejb.session.ws;
 
 import ejb.session.stateless.FlightScheduleSessionBeanLocal;
 import ejb.session.stateless.PartnerSessionBeanLocal;
+import ejb.session.stateless.ReservationSessionBeanLocal;
+import ejb.session.stateless.SeatsInventorySessionBeanLocal;
 import entity.FareEntity;
 import entity.FlightScheduleEntity;
 import entity.PartnerEntity;
+import entity.PassengerEntity;
+import entity.ReservationEntity;
+import entity.SeatInventoryEntity;
 import enumeration.CabinClassTypeEnum;
 import exceptions.CabinClassNotFoundException;
+import exceptions.FareNotFoundException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.InvalidLoginCredentialException;
+import exceptions.ReservationExistException;
+import exceptions.ReservationNotFoundException;
+import exceptions.SeatInventoryNotFoundException;
+import exceptions.UnknownPersistenceException;
+import exceptions.UpdateSeatsException;
+import exceptions.UserNotFoundException;
 import helper.MyPair;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,6 +46,12 @@ import javax.ejb.Stateless;
 @Stateless()
 public class FlightReservationWebService {
 
+    @EJB
+    private ReservationSessionBeanLocal reservationSessionBean;
+
+    @EJB
+    private SeatsInventorySessionBeanLocal seatsInventorySessionBean;
+ 
     @EJB
     private FlightScheduleSessionBeanLocal flightScheduleSessionBean;
 
@@ -64,6 +82,38 @@ public class FlightReservationWebService {
             newList.add(newPair);
         }
         return newList;
+    }
+    
+    @WebMethod(operationName = "retrieveFlightScheduleById")
+    public FlightScheduleEntity retrieveFlightScheduleById(@WebParam Long outbound1) throws InvalidLoginCredentialException, FlightScheduleNotFoundException {
+        return flightScheduleSessionBean.retrieveFlightScheduleById(outbound1);
+    }
+    
+    @WebMethod(operationName = "getCorrectSeatInventory")
+    public SeatInventoryEntity getCorrectSeatInventory(@WebParam FlightScheduleEntity flightSchedule, @WebParam CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, SeatInventoryNotFoundException {
+        return flightScheduleSessionBean.getCorrectSeatInventory(flightSchedule, cabinClassType);
+    }
+    
+    @WebMethod(operationName = "checkIfBooked")
+    public boolean checkIfBooked(@WebParam SeatInventoryEntity seatInventory,@WebParam String seatNumber) {
+        return seatsInventorySessionBean.checkIfBooked(seatInventory, seatNumber);
+    }
+    
+    @WebMethod(operationName = "createNewReservation")
+    public long createNewReservation(@WebParam ReservationEntity reservation,@WebParam List<PassengerEntity> passengers,@WebParam long flightScheduleId,@WebParam long userId,@WebParam long fareId,@WebParam long cabinClassId) throws ReservationExistException, UnknownPersistenceException, FlightScheduleNotFoundException, UserNotFoundException, FareNotFoundException, CabinClassNotFoundException, SeatInventoryNotFoundException, UpdateSeatsException {
+        return reservationSessionBean.createNewReservation(reservation, 
+                         passengers, flightScheduleId, userId, 
+                         fareId,cabinClassId);      
+    }
+    
+    @WebMethod(operationName = "retrieveReservationsByCustomerId")
+    public List<ReservationEntity> retrieveReservationsByCustomerId(@WebParam Long userID) {
+        return reservationSessionBean.retrieveReservationsByCustomerId(userID);
+    }
+    
+    @WebMethod(operationName = "retrieveReservationById")
+    public ReservationEntity retrieveReservationById(@WebParam long id) throws ReservationNotFoundException {
+        return reservationSessionBean.retrieveReservationById(id);
     }
 }
     

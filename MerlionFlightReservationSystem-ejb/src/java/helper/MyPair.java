@@ -13,15 +13,18 @@ import entity.FlightScheduleEntity;
  */
 public class MyPair {
     
-    FlightScheduleEntity fs1;
-    FlightScheduleEntity fs2;
+    private FlightScheduleEntity fs1;
+    private FlightScheduleEntity fs2;
+
+    public MyPair() {
+    }
 
     public MyPair(FlightScheduleEntity fs1, FlightScheduleEntity fs2) {
         this.fs1 = fs1;
         this.fs2 = fs2;
     }
 
-    public FlightScheduleEntity getKey() {
+    public FlightScheduleEntity getFs1() {
         return fs1;
     }
 
@@ -29,7 +32,7 @@ public class MyPair {
         this.fs1 = fs1;
     }
 
-    public FlightScheduleEntity getValue() {
+    public FlightScheduleEntity getFs2() {
         return fs2;
     }
 

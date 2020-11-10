@@ -75,6 +75,21 @@ public class PassengerEntity implements Serializable {
         this.passengerID = passengerID;
     }
     
+    /**
+     * @return the seatNumber
+     */
+    public String getSeatNumber() {
+        return seatNumber;
+    }
+
+    /**
+     * @param seatNumber the seatNumber to set
+     */
+    public void setSeatNumber(String seatNumber) {
+        this.seatNumber = seatNumber;
+    }
+    
+    
     @Override
     public int hashCode() {
         int hash = 0;
@@ -100,18 +115,5 @@ public class PassengerEntity implements Serializable {
         return "entity.PassengerEntity[ id=" + passengerID + " ]";
     }
 
-    /**
-     * @return the seatNumber
-     */
-    public String getSeatNumber() {
-        return seatNumber;
-    }
-
-    /**
-     * @param seatNumber the seatNumber to set
-     */
-    public void setSeatNumber(String seatNumber) {
-        this.seatNumber = seatNumber;
-    }
     
 }

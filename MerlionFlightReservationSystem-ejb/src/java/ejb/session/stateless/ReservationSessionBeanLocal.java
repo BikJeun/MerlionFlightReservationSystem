@@ -5,8 +5,19 @@
  */
 package ejb.session.stateless;
 
+import entity.FlightScheduleEntity;
+import entity.PassengerEntity;
+import entity.ReservationEntity;
+import exceptions.CabinClassNotFoundException;
+import exceptions.FareNotFoundException;
+import exceptions.FlightScheduleNotFoundException;
+import exceptions.ReservationExistException;
+import exceptions.ReservationNotFoundException;
 import exceptions.SeatInventoryNotFoundException;
+import exceptions.UnknownPersistenceException;
 import exceptions.UpdateSeatsException;
+import exceptions.UserNotFoundException;
+import java.util.List;
 import javax.ejb.Local;
 
 /**
@@ -15,5 +26,11 @@ import javax.ejb.Local;
  */
 @Local
 public interface ReservationSessionBeanLocal {
+
+    public long createNewReservation(ReservationEntity reservation, List<PassengerEntity> passengers, long flightScheduleId, long userId, long fareId, long cabinClassId) throws ReservationExistException, UnknownPersistenceException, FlightScheduleNotFoundException, UserNotFoundException, FareNotFoundException, CabinClassNotFoundException, SeatInventoryNotFoundException, UpdateSeatsException ;
+
+    public List<ReservationEntity> retrieveReservationsByCustomerId(Long userID);
+
+    public ReservationEntity retrieveReservationById(long id) throws ReservationNotFoundException;
         
 }

@@ -21,6 +21,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -119,6 +121,18 @@ public class AircraftConfigurationSessionBean implements AircraftConfigurationSe
             return result;
         }
        
+    }
+
+    @Override
+    public AircraftConfigurationEntity retrieveAircraftConfigByName(String name) throws AircraftConfigNotFoundException {
+        Query query = em.createQuery("SELECT a FROM AircraftConfigurationEntity a WHERE a.name = :name");
+        query.setParameter("name", name);
+        
+        try {
+            return (AircraftConfigurationEntity) query.getSingleResult();
+        } catch (NoResultException | NonUniqueResultException ex) {
+            throw new AircraftConfigNotFoundException("Flight does not exist in sytem!");
+        }
     }
    
 }

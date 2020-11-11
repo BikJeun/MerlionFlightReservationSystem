@@ -25,4 +25,5 @@ public interface AircraftConfigurationSessionBeanLocal {
     
     public AircraftConfigurationEntity retriveAircraftConfigByID(Long aircraftConfigID) throws AircraftConfigNotFoundException;
     
+    public AircraftConfigurationEntity retrieveAircraftConfigByName(String name) throws AircraftConfigNotFoundException;
 }

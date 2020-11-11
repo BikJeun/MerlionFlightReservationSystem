@@ -3,4 +3,7 @@
     <system systemId="http://localhost:8080/FlightReservationWebService/FlightReservationWebService?wsdl" uri="xml-resources/web-service-references/FlightReservationWebService/wsdl/localhost_8080/FlightReservationWebService/FlightReservationWebService.wsdl"/>
     <system systemId="http://localhost:8080/FlightReservationWebService/FlightReservationWebService?xsd=1" uri="xml-resources/web-service-references/FlightReservationWebService/wsdl/localhost_8080/FlightReservationWebService/FlightReservationWebService.xsd_1.xsd"/>
     <system systemId="http://localhost:8080/FlightReservationWebService/FlightReservationWebService?xsd=2" uri="xml-resources/web-service-references/FlightReservationWebService/wsdl/localhost_8080/FlightReservationWebService/FlightReservationWebService.xsd_2.xsd"/>
+    <system systemId="http://localhost:8080/ReservationWebService/ReservationWebService?wsdl" uri="xml-resources/web-service-references/ReservationWebService/wsdl/localhost_8080/ReservationWebService/ReservationWebService.wsdl"/>
+    <system systemId="http://localhost:8080/ReservationWebService/ReservationWebService?xsd=1" uri="xml-resources/web-service-references/ReservationWebService/wsdl/localhost_8080/ReservationWebService/ReservationWebService.xsd_1.xsd"/>
+    <system systemId="http://localhost:8080/ReservationWebService/ReservationWebService?xsd=2" uri="xml-resources/web-service-references/ReservationWebService/wsdl/localhost_8080/ReservationWebService/ReservationWebService.xsd_2.xsd"/>
 </catalog>

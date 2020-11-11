@@ -24,6 +24,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  *
@@ -36,14 +38,19 @@ public class FlightSchedulePlanEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long flightSchedulePlanID;
+    
     @Column(nullable = false, length = 32)
+    @NotNull
+    @Size(min=3, max=32)
     private String flightNum;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @NotNull
     private ScheduleTypeEnum typeExistingInPlan;
     
     @Column(nullable = false)
+    @NotNull
     private boolean disabled;
         
     @Temporal(TemporalType.TIMESTAMP)
@@ -86,6 +93,7 @@ public class FlightSchedulePlanEntity implements Serializable {
         this.typeExistingInPlan = typeExistingInPlan;
         this.recurrentEndDate = recurrentEndDate;
         this.flight = flight;
+        this.flightNum = flight.getFlightNum();
     }
     
 

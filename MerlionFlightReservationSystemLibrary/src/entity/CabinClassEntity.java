@@ -31,20 +31,29 @@ public class CabinClassEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cabinClassID;
+    
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private CabinClassTypeEnum cabinClassType;
+    
     @Column(nullable = false)
     @Min(0)
     @Max(2)
     private int numOfAisles;
+    
     @Column(nullable = false)
+    @Min(1)
     private int numOfRows;
+    
     @Column(nullable = false)
     private int numOfSeatsAbreast;
+    
     @Column(nullable = false)
     @Size(min=1, max=5)
     private String seatingConfigPerColumn;
+    
     @Column(nullable = false)
+    @Min(1)
     private int maxSeatCapacity;
     
     @ManyToOne(optional = false)

@@ -12,13 +12,21 @@ import entity.EmployeeEntity;
 import entity.FlightEntity;
 import entity.FlightScheduleEntity;
 import entity.FlightSchedulePlanEntity;
+import entity.PassengerEntity;
+import entity.ReservationEntity;
 import entity.SeatInventoryEntity;
+import enumeration.CabinClassTypeEnum;
 import enumeration.EmployeeAccessRightEnum;
 import exceptions.FlightNotFoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.util.Pair;
 
 /**
  *
@@ -60,7 +68,7 @@ public class SalesManagementModule {
                     }
                 } else if (response == 2) {
                     if(currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.ADMINISTRATOR) || currentEmployee.getAccessRight().equals(EmployeeAccessRightEnum.SALESMANAGER)) {
-                        //flightSchedulePlanMenu();
+                        viewFlightReservations();
                     } else {
                         System.out.println("You are not authorised to use this feature.");
                     }
@@ -190,6 +198,115 @@ public class SalesManagementModule {
             System.out.println("Number of balance seats: " + totalBalanceSeats);
             System.out.print("Press any key to continue...> ");
             sc.nextLine();
+            
+        } catch (FlightNotFoundException ex) {
+            System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n");
+        }
+    }
+
+    private void viewFlightReservations() {
+       
+        try {
+            Scanner sc = new Scanner(System.in);
+            System.out.println("*** View Flight Reservations ***");
+            System.out.print("Enter Flight Number> ");
+            String flightNum = sc.nextLine().trim();
+            FlightEntity flight = flightSessionBean.retrieveFlightByFlightNumber(flightNum);
+            if (flight.getFlightSchedulePlan().isEmpty()) {
+                System.out.println("Error: The selected flight has no flight schedule plans associated with it\n");
+                return;
+            }
+            System.out.println("Displaying all flight schedules for Flight " + flightNum + ": " + flight.getFlightRoute().getOrigin().getIATACode() + " -> " + flight.getFlightRoute().getDestination().getIATACode());
+            System.out.printf("%25s%30s%20s\n", "Flight Schedule ID", "Departure Date Time", "Duration (HRS)");
+            for (FlightSchedulePlanEntity fsp: flight.getFlightSchedulePlan()) {
+                for (FlightScheduleEntity fs: fsp.getFlightSchedule()) {
+                    System.out.printf("%25s%30s%20s\n", fs.getFlightScheduleID().toString(), fs.getDepartureDateTime().toString(), String.valueOf(fs.getDuration()));
+                }
+            }
+            System.out.print("Select flight schedule (BY ID)>  ");
+            Long chosenFlightScheduleId = sc.nextLong();
+            sc.nextLine();
+        
+            FlightScheduleEntity flightSchedule = null;
+            for (FlightSchedulePlanEntity fsp: flight.getFlightSchedulePlan()) {
+                for (FlightScheduleEntity fs: fsp.getFlightSchedule()) {
+                    if (Objects.equals(fs.getFlightScheduleID(), chosenFlightScheduleId)) {
+                        flightSchedule = fs;
+                    }
+                }
+            }
+            if (flightSchedule == null) {
+                System.out.println("Error: Flight Schedule with ID " + chosenFlightScheduleId + " does not exist with flight " + flightNum + "\n");
+                return;
+            }
+            
+            List<CabinClassTypeEnum> cabinTypes = new ArrayList<>();
+            for (ReservationEntity reservations: flightSchedule.getReservations()) {
+                if (!cabinTypes.contains(reservations.getCabinClassType())) {
+                    cabinTypes.add(reservations.getCabinClassType());
+                }
+            }
+            
+            List<List<Pair<PassengerEntity, String>>> res = new ArrayList<>();
+            for (int i = 0; i < cabinTypes.size(); i++) {
+                res.add(new ArrayList<>());
+                for (ReservationEntity reservations: flightSchedule.getReservations()) {
+                    if (reservations.getCabinClassType() == cabinTypes.get(i)) {
+                        String fareBasisCode = reservations.getFareBasisCode();
+                        for (PassengerEntity passenger: reservations.getPassenger()) {
+                            res.get(i).add(new Pair<>(passenger, fareBasisCode));
+                        }
+                    }
+                }
+            }
+            
+            for (int i = 0; i < cabinTypes.size(); i++) {
+                Collections.sort(res.get(i), new Comparator<Pair<PassengerEntity, String>>() {     
+                    @Override
+                    public int compare(Pair<PassengerEntity, String> o1, Pair<PassengerEntity, String> o2) {
+                        if (o1.getKey().getSeatNumber().compareTo(o2.getKey().getSeatNumber()) > 0) {
+                            return 1;
+                        } else if (o1.getKey().getSeatNumber().compareTo(o2.getKey().getSeatNumber()) < 0) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
+                    }
+                });
+            }
+            
+            System.out.println("\n +++ All Reservations for Flight Schedule (ID: " + chosenFlightScheduleId + " +++\n");
+            for (int i = 0; i < cabinTypes.size(); i++) {
+                String type;
+                switch (cabinTypes.get(i)) {
+                case F:
+                    type = "First Class";
+                    break;
+                case J:
+                    type = "Business Class";
+                    break;
+                case W:
+                    type = "Premium Economy Class";
+                    break;
+                case Y:
+                    type = "Economy Class";
+                    break;
+                default:
+                    type = "Economy Class"; //will never hit this
+                    break;
+                }
+                System.out.println(" -- " + type + " -- ");
+                System.out.println();
+                for (Pair<PassengerEntity, String> pair: res.get(i)) {
+                    PassengerEntity pass = pair.getKey();
+                    String fareCode = pair.getValue();
+                    System.out.println(pass.getFirstName() + " " + pass.getLastName() + ", Seat " + pass.getSeatNumber() + ", " + fareCode);
+                }
+                System.out.println();
+            }
+            System.out.print("Press any key to continue...> ");
+            sc.nextLine();
+            
             
         } catch (FlightNotFoundException ex) {
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n");

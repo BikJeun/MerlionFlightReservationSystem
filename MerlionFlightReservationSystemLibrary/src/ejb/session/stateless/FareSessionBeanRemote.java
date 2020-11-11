@@ -6,11 +6,9 @@
 package ejb.session.stateless;
 
 import entity.FareEntity;
-import exceptions.CabinClassNotFoundException;
-import exceptions.FareExistException;
-import exceptions.FlightSchedulePlanNotFoundException;
-import exceptions.UnknownPersistenceException;
-import java.util.List;
+import exceptions.FareNotFoundException;
+import exceptions.UpdateFareException;
+import java.math.BigDecimal;
 import javax.ejb.Remote;
 
 /**
@@ -20,7 +18,5 @@ import javax.ejb.Remote;
 @Remote
 public interface FareSessionBeanRemote {
 
-    public FareEntity createFareEntity(FareEntity fare, long flightSchedulePlanID, long cabinClassID) throws FlightSchedulePlanNotFoundException, CabinClassNotFoundException, FareExistException, UnknownPersistenceException;
-
-    /*    public FareEntity retrieveFareByCabinAndFsp(Long cabinClassID, Long flightScheduleID);*/    
+    public FareEntity updateFare(long fareID, BigDecimal newCost) throws FareNotFoundException, UpdateFareException;
 }

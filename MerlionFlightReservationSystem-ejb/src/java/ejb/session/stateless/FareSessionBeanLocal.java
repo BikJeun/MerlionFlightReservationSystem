@@ -6,10 +6,10 @@
 package ejb.session.stateless;
 
 import entity.FareEntity;
-import exceptions.CabinClassNotFoundException;
+import entity.FlightSchedulePlanEntity;
 import exceptions.FareExistException;
 import exceptions.FareNotFoundException;
-import exceptions.FlightSchedulePlanNotFoundException;
+import exceptions.InputDataValidationException;
 import exceptions.UnknownPersistenceException;
 import java.util.List;
 import javax.ejb.Local;
@@ -21,7 +21,7 @@ import javax.ejb.Local;
 @Local
 public interface FareSessionBeanLocal {
     
-    public FareEntity createFareEntity(FareEntity fare, long flightSchedulePlanID, long cabinClassID) throws FlightSchedulePlanNotFoundException, CabinClassNotFoundException, FareExistException, UnknownPersistenceException;
+    public FareEntity createFareEntity(FareEntity fare, FlightSchedulePlanEntity flightSchedulePlan) throws FareExistException, UnknownPersistenceException, InputDataValidationException;
 
     public void deleteFares(List<FareEntity> fares);
     

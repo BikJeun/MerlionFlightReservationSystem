@@ -7,7 +7,6 @@ package entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -43,9 +42,9 @@ public class FlightScheduleEntity implements Serializable {
     private Date departureDateTime;
     
     @Column(nullable = false)
-    @Min(1)
+    @Min(0)
     @Max(24)
-    private int duration;
+    private double duration;
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
@@ -62,7 +61,7 @@ public class FlightScheduleEntity implements Serializable {
         seatInventory = new ArrayList<>();
     }
 
-    public FlightScheduleEntity(Date departureDateTime, int duration) {
+    public FlightScheduleEntity(Date departureDateTime, double duration) {
         this();
         this.departureDateTime = departureDateTime;
         this.duration = duration;
@@ -76,11 +75,11 @@ public class FlightScheduleEntity implements Serializable {
         this.departureDateTime = departureDateTime;
     }
 
-    public int getDuration() {
+    public double getDuration() {
         return duration;
     }
 
-    public void setDuration(int duration) {
+    public void setDuration(double duration) {
         this.duration = duration;
     }
 

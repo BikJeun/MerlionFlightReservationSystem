@@ -12,14 +12,11 @@ import entity.FlightSchedulePlanEntity;
 import entity.SeatInventoryEntity;
 import enumeration.CabinClassTypeEnum;
 import exceptions.CabinClassNotFoundException;
-import exceptions.CustomerNotFoundException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.InputDataValidationException;
 import exceptions.SeatInventoryNotFoundException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import exceptions.UpdateFlightScheduleException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -27,18 +24,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.util.Pair;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -127,6 +119,9 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
 
         for (FlightEntity flightEntity: flight) {
             for (FlightSchedulePlanEntity flightSchedulePlanEntity: flightEntity.getFlightSchedulePlan()) {
+                if (flightSchedulePlanEntity.isDisabled()) {
+                    continue;
+                }
                 for (FlightScheduleEntity flightScheduleEntity: flightSchedulePlanEntity.getFlightSchedule()) {
                     boolean toAdd = false;
                     if (cabin == null) {
@@ -167,8 +162,14 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
             FlightEntity firstFlight = (FlightEntity) pair[0];
             FlightEntity secondFlight = (FlightEntity) pair[1];
             for (FlightSchedulePlanEntity flightSchedulePlan: firstFlight.getFlightSchedulePlan()) {
+                if (flightSchedulePlan.isDisabled()) {
+                    continue;
+                }
                 for (FlightScheduleEntity flightSchedule: flightSchedulePlan.getFlightSchedule()) {
                     for (FlightSchedulePlanEntity flightSchedulePlan2: secondFlight.getFlightSchedulePlan()) {
+                        if (flightSchedulePlan2.isDisabled()) {
+                            continue;
+                        }
                         for (FlightScheduleEntity flightSchedule2: flightSchedulePlan2.getFlightSchedule()) {
                             boolean toAdd = false;
                             if (cabin == null) {
@@ -195,7 +196,11 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
                             
                             Calendar c = Calendar.getInstance();
                             c.setTime(flightSchedule.getDepartureDateTime());
-                            c.add(Calendar.HOUR_OF_DAY, flightSchedule.getDuration());
+                            double duration = flightSchedule.getDuration();
+                            int hour = (int) duration;
+                            int min = (int) (duration % 1 * 60);
+                            c.add(Calendar.HOUR_OF_DAY, hour);
+                            c.add(Calendar.MINUTE, min);               
                             int diff1 = flightSchedule.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
                             flightSchedule.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
                             c.add(Calendar.HOUR_OF_DAY, diff1);
@@ -226,7 +231,7 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
         List<FareEntity> fares = flightScheduleEntity.getFlightSchedulePlan().getFares();
         List<FareEntity> ccfares = new ArrayList<>();
         for (FareEntity fare: fares) {
-            if (fare.getCabinClass().getCabinClassType() == cabinClassType) {
+            if (fare.getCabinClassType() == cabinClassType) {
                 ccfares.add(fare);
             }
         }
@@ -248,7 +253,7 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
         List<FareEntity> fares = flightSchedule.getFlightSchedulePlan().getFares();
         List<FareEntity> ccfares = new ArrayList<>();
         for(FareEntity fare : fares) {
-            if(fare.getCabinClass().getCabinClassType() == type) {
+            if(fare.getCabinClassType() == type) {
                 ccfares.add(fare);
             }
         }
@@ -275,6 +280,63 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
         }
         throw new SeatInventoryNotFoundException("No such seat inventory");
     }
+    
+    @Override
+    public FlightScheduleEntity updateFlightSchedule(long flightScheduleId, Date newDepartureDateTime, double newFlightDuration) throws FlightScheduleNotFoundException, UpdateFlightScheduleException {
+        FlightScheduleEntity flightSchedule = retrieveFlightScheduleById(flightScheduleId);
+    
+         // Check no overlaps with already existing flight plans associated with the flight
+        for (FlightSchedulePlanEntity fsp: flightSchedule.getFlightSchedulePlan().getFlight().getFlightSchedulePlan()) {
+            for (FlightScheduleEntity fs: fsp.getFlightSchedule()) {
+                if (fs.getFlightScheduleID() == flightScheduleId) {
+                    continue;
+                }
+                Date start1 = fs.getDepartureDateTime();
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(start1);
+                double duration = fs.getDuration();
+                int hour = (int) duration;
+                int min = (int) (duration % 1 * 60);
+                calendar.add(Calendar.HOUR_OF_DAY, hour);
+                calendar.add(Calendar.MINUTE, min);
+                Date end1 = calendar.getTime();
+            
+                Calendar c = Calendar.getInstance();
+                c.setTime(newDepartureDateTime);
+                double duration2 = newFlightDuration;
+                int hour2 = (int) duration2;
+                int min2 = (int) (duration % 1 * 60);
+                c.add(Calendar.HOUR_OF_DAY, hour2);
+                c.add(Calendar.MINUTE, min2);
+                Date end2 = c.getTime();
+                    
+                if (start1.before(end2) && newDepartureDateTime.before(end1)) {
+                    //System.out.println("calling one");
+                    throw new UpdateFlightScheduleException("Updated fight schedule conflicts with existing flight schedules");
+                }   
+            }
+        }
+        
+        flightSchedule.setDepartureDateTime(newDepartureDateTime);
+        flightSchedule.setDuration(newFlightDuration);
+        em.flush();
+        return flightSchedule;
+    }
+    
+    @Override
+    public void deleteFlightSchedule(long flightScheduleId)  throws FlightScheduleNotFoundException, UpdateFlightScheduleException  {
+        FlightScheduleEntity flightSchedule = retrieveFlightScheduleById(flightScheduleId);
+        if (!flightSchedule.getReservations().isEmpty()) {
+            throw new UpdateFlightScheduleException("Ticket has already been issued for this flight schedule, unable to delete");
+        } else {
+            flightSchedule.getFlightSchedulePlan().getFlightSchedule().remove(flightSchedule);
+            for (SeatInventoryEntity seats: flightSchedule.getSeatInventory()) {    
+                em.remove(seats);
+            }
+            em.remove(flightSchedule);
+        }
+    }
+        
    
 }
     

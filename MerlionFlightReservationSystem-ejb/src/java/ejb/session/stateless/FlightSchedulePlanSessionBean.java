@@ -6,10 +6,12 @@
 package ejb.session.stateless;
 
 import entity.CabinClassEntity;
+import entity.FareEntity;
 import entity.FlightEntity;
 import entity.FlightScheduleEntity;
 import entity.FlightSchedulePlanEntity;
 import entity.SeatInventoryEntity;
+import exceptions.FareExistException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightSchedulePlanExistException;
 import exceptions.FlightSchedulePlanNotFoundException;
@@ -27,8 +29,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -62,13 +62,13 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
     private final Validator validator;
 
     public FlightSchedulePlanSessionBean() {
-         validatorFactory = Validation.buildDefaultValidatorFactory();
+        validatorFactory = Validation.buildDefaultValidatorFactory();
         validator = validatorFactory.getValidator();
     }
     
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
-    public FlightSchedulePlanEntity createNewFlightSchedulePlan(FlightSchedulePlanEntity plan, long flightID, Pair<Date, Integer> pair, int recurrent) throws InputDataValidationException, UnknownPersistenceException, FlightNotFoundException, FlightSchedulePlanExistException {
+    public FlightSchedulePlanEntity createNewFlightSchedulePlan(FlightSchedulePlanEntity plan, List<FareEntity> fares, long flightID, Pair<Date, Double> pair, int recurrent) throws InputDataValidationException, FareExistException, UnknownPersistenceException, FlightNotFoundException, FlightSchedulePlanExistException {
         Set<ConstraintViolation<FlightSchedulePlanEntity>>constraintViolations = validator.validate(plan);
         
         if (constraintViolations.isEmpty()) {
@@ -96,13 +96,17 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
                 }
                 
                 associateFlightToPlan(flightID, plan);
-                System.out.print("test" + plan.getFlightSchedule().size());
+                //System.out.print("test" + plan.getFlightSchedule().size());
                  
                 for (FlightScheduleEntity fse: plan.getFlightSchedule()) {               
                     for (CabinClassEntity cc: plan.getFlight().getAircraftConfig().getCabin()) {                    
                         SeatInventoryEntity seats = new SeatInventoryEntity(cc.getMaxSeatCapacity(), 0 , cc.getMaxSeatCapacity());                       
                         seatsInventorySessionBean.createSeatInventory(seats, fse, cc);
                     }
+                }
+                
+                for (FareEntity fare: fares) {
+                    fareSessionBean.createFareEntity(fare, plan);
                 }
                 
                 em.flush();
@@ -127,6 +131,9 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
             } catch (FlightSchedulePlanExistException ex) {
                 eJBContext.setRollbackOnly();
                 throw new FlightSchedulePlanExistException(ex.getMessage());
+            } catch (FareExistException ex) {
+                eJBContext.setRollbackOnly();
+                throw new FareExistException(ex.getMessage());
             } 
         } else {
             eJBContext.setRollbackOnly();
@@ -136,7 +143,7 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
     
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
-    public FlightSchedulePlanEntity createNewFlightSchedulePlanMultiple(FlightSchedulePlanEntity plan, long flightID, List<Pair<Date, Integer>> info) throws InputDataValidationException, UnknownPersistenceException, FlightNotFoundException, FlightSchedulePlanExistException {
+    public FlightSchedulePlanEntity createNewFlightSchedulePlanMultiple(FlightSchedulePlanEntity plan, List<FareEntity> fares, long flightID, List<Pair<Date, Double>> info) throws InputDataValidationException, FareExistException, UnknownPersistenceException, FlightNotFoundException, FlightSchedulePlanExistException {
         Set<ConstraintViolation<FlightSchedulePlanEntity>>constraintViolations = validator.validate(plan);
         
         if(constraintViolations.isEmpty()) {
@@ -157,6 +164,10 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
                         SeatInventoryEntity seats = new SeatInventoryEntity(cc.getMaxSeatCapacity(), 0 , cc.getMaxSeatCapacity());                       
                         seatsInventorySessionBean.createSeatInventory(seats, fse, cc);
                     }
+                }
+                
+                for (FareEntity fare: fares) {
+                    fareSessionBean.createFareEntity(fare, plan);
                 }
                             
                 em.flush();
@@ -181,6 +192,9 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
             } catch (FlightSchedulePlanExistException ex) {
                 eJBContext.setRollbackOnly();
                 throw new FlightSchedulePlanExistException(ex.getMessage());
+            } catch (FareExistException ex) {
+                eJBContext.setRollbackOnly();
+                throw new FareExistException(ex.getMessage());
             } 
         } else {
             eJBContext.setRollbackOnly();
@@ -211,13 +225,21 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
                 Date start1 = fs.getDepartureDateTime();
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(start1);
-                calendar.add(Calendar.HOUR_OF_DAY, fs.getDuration());
+                double duration = fs.getDuration();
+                int hour = (int) duration;
+                int min = (int) (duration % 1 * 60);
+                calendar.add(Calendar.HOUR_OF_DAY, hour);
+                calendar.add(Calendar.MINUTE, min);
                 Date end1 = calendar.getTime();
                 for (FlightScheduleEntity fs2: flightSchedulePlan.getFlightSchedule()) {
                     Date start2 = fs2.getDepartureDateTime();
                     Calendar calendar2 = Calendar.getInstance();
                     calendar2.setTime(start2);
-                    calendar2.add(Calendar.HOUR_OF_DAY, fs2.getDuration());
+                    double duration2 = fs2.getDuration();
+                    int hour2 = (int) duration2;
+                    int min2 = (int) (duration2 % 1 * 60);
+                    calendar2.add(Calendar.HOUR_OF_DAY, hour2);
+                    calendar2.add(Calendar.MINUTE, min2);
                     Date end2 = calendar2.getTime();
                     
                     if (isOverlapping(start1, end1, start2, end2)) {
@@ -235,13 +257,21 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
             Date start1 = fs.get(i).getDepartureDateTime();
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(start1);
-            calendar.add(Calendar.HOUR_OF_DAY, fs.get(i).getDuration());
+            double duration = fs.get(i).getDuration();
+            int hour = (int) duration;
+            int min = (int) (duration % 1 * 60);
+            calendar.add(Calendar.HOUR_OF_DAY, hour);
+            calendar.add(Calendar.MINUTE, min);
             Date end1 = calendar.getTime();
             for (int j = i+1; j < fs.size(); j++) {
                 Date start2 = fs.get(j).getDepartureDateTime();
                 Calendar calendar2 = Calendar.getInstance();
                 calendar2.setTime(start2);
-                calendar2.add(Calendar.HOUR_OF_DAY, fs.get(j).getDuration());
+                double duration2 = fs.get(j).getDuration();
+                int hour2 = (int) duration2;
+                int min2 = (int) (duration2 % 1 * 60);
+                calendar2.add(Calendar.HOUR_OF_DAY, hour2);
+                calendar2.add(Calendar.MINUTE, min2);
                 Date end2 = calendar2.getTime();
                  
                 if (isOverlapping(start1, end1, start2, end2)) {

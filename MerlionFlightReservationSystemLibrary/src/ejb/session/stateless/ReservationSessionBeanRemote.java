@@ -12,6 +12,8 @@ import entity.ReservationEntity;
 import exceptions.CabinClassNotFoundException;
 import exceptions.FareNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
+import exceptions.InputDataValidationException;
+import exceptions.ItineraryNotFoundException;
 import exceptions.ReservationExistException;
 import exceptions.ReservationNotFoundException;
 import exceptions.SeatInventoryNotFoundException;
@@ -28,10 +30,8 @@ import javax.ejb.Remote;
 @Remote
 public interface ReservationSessionBeanRemote {
 
-    public long createNewReservation(ReservationEntity reservation, List<PassengerEntity> passengers, long flightScheduleId, long userId, long fareId, long cabinClassId) throws ReservationExistException, UnknownPersistenceException, FlightScheduleNotFoundException, UserNotFoundException, FareNotFoundException, CabinClassNotFoundException, SeatInventoryNotFoundException, UpdateSeatsException ;
-
-    public List<ReservationEntity> retrieveReservationsByCustomerId(Long userID);
-
     public ReservationEntity retrieveReservationById(long id) throws ReservationNotFoundException;
+
+    public long createNewReservation(ReservationEntity reservation, List<PassengerEntity> passengers, long flightScheduleId, long itineraryId) throws ReservationExistException, UnknownPersistenceException, FlightScheduleNotFoundException, SeatInventoryNotFoundException, UpdateSeatsException, ItineraryNotFoundException, InputDataValidationException;
     
 }

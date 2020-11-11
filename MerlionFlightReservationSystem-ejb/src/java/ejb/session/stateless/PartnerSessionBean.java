@@ -10,8 +10,6 @@ import exceptions.InvalidLoginCredentialException;
 import exceptions.PartnerNotFoundException;
 import exceptions.PartnerUsernameExistException;
 import exceptions.UnknownPersistenceException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;

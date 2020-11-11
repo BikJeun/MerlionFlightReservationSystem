@@ -17,6 +17,8 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  *
@@ -30,16 +32,22 @@ public class UserEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long UserID;
+    
     @Column(nullable = false, unique = true, length = 16)
+    @NotNull
+    @Size(min = 1, max = 16)
     private String username;
+    
     @Column(nullable = false, length = 16)
+    @NotNull
+    @Size(min = 1, max = 16)
     private String password;
     
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
-    private List<ReservationEntity> reservations;
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user")
+    private List<ItineraryEntity> itineraries;    
 
     public UserEntity() {
-        this.reservations = new ArrayList<>();
+        this.itineraries = new ArrayList<>();
     }
     
     public UserEntity(String username, String password) {
@@ -110,17 +118,17 @@ public class UserEntity implements Serializable {
     }
 
     /**
-     * @return the reservations
+     * @return the itineraries
      */
-    public List<ReservationEntity> getReservations() {
-        return reservations;
+    public List<ItineraryEntity> getItineraries() {
+        return itineraries;
     }
 
     /**
-     * @param reservations the reservations to set
+     * @param itineraries the itineraries to set
      */
-    public void setReservations(List<ReservationEntity> reservations) {
-        this.reservations = reservations;
+    public void setItineraries(List<ItineraryEntity> itineraries) {
+        this.itineraries = itineraries;
     }
     
 }

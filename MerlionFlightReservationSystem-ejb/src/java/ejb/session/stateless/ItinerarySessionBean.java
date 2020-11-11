@@ -5,22 +5,21 @@
  */
 package ejb.session.stateless;
 
-import entity.FareEntity;
-import entity.FlightSchedulePlanEntity;
-import exceptions.FareExistException;
-import exceptions.FareNotFoundException;
+import entity.ItineraryEntity;
+import entity.UserEntity;
 import exceptions.InputDataValidationException;
+import exceptions.ItineraryExistException;
+import exceptions.ItineraryNotFoundException;
 import exceptions.UnknownPersistenceException;
-import exceptions.UpdateFareException;
-import java.math.BigDecimal;
+import exceptions.UserNotFoundException;
 import java.util.List;
 import java.util.Set;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -31,7 +30,10 @@ import javax.validation.ValidatorFactory;
  * @author Ooi Jun Hao
  */
 @Stateless
-public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLocal {
+public class ItinerarySessionBean implements ItinerarySessionBeanRemote, ItinerarySessionBeanLocal {
+
+    @EJB
+    private UserSessionBeanLocal userSessionBean;
 
     @PersistenceContext(unitName = "MerlionFlightReservationSystem-ejbPU")
     private EntityManager em;
@@ -39,30 +41,29 @@ public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLo
     private final ValidatorFactory validatorFactory;
     private final Validator validator;  
     
-    public FareSessionBean() {
+    public ItinerarySessionBean() {
         validatorFactory = Validation.buildDefaultValidatorFactory();
         validator = validatorFactory.getValidator();
     }
 
-    // Only exposed in local interface
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
-    public FareEntity createFareEntity(FareEntity fare, FlightSchedulePlanEntity flightSchedulePlan) throws FareExistException, UnknownPersistenceException, InputDataValidationException {     
-        Set<ConstraintViolation<FareEntity>> constraintViolations = validator.validate(fare);
+    public ItineraryEntity createNewItinerary(ItineraryEntity itinerary, long userId) throws UnknownPersistenceException, InputDataValidationException, UserNotFoundException, ItineraryExistException {
+        Set<ConstraintViolation<ItineraryEntity>> constraintViolations = validator.validate(itinerary);
+        UserEntity user = userSessionBean.retrieveUserById(userId);
         
-        if (constraintViolations.isEmpty()) {
+         if (constraintViolations.isEmpty()) {
             try {
-                em.persist(fare);
+                em.persist(itinerary);
 
-                flightSchedulePlan.getFares().add(fare);
-                fare.setFlightSchedulePlan(flightSchedulePlan);
+                itinerary.setUser(user);
+                user.getItineraries().add(itinerary);
 
                 em.flush();
-                return fare;
+                return itinerary;
             } catch (PersistenceException ex) { 
                 if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
                     if (ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
-                        throw new FareExistException("Overlap in fare basis codes");
+                        throw new ItineraryExistException("Itinerary already exists");
                     } else {
                         throw new UnknownPersistenceException(ex.getMessage());
                     }
@@ -74,38 +75,26 @@ public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLo
             throw new InputDataValidationException(prepareInputDataValidationErrorsMessage(constraintViolations));
         }
     }
-       
+    
     @Override
-    public FareEntity retrieveFareById(Long fareID) throws FareNotFoundException {
-        FareEntity fare = em.find(FareEntity.class, fareID);
-        if (fare != null) {
-            return fare;
+    public ItineraryEntity retrieveItineraryByID(long itineraryId) throws ItineraryNotFoundException {
+        ItineraryEntity itinerary = em.find(ItineraryEntity.class, itineraryId);
+        if (itinerary == null) {
+            throw new ItineraryNotFoundException("Itinerary not found");
         } else {
-            throw new FareNotFoundException("Fare " + fareID + " not found!");
+            return itinerary;
         }
     }
     
     @Override
-    public FareEntity updateFare(long fareID, BigDecimal newCost) throws FareNotFoundException, UpdateFareException {
-        try {
-            FareEntity fare = retrieveFareById(fareID);
-            fare.setFareAmount(newCost);
-            em.flush();
-            return fare;
-        } catch (PersistenceException ex) {
-            throw new UpdateFareException("Invalid new cost");
-        }
+    public List<ItineraryEntity> retrieveItinerariesByCustomerId(Long userID) {
+        Query query = em.createQuery("SELECT r FROM ItineraryEntity r WHERE r.user.UserID = :id");
+        query.setParameter("id", userID);
+        
+        return query.getResultList();
     }
     
-    // only exposed in local interface, managed instances passed in
-    @Override
-    public void deleteFares(List<FareEntity> fares) {
-        for(FareEntity fare : fares) {
-            em.remove(fare);
-        }
-    }
-    
-    private String prepareInputDataValidationErrorsMessage(Set<ConstraintViolation<FareEntity>> constraintViolations) {
+    private String prepareInputDataValidationErrorsMessage(Set<ConstraintViolation<ItineraryEntity>> constraintViolations) {
         String msg = "Input data validation error!:";
             
         for (ConstraintViolation constraintViolation:constraintViolations) {
@@ -115,5 +104,3 @@ public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLo
         return msg;
     }
 }
-
-

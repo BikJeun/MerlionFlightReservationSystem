@@ -13,6 +13,7 @@ import ejb.session.stateless.EmployeeSessionBeanRemote;
 import ejb.session.stateless.FareSessionBeanRemote;
 import ejb.session.stateless.FlightRouteSessionBeanRemote;
 import ejb.session.stateless.FlightSchedulePlanSessionBeanRemote;
+import ejb.session.stateless.FlightScheduleSessionBeanRemote;
 import ejb.session.stateless.FlightSessionBeanRemote;
 import ejb.session.stateless.ReservationSessionBeanRemote;
 import ejb.session.stateless.SeatsInventorySessionBeanRemote;
@@ -38,6 +39,7 @@ public class MainApp {
     private AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean;
     private EmployeeSessionBeanRemote employeeSessionBean;
     private FareSessionBeanRemote fareSessionBean;
+    private FlightScheduleSessionBeanRemote flightScheduleSessionBean;
     
     private boolean login = false;
     private EmployeeEntity currentEmployee;
@@ -46,7 +48,7 @@ public class MainApp {
     private FlightPlanningModule flightPlanningModule;
     private SalesManagementModule salesManagementModule;
     
-    public MainApp(AirportSessionBeanRemote airportSessionBean, AircraftTypeSessionBeanRemote aircraftTypeSessionBean, CabinClassSessionBeanRemote cabinClassSessionBean, ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean, FareSessionBeanRemote fareSessionBean) {
+    public MainApp(FlightScheduleSessionBeanRemote flightScheduleSessionBean, AirportSessionBeanRemote airportSessionBean, AircraftTypeSessionBeanRemote aircraftTypeSessionBean, CabinClassSessionBeanRemote cabinClassSessionBean, ReservationSessionBeanRemote reservationSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightSessionBeanRemote flightSessionBean, FlightRouteSessionBeanRemote flightRouteSessionBean, AircraftConfigurationSessionBeanRemote aircraftConfigurationSessionBean, EmployeeSessionBeanRemote employeeSessionBean, FareSessionBeanRemote fareSessionBean) {
         this.airportSessionBean = airportSessionBean;
         this.aircraftTypeSessionBean = aircraftTypeSessionBean;
         this.cabinClassSessionBean = cabinClassSessionBean;
@@ -58,6 +60,7 @@ public class MainApp {
         this.aircraftConfigurationSessionBean = aircraftConfigurationSessionBean;
         this.employeeSessionBean = employeeSessionBean;
         this.fareSessionBean = fareSessionBean;
+        this.flightScheduleSessionBean = flightScheduleSessionBean;
     }
     
     public void runApp() {
@@ -79,7 +82,7 @@ public class MainApp {
                             doLogin();
                             System.out.println("Login Successful!\n");
                             login = true;
-                            flightOperationModule = new FlightOperationModule(currentEmployee, flightSessionBean, flightSchedulePlanSessionBean, flightRouteSessionBean, aircraftConfigurationSessionBean, fareSessionBean);
+                            flightOperationModule = new FlightOperationModule(flightScheduleSessionBean, currentEmployee, flightSessionBean, flightSchedulePlanSessionBean, flightRouteSessionBean, aircraftConfigurationSessionBean, fareSessionBean);
                             flightPlanningModule = new FlightPlanningModule(currentEmployee, airportSessionBean, aircraftConfigurationSessionBean, flightRouteSessionBean, cabinClassSessionBean, aircraftTypeSessionBean);
                             salesManagementModule = new SalesManagementModule(currentEmployee, seatsInventorySessionBean, reservationSessionBean, flightSessionBean);
                             mainMenu();

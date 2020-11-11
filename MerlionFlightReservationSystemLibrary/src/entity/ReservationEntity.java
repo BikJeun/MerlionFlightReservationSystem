@@ -5,11 +5,15 @@
 */
 package entity;
 
+import enumeration.CabinClassTypeEnum;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -17,6 +21,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  *
@@ -29,54 +36,46 @@ public class ReservationEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reservationID;
-    @Column(nullable = false, length = 32)
-    private String creditCardNumber;
-    @Column(nullable = false, length = 3)
-    private String cvv;
+        
+    /* Fare codes start with a
+    letter that denotes the booking class. Other letters or numbers may follow. Typically a fare
+    basis will be 3 to 7 characters long.*/
+    @Column(nullable = false, length = 7)
+    @NotNull
+    @Size(min = 2, max = 7)
+    private String fareBasisCode;
     
-    @OneToMany(fetch = FetchType.EAGER)
-    private List<PassengerEntity> passenger;
+    @Column(nullable = false, precision = 11, scale = 2)
+    @NotNull
+    @DecimalMin("0.00")
+    private BigDecimal fareAmount;
+    
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    private CabinClassTypeEnum cabinClassType;
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
-    private UserEntity user;
+    private ItineraryEntity itinerary;
+    
+    @OneToMany(fetch = FetchType.EAGER)
+    private List<PassengerEntity> passenger; 
     
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false)
     private FlightScheduleEntity flightSchedule;
     
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
-    private FareEntity fare;
-      
-    @ManyToOne(optional = false)
-    @JoinColumn(nullable = false)
-    private CabinClassEntity cabinClass;
-
+     
     public ReservationEntity() {
         passenger = new ArrayList<>(); 
     }
 
-    public ReservationEntity(String creditCardNumber, String cvv) {
+    public ReservationEntity(String fareBasisCode, BigDecimal fareAmount, CabinClassTypeEnum cabinClassType) {
         this();
-        this.creditCardNumber = creditCardNumber;
-        this.cvv = cvv;
-    }
-
-    public String getCreditCardNumber() {
-        return creditCardNumber;
-    }
-
-    public void setCreditCardNumber(String creditCardNumber) {
-        this.creditCardNumber = creditCardNumber;
-    }
-
-    public String getCvv() {
-        return cvv;
-    }
-
-    public void setCvv(String cvv) {
-        this.cvv = cvv;
+        this.fareBasisCode = fareBasisCode;
+        this.fareAmount = fareAmount;
+        this.cabinClassType = cabinClassType;
     }
 
     public List<PassengerEntity> getPassenger() {
@@ -129,45 +128,59 @@ public class ReservationEntity implements Serializable {
     }
 
     /**
-     * @return the user
+     * @return the fareBasisCode
      */
-    public UserEntity getUser() {
-        return user;
+    public String getFareBasisCode() {
+        return fareBasisCode;
     }
 
     /**
-     * @param user the user to set
+     * @param fareBasisCode the fareBasisCode to set
      */
-    public void setUser(UserEntity user) {
-        this.user = user;
+    public void setFareBasisCode(String fareBasisCode) {
+        this.fareBasisCode = fareBasisCode;
     }
 
     /**
-     * @return the fare
+     * @return the fareAmount
      */
-    public FareEntity getFare() {
-        return fare;
+    public BigDecimal getFareAmount() {
+        return fareAmount;
     }
 
     /**
-     * @param fare the fare to set
+     * @param fareAmount the fareAmount to set
      */
-    public void setFare(FareEntity fare) {
-        this.fare = fare;
+    public void setFareAmount(BigDecimal fareAmount) {
+        this.fareAmount = fareAmount;
     }
 
     /**
-     * @return the cabinClass
+     * @return the cabinClassType
      */
-    public CabinClassEntity getCabinClass() {
-        return cabinClass;
+    public CabinClassTypeEnum getCabinClassType() {
+        return cabinClassType;
     }
 
     /**
-     * @param cabinClass the cabinClass to set
+     * @param cabinClassType the cabinClassType to set
      */
-    public void setCabinClass(CabinClassEntity cabinClass) {
-        this.cabinClass = cabinClass;
+    public void setCabinClassType(CabinClassTypeEnum cabinClassType) {
+        this.cabinClassType = cabinClassType;
     }
-    
+
+    /**
+     * @return the itinerary
+     */
+    public ItineraryEntity getItinerary() {
+        return itinerary;
+    }
+
+    /**
+     * @param itinerary the itinerary to set
+     */
+    public void setItinerary(ItineraryEntity itinerary) {
+        this.itinerary = itinerary;
+    }
+
 }

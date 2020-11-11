@@ -12,28 +12,27 @@ import ejb.session.stateless.FlightRouteSessionBeanRemote;
 import ejb.session.stateless.FlightSchedulePlanSessionBeanRemote;
 import ejb.session.stateless.FlightScheduleSessionBeanRemote;
 import ejb.session.stateless.FlightSessionBeanRemote;
+import ejb.session.stateless.ItinerarySessionBeanRemote;
 import ejb.session.stateless.PassengerSessionBeanRemote;
 import ejb.session.stateless.ReservationSessionBeanRemote;
 import ejb.session.stateless.SeatsInventorySessionBeanRemote;
-import entity.CabinClassEntity;
 import entity.CustomerEntity;
 import entity.FareEntity;
 import entity.FlightScheduleEntity;
-import entity.FlightScheduleEntity.FlightScheduleComparator;
+import entity.ItineraryEntity;
 import entity.PassengerEntity;
 import entity.ReservationEntity;
 import entity.SeatInventoryEntity;
 import enumeration.CabinClassTypeEnum;
 import exceptions.CabinClassNotFoundException;
 import exceptions.CustomerExistException;
-import exceptions.FareNotFoundException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.InputDataValidationException;
 import exceptions.InvalidLoginCredentialException;
-import exceptions.PassengerAlreadyExistException;
+import exceptions.ItineraryExistException;
+import exceptions.ItineraryNotFoundException;
 import exceptions.ReservationExistException;
-import exceptions.ReservationNotFoundException;
 import exceptions.SeatInventoryNotFoundException;
 import exceptions.UnknownPersistenceException;
 import exceptions.UpdateSeatsException;
@@ -43,13 +42,15 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Set;
 import javafx.util.Pair;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 /**
  *
@@ -57,6 +58,7 @@ import javafx.util.Pair;
  */
 public class MainApp {
     
+    private ItinerarySessionBeanRemote itinerarySessionBean;
     private ReservationSessionBeanRemote reservationSessionBean;
     private PassengerSessionBeanRemote passengerSessionBean;
     private FareSessionBeanRemote fareSessionBean;
@@ -70,7 +72,17 @@ public class MainApp {
     private boolean login;
     private CustomerEntity currentCustomer;
     
-    public MainApp(ReservationSessionBeanRemote reservationSessionBean, PassengerSessionBeanRemote passengerSessionBean, FareSessionBeanRemote fareSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean,FlightRouteSessionBeanRemote flightRouteSessionBean, FlightSessionBeanRemote flightSessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightScheduleSessionBeanRemote flightScheduleSessionBean, AirportSessionBeanRemote airportSessionBean, CustomerSessionBeanRemote customerSessionBean) {
+    private final ValidatorFactory validatorFactory;
+    private final Validator validator;
+    
+    public MainApp() {
+        validatorFactory = Validation.buildDefaultValidatorFactory();
+        validator = validatorFactory.getValidator();    
+    }
+    
+    public MainApp(ItinerarySessionBeanRemote itinerarySessionBean, ReservationSessionBeanRemote reservationSessionBean, PassengerSessionBeanRemote passengerSessionBean, FareSessionBeanRemote fareSessionBean, SeatsInventorySessionBeanRemote seatsInventorySessionBean,FlightRouteSessionBeanRemote flightRouteSessionBean, FlightSessionBeanRemote flightSessionBean, FlightSchedulePlanSessionBeanRemote flightSchedulePlanSessionBean, FlightScheduleSessionBeanRemote flightScheduleSessionBean, AirportSessionBeanRemote airportSessionBean, CustomerSessionBeanRemote customerSessionBean) {
+        this();
+        this.itinerarySessionBean = itinerarySessionBean;
         this.reservationSessionBean = reservationSessionBean;
         this.passengerSessionBean = passengerSessionBean;
         this.seatsInventorySessionBean = seatsInventorySessionBean;
@@ -248,340 +260,28 @@ public class MainApp {
                 System.out.println("                      ============= Available Outbound Flights ============= ");
                 
                 System.out.println("                             ============ On Desired Date =========== ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateActualFlightScheduleOutBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
+                printSingleFlightSchedule(dateActualFlightScheduleOutBound, cabin, passengers);               
 
                 System.out.println("\n                  ============ Departing 1 day before Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateMinusOneFlightScheduleOutBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
+                printSingleFlightSchedule(dateMinusOneFlightScheduleOutBound, cabin, passengers);                    
                 
                 System.out.println("\n                  ============ Departing 2 days before Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateMinusTwoFlightScheduleOutBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
+                printSingleFlightSchedule(dateMinusTwoFlightScheduleOutBound, cabin, passengers);  
+              
                 
                 System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateMinusThreeFlightScheduleOutBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
+                printSingleFlightSchedule(dateMinusThreeFlightScheduleOutBound, cabin, passengers);  
+                                     
                 
                 System.out.println("\n                  ============ Departing 1 day after Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateAddOneFlightScheduleOutBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
-                
+                printSingleFlightSchedule(dateAddOneFlightScheduleOutBound, cabin, passengers); 
+                              
                 System.out.println("\n                  ============ Departing 2 days after Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateAddTwoFlightScheduleOutBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
+                printSingleFlightSchedule(dateAddTwoFlightScheduleOutBound, cabin, passengers); 
+             
                 
                 System.out.println("\n                  ============ Departing 3 days after Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateAddThreeFlightScheduleOutBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
+                printSingleFlightSchedule(dateAddThreeFlightScheduleOutBound, cabin, passengers);                         
                 
             } catch (FlightNotFoundException ex) {
                 System.out.print("Sorry, there are no flights with your desired flight route\n");
@@ -615,741 +315,34 @@ public class MainApp {
                 System.out.println("                      ============= Available Outbound Flights ============= ");
 
                 System.out.println("                             ============ On Desired Date =========== ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateActualFlightScheduleOutBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-
+                printFlightScheduleWithConnecting(dateActualFlightScheduleOutBound, cabin, passengers);
+                
                 System.out.println("\n                  ============ Departing 1 day before Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateMinusOneFlightScheduleOutBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-
+                printFlightScheduleWithConnecting(dateMinusOneFlightScheduleOutBound, cabin, passengers);
+            
                 System.out.println("\n                  ============ Departing 2 days before Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateMinusTwoFlightScheduleOutBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-
+                printFlightScheduleWithConnecting(dateMinusTwoFlightScheduleOutBound, cabin, passengers);
+                                  
                 System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateMinusThreeFlightScheduleOutBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-
+                printFlightScheduleWithConnecting(dateMinusThreeFlightScheduleOutBound, cabin, passengers);
+              
                 System.out.println("\n                  ============ Departing 1 day after Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateAddOneFlightScheduleOutBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-
+                printFlightScheduleWithConnecting(dateAddOneFlightScheduleOutBound, cabin, passengers);
+                         
                 System.out.println("\n                  ============ Departing 2 days after Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateAddTwoFlightScheduleOutBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-
+                printFlightScheduleWithConnecting(dateAddTwoFlightScheduleOutBound, cabin, passengers);
+                               
                 System.out.println("\n                  ============ Departing 3 days after Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateAddThreeFlightScheduleOutBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-
+                printFlightScheduleWithConnecting(dateAddThreeFlightScheduleOutBound, cabin, passengers);
+                              
             } catch (FlightNotFoundException ex) {
                 System.out.println("Sorry there are not indirect flights for your specified route");
                 return;
             } catch (FlightScheduleNotFoundException | CabinClassNotFoundException ex) {
-                Logger.getLogger(MainApp.class.getName()).log(Level.SEVERE, null, ex);
+                // will nvr hit
             }
         }
-                      
+        
         System.out.println("\n");
 
         if (type == 2 && flightPref == 1) {
@@ -1389,341 +382,26 @@ public class MainApp {
                 System.out.println("                      ============= Available Inbound Flights ============= ");
 
                 System.out.println("                             ============ On Desired Date =========== ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateActualFlightScheduleInBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
-
+                printSingleFlightSchedule(dateActualFlightScheduleInBound, cabin, passengers);
+              
                 System.out.println("\n                  ============ Departing 1 day before Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateMinusOneFlightScheduleInBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
-
+                printSingleFlightSchedule(dateMinusOneFlightScheduleInBound, cabin, passengers);
+               
                 System.out.println("\n                  ============ Departing 2 days before Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateMinusTwoFlightScheduleInBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
-
+                printSingleFlightSchedule(dateMinusTwoFlightScheduleInBound, cabin, passengers);
+               
                 System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateMinusThreeFlightScheduleInBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
-
+                printSingleFlightSchedule(dateMinusThreeFlightScheduleInBound, cabin, passengers);
+               
                 System.out.println("\n                  ============ Departing 1 day after Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateAddOneFlightScheduleInBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
-
+                printSingleFlightSchedule(dateAddOneFlightScheduleInBound, cabin, passengers);
+               
                 System.out.println("\n                  ============ Departing 2 days after Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateAddTwoFlightScheduleInBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
-
+                printSingleFlightSchedule(dateAddTwoFlightScheduleInBound, cabin, passengers);
+               
                 System.out.println("\n                  ============ Departing 3 days after Desired Date ============ ");
-                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrial Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (FlightScheduleEntity flightScheduleEntity: dateAddThreeFlightScheduleInBound) {
-                    int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flightScheduleEntity.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flightScheduleEntity.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff);
-                    Date arrival = c2.getTime();
-                    for (SeatInventoryEntity seats: flightScheduleEntity.getSeatInventory()) {
-                        String cabinClassType;
-                        if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabin == CabinClassTypeEnum.F || cabin == null)) {
-                            cabinClassType = "First Class";                
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabin == CabinClassTypeEnum.J || cabin == null)) {
-                            cabinClassType = "Business Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabin == CabinClassTypeEnum.W || cabin == null)) {
-                            cabinClassType = "Premium Economy Class";                  
-                        } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabin == CabinClassTypeEnum.Y || cabin == null)) {
-                            cabinClassType = "Economy Class";                     
-                        } else {
-                            continue;
-                        }
-                        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(), 
-                                flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
-                                flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
-                                flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
-                                flightScheduleEntity.getDuration(),
-                                arrival.toString().substring(0, 19),
-                                cabinClassType,
-                                seats.getBalance(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
-                                flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                        );              
-                    }       
-                }
-
+                printSingleFlightSchedule(dateAddThreeFlightScheduleInBound, cabin, passengers);
+               
             } catch (FlightNotFoundException ex) {
                 System.out.print("Sorry there are no return flights for this flight route within this period");
                 return;
@@ -1769,732 +447,26 @@ public class MainApp {
                 System.out.println("                      ============= Available Inbound Flights ============= ");
 
                 System.out.println("                             ============ On Desired Date =========== ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateActualFlightScheduleInBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-                
+                printFlightScheduleWithConnecting(dateActualFlightScheduleInBound, cabin, passengers);
+                              
                 System.out.println("\n                  ============ Departing 1 day before Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateMinusOneFlightScheduleInBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-                
+                printFlightScheduleWithConnecting(dateMinusOneFlightScheduleInBound, cabin, passengers);
+                                
                 System.out.println("\n                  ============ Departing 2 days before Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateMinusTwoFlightScheduleInBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-                
+                printFlightScheduleWithConnecting(dateMinusTwoFlightScheduleInBound, cabin, passengers);
+                               
                 System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateMinusThreeFlightScheduleInBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-                
+                printFlightScheduleWithConnecting(dateMinusThreeFlightScheduleInBound, cabin, passengers);
+                              
                 System.out.println("\n                  ============ Departing 1 day after Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateAddOneFlightScheduleInBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-                
+                printFlightScheduleWithConnecting(dateAddOneFlightScheduleInBound, cabin, passengers);
+                                                      
                 System.out.println("\n                  ============ Departing 2 days after Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
-                        "Flight Number", 
-                        "Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price",
-                        "Connecting Flight ID", 
-                        "Connecting Flight Number", 
-                        "Connecting Departure Airport", 
-                        "Arrival Airport", 
-                        "Departure Date & Time", 
-                        "Duration (HRS)", 
-                        "Arrival Date & Time", 
-                        "Cabin Type", 
-                        "Number of Seats Balanced", 
-                        "Price per head", 
-                        "Total Price");
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateAddTwoFlightScheduleInBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
-                
+                printFlightScheduleWithConnecting(dateAddTwoFlightScheduleInBound, cabin, passengers);
+                                          
                 System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
-                System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", //15
-                        "Flight Number", //20
-                        "Departure Airport", //40
-                        "Arrival Airport", //40
-                        "Departure Date & Time", //30 
-                        "Duration (HRS)",  //20
-                        "Arrival Date & Time", // 30  
-                        "Cabin Type",  //30
-                        "Number of Seats Balanced", //30
-                        "Price per head", //25
-                        "Total Price", //25
-                        "Connecting Flight ID", //25 
-                        "Connecting Flight Number", //30
-                        "Connecting Departure Airport", //45
-                        "Arrival Airport",  //45
-                        "Departure Date & Time", //40 
-                        "Duration (HRS)", //20
-                        "Arrival Date & Time",  //30
-                        "Cabin Type",  //30
-                        "Number of Seats Balanced", //30 
-                        "Price per head", //25
-                        "Total Price"); //25
-                for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: dateAddThreeFlightScheduleInBound) {
-                    FlightScheduleEntity flight1 = pair.getKey();
-                    FlightScheduleEntity flight2 = pair.getValue();
-                    int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c2 = Calendar.getInstance();
-                    c2.setTime(flight1.getDepartureDateTime());
-                    c2.add(Calendar.HOUR_OF_DAY, flight1.getDuration());
-                    c2.add(Calendar.HOUR_OF_DAY, diff1);
-                    Date arrival1 = c2.getTime();
-                    int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
-                            flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
-                    Calendar c3 = Calendar.getInstance();
-                    c3.setTime(flight2.getDepartureDateTime());
-                    c3.add(Calendar.HOUR_OF_DAY, flight2.getDuration());
-                    c3.add(Calendar.HOUR_OF_DAY, diff2);
-                    Date arrival2 = c3.getTime();
-                    for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
-                        for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
-                            String cabinClassType1, cabinClassType2;
-                            if (cabin == null) {
-                                if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType1 = "First Class"; 
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType1 = "Business Class";
-                                } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType1 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType1 = "Economy Class";  
-                                }
-                                if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
-                                    cabinClassType2 = "First Class"; 
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
-                                    cabinClassType2 = "Business Class";
-                                } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
-                                    cabinClassType2 = "Premium Economy Class";
-                                } else {
-                                    cabinClassType2 = "Economy Class";  
-                                }
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
-                                cabinClassType1 = "First Class"; 
-                                cabinClassType2 = "First Class"; 
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
-                                cabinClassType1 = "Business Class";
-                                cabinClassType2 = "Business Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
-                                cabinClassType1 = "Premium Economy Class";
-                                cabinClassType2 = "Premium Economy Class";
-                            } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
-                                cabinClassType1 = "Economy Class"; 
-                                cabinClassType2 = "Economy Class"; 
-                            } else {
-                                continue;
-                            }
-                            System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
-                                flight1.getFlightSchedulePlan().getFlightNum(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight1.getDepartureDateTime().toString().substring(0, 19), 
-                                flight1.getDuration(), 
-                                arrival1.toString().substring(0, 19), 
-                                cabinClassType1, 
-                                seats1.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
-                                flight2.getFlightScheduleID(), 
-                                flight2.getFlightSchedulePlan().getFlightNum(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
-                                flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
-                                flight2.getDepartureDateTime().toString().substring(0, 19), 
-                                flight2.getDuration(), 
-                                arrival2.toString().substring(0, 19), 
-                                cabinClassType2, 
-                                seats2.getBalance(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
-                                flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
-                            );
-                        }
-                    }
-                }
+                printFlightScheduleWithConnecting(dateAddThreeFlightScheduleInBound, cabin, passengers);
+             
             } catch (FlightNotFoundException ex) {
                 System.out.print("Sorry there are no indirect return flights for this flight route within this period");
                 return;
@@ -2502,8 +474,7 @@ public class MainApp {
                 // will never hit this
             }
         }
-        
-        
+                
         System.out.println("\n");
         
         System.out.print("Would you like to reserve a flight? (Y/N)> ");
@@ -2660,21 +631,27 @@ public class MainApp {
             List<String> outbound1SeatSelection;   
             FareEntity outbound1Fare;
             SeatInventoryEntity outbound1Seats;
+            ReservationEntity outbound1Reservation;
             
             FlightScheduleEntity outbound2FlightSchedule;
             List<String> outbound2SeatSelection;
             FareEntity outbound2Fare;
             SeatInventoryEntity outbound2Seats;
+            ReservationEntity outbound2Reservation;
             
             FlightScheduleEntity inbound1FlightSchedule;
             List<String> inbound1SeatSelection;
             FareEntity inbound1Fare; 
             SeatInventoryEntity inbound1Seats;
+            ReservationEntity inbound1Reservation;
             
             FlightScheduleEntity inbound2FlightSchedule;
             List<String> inbound2SeatSelection;
             FareEntity inbound2Fare;
-            SeatInventoryEntity inbound2Seats;        
+            SeatInventoryEntity inbound2Seats;  
+            ReservationEntity inbound2Reservation;
+            
+            ItineraryEntity itinerary = new ItineraryEntity();
             
             BigDecimal pricePerPax;
 
@@ -2688,12 +665,8 @@ public class MainApp {
                 }
                 outbound1Fare = flightScheduleSessionBean.getSmallestFare(outbound1FlightSchedule, outbound1Seats.getCabin().getCabinClassType());
                 outbound1SeatSelection = getSeatBookings(outbound1Seats, noOfPassengers);
-                
-                List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
-                
-                for (int i = 0; i < passengers.size(); i++) {
-                    passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
-                }
+                            
+                outbound1Reservation = new ReservationEntity(outbound1Fare.getFareBasisCode(), outbound1Fare.getFareAmount(), outbound1Seats.getCabin().getCabinClassType());
                 
                 pricePerPax = outbound1Fare.getFareAmount();
                 System.out.println("Price per person : $" + pricePerPax.toString() + "\nTotal Amount : $" + pricePerPax.multiply(new BigDecimal(noOfPassengers)));
@@ -2702,14 +675,25 @@ public class MainApp {
                 String creditCardNum = sc.nextLine().trim();
                 System.out.print("Enter cvv> ");
                 String cvv = sc.nextLine().trim();
-
-                ReservationEntity reservation = new ReservationEntity(creditCardNum, cvv);
+                itinerary.setCreditCardNumber(creditCardNum);
+                itinerary.setCvv(cvv); 
+             
+                Set<ConstraintViolation<ItineraryEntity>> constraintViolations = validator.validate(itinerary);
+                if (constraintViolations.isEmpty()) {
+                    itinerary = itinerarySessionBean.createNewItinerary(itinerary, currentCustomer.getUserID());
+                } else {
+                    showInputDataValidationErrorsForItineraryEntity(constraintViolations);
+                    return;
+                }
                 
-                long reservationId = reservationSessionBean.createNewReservation(reservation, 
-                         passengers, outbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
-                         outbound1Fare.getFareID(), outbound1Seats.getCabin().getCabinClassID());        
+                List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
                 
-                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+                for (int i = 0; i < passengers.size(); i++) {
+                    passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
+                }
+                reservationSessionBean.createNewReservation(outbound1Reservation, passengers, outbound1FlightSchedule.getFlightScheduleID(), itinerary.getItineraryId());                  
+                
+                System.out.println("Reservation Itinerary (Booking ID: " + itinerary.getItineraryId() + ") created successfully for User " + currentCustomer.getUserID() + "!\n");
             } else if (outbound2 == null && inbound2 == null) {
                 outbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound1);
                 System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -2720,6 +704,7 @@ public class MainApp {
                 }
                 outbound1Fare = flightScheduleSessionBean.getSmallestFare(outbound1FlightSchedule, outbound1Seats.getCabin().getCabinClassType());
                 outbound1SeatSelection = getSeatBookings(outbound1Seats, noOfPassengers);
+                outbound1Reservation = new ReservationEntity(outbound1Fare.getFareBasisCode(), outbound1Fare.getFareAmount(), outbound1Seats.getCabin().getCabinClassType());
                 
                 inbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(inbound1);
                 System.out.println("Seat Selection for inbound flight " + inbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -2729,7 +714,8 @@ public class MainApp {
                     inbound1Seats = flightScheduleSessionBean.getCorrectSeatInventory(inbound1FlightSchedule, cabinClassType);
                 }
                 inbound1Fare = flightScheduleSessionBean.getSmallestFare(inbound1FlightSchedule, inbound1Seats.getCabin().getCabinClassType());
-                inbound1SeatSelection = getSeatBookings(inbound1Seats, noOfPassengers);           
+                inbound1SeatSelection = getSeatBookings(inbound1Seats, noOfPassengers); 
+                inbound1Reservation = new ReservationEntity(inbound1Fare.getFareBasisCode(), inbound1Fare.getFareAmount(), inbound1Seats.getCabin().getCabinClassType());
                 
                 pricePerPax = outbound1Fare.getFareAmount().add(inbound1Fare.getFareAmount());
                 List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
@@ -2740,24 +726,28 @@ public class MainApp {
                 String creditCardNum = sc.nextLine().trim();
                 System.out.print("Enter cvv> ");
                 String cvv = sc.nextLine().trim();
-
-                ReservationEntity reservation = new ReservationEntity(creditCardNum, cvv);
+                itinerary.setCreditCardNumber(creditCardNum);
+                itinerary.setCvv(cvv); 
+             
+                Set<ConstraintViolation<ItineraryEntity>> constraintViolations = validator.validate(itinerary);
+                if (constraintViolations.isEmpty()) {
+                    itinerary = itinerarySessionBean.createNewItinerary(itinerary, currentCustomer.getUserID());
+                } else {
+                    showInputDataValidationErrorsForItineraryEntity(constraintViolations);
+                    return;
+                }
                 
                 for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
                 }
-                long reservationId = reservationSessionBean.createNewReservation(reservation, 
-                         passengers, outbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
-                         outbound1Fare.getFareID(), outbound1Seats.getCabin().getCabinClassID());                 
-                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+                reservationSessionBean.createNewReservation(outbound1Reservation, passengers, outbound1FlightSchedule.getFlightScheduleID(), itinerary.getItineraryId());                  
                 
                 for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(inbound1SeatSelection.get(i));
                 }  
-                reservationId = reservationSessionBean.createNewReservation(reservation, 
-                         passengers, inbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
-                         inbound1Fare.getFareID(), inbound1Seats.getCabin().getCabinClassID());                      
-                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for return flight " + inbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");        
+                reservationSessionBean.createNewReservation(inbound1Reservation, passengers, inbound1FlightSchedule.getFlightScheduleID(), itinerary.getItineraryId());  
+                
+                System.out.println("Reservation Itinerary (Booking ID: " + itinerary.getItineraryId() + ") created successfully for User " + currentCustomer.getUserID() + "!\n");
             } else if (inbound1 == null && inbound2 == null) {
                 outbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound1);
                 System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -2768,6 +758,7 @@ public class MainApp {
                 }
                 outbound1Fare = flightScheduleSessionBean.getSmallestFare(outbound1FlightSchedule, outbound1Seats.getCabin().getCabinClassType());
                 outbound1SeatSelection = getSeatBookings(outbound1Seats, noOfPassengers);
+                outbound1Reservation = new ReservationEntity(outbound1Fare.getFareBasisCode(), outbound1Fare.getFareAmount(), outbound1Seats.getCabin().getCabinClassType());
                 
                 outbound2FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound2);
                 System.out.println("Seat Selection for outbound connecting flight " + outbound2FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -2778,6 +769,7 @@ public class MainApp {
                 }    
                 outbound2Fare = flightScheduleSessionBean.getSmallestFare(outbound2FlightSchedule, outbound2Seats.getCabin().getCabinClassType());
                 outbound2SeatSelection = getSeatBookings(outbound2Seats, noOfPassengers);
+                outbound2Reservation = new ReservationEntity(outbound2Fare.getFareBasisCode(), outbound2Fare.getFareAmount(), outbound2Seats.getCabin().getCabinClassType());
                 
                 pricePerPax = outbound1Fare.getFareAmount().add(outbound2Fare.getFareAmount());
                 List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
@@ -2788,24 +780,28 @@ public class MainApp {
                 String creditCardNum = sc.nextLine().trim();
                 System.out.print("Enter cvv> ");
                 String cvv = sc.nextLine().trim();
-
-                ReservationEntity reservation = new ReservationEntity(creditCardNum, cvv);
+                itinerary.setCreditCardNumber(creditCardNum);
+                itinerary.setCvv(cvv); 
+             
+                Set<ConstraintViolation<ItineraryEntity>> constraintViolations = validator.validate(itinerary);
+                if (constraintViolations.isEmpty()) {
+                    itinerary = itinerarySessionBean.createNewItinerary(itinerary, currentCustomer.getUserID());
+                } else {
+                    showInputDataValidationErrorsForItineraryEntity(constraintViolations);
+                    return;
+                }
                 
                 for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
                 }
-                long reservationId = reservationSessionBean.createNewReservation(reservation, 
-                        passengers, outbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
-                        outbound1Fare.getFareID(), outbound1Seats.getCabin().getCabinClassID());                 
-                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+                reservationSessionBean.createNewReservation(outbound1Reservation, passengers, outbound1FlightSchedule.getFlightScheduleID(), itinerary.getItineraryId());
             
                 for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(outbound2SeatSelection.get(i));
                 }
-                reservationId = reservationSessionBean.createNewReservation(reservation, 
-                         passengers, outbound2FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
-                         outbound2Fare.getFareID(), outbound2Seats.getCabin().getCabinClassID());                 
-                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for connecting flight " + outbound2FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+                reservationSessionBean.createNewReservation(outbound2Reservation, passengers, outbound2FlightSchedule.getFlightScheduleID(), itinerary.getItineraryId());
+                
+                System.out.println("Reservation Itinerary (Booking ID: " + itinerary.getItineraryId() + ") created successfully for User " + currentCustomer.getUserID() + "!\n");
             } else {
                 outbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound1);
                 System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -2816,6 +812,7 @@ public class MainApp {
                 }
                 outbound1Fare = flightScheduleSessionBean.getSmallestFare(outbound1FlightSchedule, outbound1Seats.getCabin().getCabinClassType());
                 outbound1SeatSelection = getSeatBookings(outbound1Seats, noOfPassengers);
+                outbound1Reservation = new ReservationEntity(outbound1Fare.getFareBasisCode(), outbound1Fare.getFareAmount(), outbound1Seats.getCabin().getCabinClassType());
                 
                 outbound2FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(outbound2);
                 System.out.println("Seat Selection for outbound connecting flight " + outbound2FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -2826,6 +823,7 @@ public class MainApp {
                 }
                 outbound2Fare = flightScheduleSessionBean.getSmallestFare(outbound2FlightSchedule, outbound2Seats.getCabin().getCabinClassType());
                 outbound2SeatSelection = getSeatBookings(outbound2Seats, noOfPassengers);
+                outbound2Reservation = new ReservationEntity(outbound2Fare.getFareBasisCode(), outbound2Fare.getFareAmount(), outbound2Seats.getCabin().getCabinClassType());
                 
                 inbound1FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(inbound1);
                 System.out.println("Seat Selection for inbound flight " + inbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -2836,6 +834,7 @@ public class MainApp {
                 }
                 inbound1Fare = flightScheduleSessionBean.getSmallestFare(inbound1FlightSchedule, inbound1Seats.getCabin().getCabinClassType());
                 inbound1SeatSelection = getSeatBookings(inbound1Seats, noOfPassengers);   
+                inbound1Reservation = new ReservationEntity(inbound1Fare.getFareBasisCode(), inbound1Fare.getFareAmount(), inbound1Seats.getCabin().getCabinClassType());
                 
                 inbound2FlightSchedule = flightScheduleSessionBean.retrieveFlightScheduleById(inbound2);
                 System.out.println("Seat Selection for inbound connecting flight " + inbound2FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -2846,6 +845,7 @@ public class MainApp {
                 }
                 inbound2Fare = flightScheduleSessionBean.getSmallestFare(inbound2FlightSchedule, inbound2Seats.getCabin().getCabinClassType());
                 inbound2SeatSelection = getSeatBookings(inbound2Seats, noOfPassengers);
+                inbound2Reservation = new ReservationEntity(inbound2Fare.getFareBasisCode(), inbound2Fare.getFareAmount(), inbound2Seats.getCabin().getCabinClassType());
                 
                 pricePerPax = outbound1Fare.getFareAmount().add(outbound2Fare.getFareAmount()).add(inbound1Fare.getFareAmount()).add(inbound2Fare.getFareAmount());
                 List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
@@ -2856,42 +856,40 @@ public class MainApp {
                 String creditCardNum = sc.nextLine().trim();
                 System.out.print("Enter cvv> ");
                 String cvv = sc.nextLine().trim();
-
-                ReservationEntity reservation = new ReservationEntity(creditCardNum, cvv);
+                itinerary.setCreditCardNumber(creditCardNum);
+                itinerary.setCvv(cvv); 
+             
+                Set<ConstraintViolation<ItineraryEntity>> constraintViolations = validator.validate(itinerary);
+                if (constraintViolations.isEmpty()) {
+                    itinerary = itinerarySessionBean.createNewItinerary(itinerary, currentCustomer.getUserID());
+                } else {
+                    showInputDataValidationErrorsForItineraryEntity(constraintViolations);
+                    return;
+                }
                 
                  for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
                 }
-                long reservationId = reservationSessionBean.createNewReservation(reservation, 
-                        passengers, outbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
-                        outbound1Fare.getFareID(), outbound1Seats.getCabin().getCabinClassID());                 
-                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+                reservationSessionBean.createNewReservation(outbound1Reservation, passengers, outbound1FlightSchedule.getFlightScheduleID(), itinerary.getItineraryId());
             
                 for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(outbound2SeatSelection.get(i));
                 }
-                reservationId = reservationSessionBean.createNewReservation(reservation, 
-                         passengers, outbound2FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
-                         outbound2Fare.getFareID(), outbound2Seats.getCabin().getCabinClassID());                 
-                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for connecting flight " + outbound2FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");
+                reservationSessionBean.createNewReservation(outbound2Reservation, passengers, outbound2FlightSchedule.getFlightScheduleID(), itinerary.getItineraryId());
             
                 for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(inbound1SeatSelection.get(i));
                 }  
-                reservationId = reservationSessionBean.createNewReservation(reservation, 
-                         passengers, inbound1FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
-                         inbound1Fare.getFareID(), inbound1Seats.getCabin().getCabinClassID());                      
-                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for return flight " + inbound1FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");        
+                reservationSessionBean.createNewReservation(inbound1Reservation, passengers, inbound1FlightSchedule.getFlightScheduleID(), itinerary.getItineraryId());
                 
                 for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(inbound2SeatSelection.get(i));
                 }  
-                reservationId = reservationSessionBean.createNewReservation(reservation, 
-                         passengers, inbound2FlightSchedule.getFlightScheduleID(), currentCustomer.getUserID(), 
-                         inbound2Fare.getFareID(), inbound2Seats.getCabin().getCabinClassID());                      
-                System.out.println("Reservation " + reservationId + " created successfully for User " + currentCustomer.getUserID() + " for connecting return flight " + inbound2FlightSchedule.getFlightSchedulePlan().getFlightNum() + "!\n");        
+                reservationSessionBean.createNewReservation(inbound2Reservation, passengers, inbound2FlightSchedule.getFlightScheduleID(), itinerary.getItineraryId());
+                
+                System.out.println("Reservation Itinerary (Booking ID: " + itinerary.getItineraryId() + ") created successfully for User " + currentCustomer.getUserID() + "!\n");
             }           
-        } catch (FlightScheduleNotFoundException | CabinClassNotFoundException | ReservationExistException | UnknownPersistenceException | UserNotFoundException | FareNotFoundException | SeatInventoryNotFoundException | UpdateSeatsException ex) {
+        } catch (FlightScheduleNotFoundException | CabinClassNotFoundException | ReservationExistException | UnknownPersistenceException | UserNotFoundException | SeatInventoryNotFoundException | UpdateSeatsException | InputDataValidationException | ItineraryExistException | ItineraryNotFoundException ex) {
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n");
         }
     }
@@ -3040,10 +1038,18 @@ public class MainApp {
     private void viewFlightReservation() {
         Scanner sc = new Scanner(System.in);
         System.out.println("*** View Flight Reservations ***\n");
-        List<ReservationEntity> list = reservationSessionBean.retrieveReservationsByCustomerId(currentCustomer.getUserID());
-        System.out.printf("%25s%30s%20s%20s\n", "Reservation ID", "Flight Schedule ID", "Flight Number", "Cabin Class");
-        for (ReservationEntity res : list) {
-            System.out.printf("%25s%30s%20s%20s\n", res.getReservationID(), res.getFlightSchedule(), res.getFlightSchedule().getFlightSchedulePlan().getFlightNum(), res.getCabinClass());
+        List<ItineraryEntity> list = itinerarySessionBean.retrieveItinerariesByCustomerId(currentCustomer.getUserID());
+        for (ItineraryEntity itinerary : list) {
+            System.out.println("Itinerary Reservation ID: " + itinerary.getItineraryId());
+            System.out.println();
+            for (ReservationEntity res: itinerary.getReservations()) {
+                String journey = res.getFlightSchedule().getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getIATACode() + " -> " + res.getFlightSchedule().getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getIATACode();
+                String departureDateTime = res.getFlightSchedule().getDepartureDateTime().toString().substring(0, 19);
+                String duration = String.valueOf(res.getFlightSchedule().getDuration()) + " Hrs";
+                String flightNum = res.getFlightSchedule().getFlightSchedulePlan().getFlightNum();
+                System.out.println("\t" + flightNum + ", " + journey + ", " + departureDateTime + ", " + duration);
+            }
+            System.out.println();          
         }
         System.out.print("Press any key to continue...> ");
         sc.nextLine();
@@ -3053,32 +1059,230 @@ public class MainApp {
     private void viewFlightReservationDetails() {
         try {
             Scanner sc = new Scanner(System.in);
-            System.out.println("*** View Flight Reservations Details ***\n");
-            
-            List<ReservationEntity> list = reservationSessionBean.retrieveReservationsByCustomerId(currentCustomer.getUserID());
-            System.out.printf("%25s%30s%20s%20s\n", "Reservation ID", "Flight Schedule ID", "Flight Number", "Cabin Class");
-            for (ReservationEntity res : list) {
-                System.out.printf("%25s%30s%20s%20s\n", res.getReservationID(), res.getFlightSchedule(), res.getFlightSchedule().getFlightSchedulePlan().getFlightNum(), res.getCabinClass());
-            }
+            System.out.println("*** View Flight Reservations Details ***\n");     
             
             System.out.print("Enter ID of reservation to view in detail> ");
             long id = sc.nextLong();
-            ReservationEntity res = reservationSessionBean.retrieveReservationById(id);
-            FlightScheduleEntity sched = res.getFlightSchedule();
-            List<PassengerEntity> passengers = res.getPassenger();
-            CabinClassEntity cabin = res.getCabinClass();
-            BigDecimal amt = res.getFare().getFareAmount().multiply(BigDecimal.valueOf(passengers.size()));
+            sc.nextLine();
+            System.out.println();
+            ItineraryEntity itinerary = itinerarySessionBean.retrieveItineraryByID(id);
             
-            System.out.printf("%35s%25s%25s%35s%25s%15s%30s%20s%20s%35s\n", "Flight Schedule ID","Flight Number","Origin Airport","Destination Airport","Departure Date",
-                    "Duration", "Passenger Name", "Cabin Type", "Seat Number", "Total amount paid");
-            
-            for(int i = 0; i<passengers.size(); i++) {
-                System.out.printf("%35s%25s%25s%35s%25s%15s%30s%20s%20s%35s\n", sched.getFlightScheduleID(), sched.getFlightSchedulePlan().getFlightNum(), sched.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin(),
-                        sched.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination(), sched.getDepartureDateTime().toString().substring(0,19), sched.getDuration(), passengers.get(i).getFirstName() + " " + passengers.get(i).getLastName(),
-                        cabin.getCabinClassType(), passengers.get(i).getSeatNumber(), amt);
+            BigDecimal totalPaid = new BigDecimal(0);
+            for (ReservationEntity res: itinerary.getReservations()) {
+                totalPaid = totalPaid.add(res.getFareAmount().multiply(new BigDecimal(res.getPassenger().size())));
+                String journey = res.getFlightSchedule().getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getIATACode() + " -> " + res.getFlightSchedule().getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getIATACode();
+                String departureDateTime = res.getFlightSchedule().getDepartureDateTime().toString().substring(0, 19);
+                String duration = String.valueOf(res.getFlightSchedule().getDuration()) + " Hrs";
+                String flightNum = res.getFlightSchedule().getFlightSchedulePlan().getFlightNum();
+                String cabinClass;
+                if (res.getCabinClassType() == CabinClassTypeEnum.F) {
+                    cabinClass = "First Class";
+                } else if (res.getCabinClassType() == CabinClassTypeEnum.J) {
+                    cabinClass = "Business Class";
+                } else if (res.getCabinClassType() == CabinClassTypeEnum.W) {
+                    cabinClass = "Premium Economy Class";
+                } else {
+                    cabinClass = "Economy Class";
+                }
+                System.out.println("Flight: " + flightNum + ", " + journey + ", " + departureDateTime + ", " + duration);
+                System.out.println();
+                for (PassengerEntity passenger: res.getPassenger()) {                  
+                    String name = passenger.getFirstName() + " " + passenger.getLastName();           
+                    String seatNumber = passenger.getSeatNumber();
+                    System.out.println("\t" + name + ", " + cabinClass + ", Seat " + seatNumber);
+                }
+                System.out.println();
             }
-        } catch (ReservationNotFoundException ex) {
-            System.out.println(ex.getMessage());
+            System.out.println("Total amount paid: $" + totalPaid.toString());
+            System.out.print("Press any key to continue...> ");
+            sc.nextLine();
+                
+        } catch (ItineraryNotFoundException ex) {
+            System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n");
         }
+    }
+    
+    private void printSingleFlightSchedule(List<FlightScheduleEntity> flightSchedules, CabinClassTypeEnum cabinClassPreference, int passengers) throws CabinClassNotFoundException, FlightScheduleNotFoundException {
+        System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", "Flight ID", 
+                        "Flight Number", 
+                        "Departure Airport", 
+                        "Arrival Airport", 
+                        "Departure Date & Time", 
+                        "Duration (HRS)", 
+                        "Arrival Date & Time", 
+                        "Cabin Type", 
+                        "Number of Seats Balanced", 
+                        "Price per head", 
+                        "Total Price");          
+        for (FlightScheduleEntity flightScheduleEntity : flightSchedules) {
+            int diff = flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt()
+                    - flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
+            Calendar c2 = Calendar.getInstance();
+            c2.setTime(flightScheduleEntity.getDepartureDateTime());
+            double duration = flightScheduleEntity.getDuration();
+            int hour = (int) duration;
+            int min = (int) (duration % 1 * 60);
+            c2.add(Calendar.HOUR_OF_DAY, hour);
+            c2.add(Calendar.MINUTE, min);
+            c2.add(Calendar.HOUR_OF_DAY, diff);
+            Date arrival = c2.getTime();
+            for (SeatInventoryEntity seats : flightScheduleEntity.getSeatInventory()) {
+                String cabinClassType;
+                if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.F && (cabinClassPreference == CabinClassTypeEnum.F || cabinClassPreference == null)) {
+                    cabinClassType = "First Class";
+                } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.J && (cabinClassPreference == CabinClassTypeEnum.J || cabinClassPreference == null)) {
+                    cabinClassType = "Business Class";
+                } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.W && (cabinClassPreference == CabinClassTypeEnum.W || cabinClassPreference == null)) {
+                    cabinClassType = "Premium Economy Class";
+                } else if (seats.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && (cabinClassPreference == CabinClassTypeEnum.Y || cabinClassPreference == null)) {
+                    cabinClassType = "Economy Class";
+                } else {
+                    continue;
+                }
+
+                System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(),
+                        flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
+                        flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),
+                        flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(),
+                        flightScheduleEntity.getDepartureDateTime().toString().substring(0, 19),
+                        flightScheduleEntity.getDuration(),
+                        arrival.toString().substring(0, 19),
+                        cabinClassType,
+                        seats.getBalance(),
+                        flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount(),
+                        flightScheduleSessionBean.getSmallestFare(flightScheduleEntity, seats.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
+                );
+
+            }
+        }
+    }
+    
+    private void printFlightScheduleWithConnecting(List<Pair<FlightScheduleEntity, FlightScheduleEntity>> flightSchedulePairs, CabinClassTypeEnum cabin, int passengers) throws FlightScheduleNotFoundException, CabinClassNotFoundException {
+         System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", "Flight ID", 
+                        "Flight Number", 
+                        "Departure Airport", 
+                        "Arrival Airport", 
+                        "Departure Date & Time", 
+                        "Duration (HRS)", 
+                        "Arrival Date & Time", 
+                        "Cabin Type", 
+                        "Number of Seats Balanced", 
+                        "Price per head", 
+                        "Total Price",
+                        "Connecting Flight ID", 
+                        "Connecting Flight Number", 
+                        "Connecting Departure Airport", 
+                        "Arrival Airport", 
+                        "Departure Date & Time", 
+                        "Duration (HRS)", 
+                        "Arrival Date & Time", 
+                        "Cabin Type", 
+                        "Number of Seats Balanced", 
+                        "Price per head", 
+                        "Total Price");
+        for (Pair<FlightScheduleEntity, FlightScheduleEntity> pair: flightSchedulePairs) {
+            FlightScheduleEntity flight1 = pair.getKey();
+            FlightScheduleEntity flight2 = pair.getValue();
+            int diff1 = flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
+                    flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
+            Calendar c2 = Calendar.getInstance();
+            c2.setTime(flight1.getDepartureDateTime());
+            double duration = flight1.getDuration();
+            int hour = (int) duration;
+            int min = (int) (duration % 1 * 60);
+            c2.add(Calendar.HOUR_OF_DAY, hour);
+            c2.add(Calendar.MINUTE, min);
+            c2.add(Calendar.HOUR_OF_DAY, diff1);
+            Date arrival1 = c2.getTime();
+            int diff2 = flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getGmt() - 
+                    flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getGmt();
+            Calendar c3 = Calendar.getInstance();
+            c3.setTime(flight2.getDepartureDateTime());
+            double duration2 = flight2.getDuration();
+            int hour2 = (int) duration2;
+            int min2 = (int) (duration2 % 1 * 60);
+            c3.add(Calendar.HOUR_OF_DAY, hour2);
+            c3.add(Calendar.MINUTE, min2);
+            c3.add(Calendar.HOUR_OF_DAY, diff2);
+            Date arrival2 = c3.getTime();
+            for (SeatInventoryEntity seats1: flight1.getSeatInventory()) {
+                for (SeatInventoryEntity seats2: flight2.getSeatInventory()) {
+                    String cabinClassType1, cabinClassType2;
+                    if (cabin == null) {
+                        if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
+                            cabinClassType1 = "First Class"; 
+                        } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
+                            cabinClassType1 = "Business Class";
+                        } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
+                            cabinClassType1 = "Premium Economy Class";
+                        } else {
+                            cabinClassType1 = "Economy Class";  
+                        }
+                        if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F) {
+                            cabinClassType2 = "First Class"; 
+                        } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J) {
+                            cabinClassType2 = "Business Class";
+                        } else if (seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W) {
+                            cabinClassType2 = "Premium Economy Class";
+                        } else {
+                            cabinClassType2 = "Economy Class";  
+                        }
+                    } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.F && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.F && cabin == CabinClassTypeEnum.F) {
+                        cabinClassType1 = "First Class"; 
+                        cabinClassType2 = "First Class"; 
+                    } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.J && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.J && cabin == CabinClassTypeEnum.J) {
+                        cabinClassType1 = "Business Class";
+                        cabinClassType2 = "Business Class";
+                    } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.W && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.W && cabin == CabinClassTypeEnum.W) {
+                        cabinClassType1 = "Premium Economy Class";
+                        cabinClassType2 = "Premium Economy Class";
+                    } else if (seats1.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && seats2.getCabin().getCabinClassType() == CabinClassTypeEnum.Y && cabin == CabinClassTypeEnum.Y) {
+                        cabinClassType1 = "Economy Class"; 
+                        cabinClassType2 = "Economy Class"; 
+                    } else {
+                        continue;
+                    }
+                    System.out.printf("%15s%20s%40s%40s%30s%20s%30s%30s%30s%25s%25s%25s%30s%45s%45s%40s%20s%30s%30s%30s%25s%25s\n", flight1.getFlightScheduleID(), 
+                        flight1.getFlightSchedulePlan().getFlightNum(), 
+                        flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
+                        flight1.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
+                        flight1.getDepartureDateTime().toString().substring(0, 19), 
+                        flight1.getDuration(), 
+                        arrival1.toString().substring(0, 19), 
+                        cabinClassType1, 
+                        seats1.getBalance(), 
+                        flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount(), 
+                        flightScheduleSessionBean.getSmallestFare(flight1, seats1.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers)),
+                        flight2.getFlightScheduleID(), 
+                        flight2.getFlightSchedulePlan().getFlightNum(), 
+                        flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(), 
+                        flight2.getFlightSchedulePlan().getFlight().getFlightRoute().getDestination().getAirportName(), 
+                        flight2.getDepartureDateTime().toString().substring(0, 19), 
+                        flight2.getDuration(), 
+                        arrival2.toString().substring(0, 19), 
+                        cabinClassType2, 
+                        seats2.getBalance(), 
+                        flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount(), 
+                        flightScheduleSessionBean.getSmallestFare(flight2, seats2.getCabin().getCabinClassType()).getFareAmount().multiply(BigDecimal.valueOf(passengers))
+                    );
+                }
+            }
+        }
+    }
+    
+    private void showInputDataValidationErrorsForItineraryEntity(Set<ConstraintViolation<ItineraryEntity>> constraintViolations) {
+        System.out.println("\nInput data validation error!:");
+        for(ConstraintViolation constraintViolation:constraintViolations) {
+            System.out.println("\t" + constraintViolation.getPropertyPath() + " - " + constraintViolation.getInvalidValue() + "; " + constraintViolation.getMessage());
+        }
+        System.out.println("\nPlease try again......\n");
+    }
+    
+    private void showInputDataValidationErrorsForReservationEntity(Set<ConstraintViolation<ReservationEntity>> constraintViolations) {
+        System.out.println("\nInput data validation error!:");
+        for(ConstraintViolation constraintViolation:constraintViolations) {
+            System.out.println("\t" + constraintViolation.getPropertyPath() + " - " + constraintViolation.getInvalidValue() + "; " + constraintViolation.getMessage());
+        }
+        System.out.println("\nPlease try again......\n");
     }
 }

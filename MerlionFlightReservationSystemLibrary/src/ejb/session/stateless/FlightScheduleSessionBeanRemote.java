@@ -13,6 +13,7 @@ import exceptions.CabinClassNotFoundException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightScheduleNotFoundException;
 import exceptions.SeatInventoryNotFoundException;
+import exceptions.UpdateFlightScheduleException;
 import java.util.Date;
 import java.util.List;
 import javafx.util.Pair;
@@ -34,5 +35,9 @@ public interface FlightScheduleSessionBeanRemote {
     public FareEntity getSmallestFare(FlightScheduleEntity flightSchedule, CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, CabinClassNotFoundException;
 
     public SeatInventoryEntity getCorrectSeatInventory(FlightScheduleEntity flightSchedule, CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, SeatInventoryNotFoundException;
+
+    public FlightScheduleEntity updateFlightSchedule(long flightScheduleId, Date newDepartureDateTime, double newFlightDuration) throws FlightScheduleNotFoundException, UpdateFlightScheduleException;
+
+    public void deleteFlightSchedule(long flightScheduleId) throws FlightScheduleNotFoundException, UpdateFlightScheduleException;
 
 }

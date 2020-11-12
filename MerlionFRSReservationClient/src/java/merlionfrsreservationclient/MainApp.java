@@ -287,7 +287,7 @@ public class MainApp {
                 System.out.print("Sorry, there are no flights with your desired flight route\n");
                 return;
             } catch (FlightScheduleNotFoundException | CabinClassNotFoundException ex) {
-                // wont hit
+                System.out.println("Unexpected error: " + ex.getMessage());
             }
         }
         if (flightPref == 2) {
@@ -339,7 +339,7 @@ public class MainApp {
                 System.out.println("Sorry there are not indirect flights for your specified route");
                 return;
             } catch (FlightScheduleNotFoundException | CabinClassNotFoundException ex) {
-                // will nvr hit
+                System.out.println("Unexpected error: " + ex.getMessage());
             }
         }
         
@@ -406,7 +406,7 @@ public class MainApp {
                 System.out.print("Sorry there are no return flights for this flight route within this period");
                 return;
             } catch (FlightScheduleNotFoundException | CabinClassNotFoundException ex) {
-                // will nvr hit this
+                System.out.println("Unexpected error: " + ex.getMessage());
             } 
         }        
         
@@ -471,7 +471,7 @@ public class MainApp {
                 System.out.print("Sorry there are no indirect return flights for this flight route within this period");
                 return;
             } catch (FlightScheduleNotFoundException | CabinClassNotFoundException ex) {
-                // will never hit this
+                System.out.println("Unexpected error: " + ex.getMessage());
             }
         }
                 
@@ -1139,7 +1139,7 @@ public class MainApp {
                 } else {
                     continue;
                 }
-
+              
                 System.out.printf("%15s%20s%30s%30s%40s%20s%20s%20s%30s%25s%25s\n", flightScheduleEntity.getFlightScheduleID(),
                         flightScheduleEntity.getFlightSchedulePlan().getFlightNum(),
                         flightScheduleEntity.getFlightSchedulePlan().getFlight().getFlightRoute().getOrigin().getAirportName(),

@@ -16,22 +16,22 @@
             <classpath path="${libs.jaxws21.classpath}"/>
         </taskdef>
     </target>
-    <target name="wsimport-client-ReservationWebService" depends="wsimport-init">
-        <mkdir dir="${build.generated.dir}/jax-wsCache/ReservationWebService"/>
-        <property name="wsdl-ReservationWebService" location="xml-resources/web-service-references/ReservationWebService/wsdl/localhost_8080/ReservationWebService/ReservationWebService.wsdl"/>
-        <wsimport sourcedestdir="${build.generated.dir}/jax-wsCache/ReservationWebService" destdir="${build.generated.dir}/jax-wsCache/ReservationWebService" wsdl="${wsdl-ReservationWebService}" catalog="catalog.xml" encoding="${source.encoding}" extension="true" verbose="true" fork="false" wsdlLocation="http://localhost:8080/ReservationWebService/ReservationWebService?wsdl" xnocompile="true" xendorsed="true">
-            <depends file="${wsdl-ReservationWebService}"/>
-            <produces dir="${build.generated.dir}/jax-wsCache/ReservationWebService"/>
+    <target name="wsimport-client-FlightReservationWebService" depends="wsimport-init">
+        <mkdir dir="${build.generated.dir}/jax-wsCache/FlightReservationWebService"/>
+        <property name="wsdl-FlightReservationWebService" location="xml-resources/web-service-references/FlightReservationWebService/wsdl/localhost_8080/FlightReservationWebService/FlightReservationWebService.wsdl"/>
+        <wsimport sourcedestdir="${build.generated.dir}/jax-wsCache/FlightReservationWebService" destdir="${build.generated.dir}/jax-wsCache/FlightReservationWebService" wsdl="${wsdl-FlightReservationWebService}" catalog="catalog.xml" encoding="${source.encoding}" extension="true" verbose="true" fork="false" wsdlLocation="http://localhost:8080/FlightReservationWebService/FlightReservationWebService?wsdl" xnocompile="true" xendorsed="true">
+            <depends file="${wsdl-FlightReservationWebService}"/>
+            <produces dir="${build.generated.dir}/jax-wsCache/FlightReservationWebService"/>
         </wsimport>
         <copy todir="${build.generated.sources.dir}/jax-ws">
-            <fileset dir="${build.generated.dir}/jax-wsCache/ReservationWebService">
+            <fileset dir="${build.generated.dir}/jax-wsCache/FlightReservationWebService">
                 <include name="**/*.java"/>
             </fileset>
         </copy>
     </target>
-    <target name="wsimport-client-clean-ReservationWebService" depends="-init-project">
-        <delete dir="${build.generated.dir}/jax-wsCache/ReservationWebService"/>
+    <target name="wsimport-client-clean-FlightReservationWebService" depends="-init-project">
+        <delete dir="${build.generated.dir}/jax-wsCache/FlightReservationWebService"/>
         <delete dir="${build.generated.sources.dir}/jax-ws/ejb/session/ws"/>
     </target>
-    <target name="wsimport-client-generate" depends="wsimport-client-ReservationWebService"/>
+    <target name="wsimport-client-generate" depends="wsimport-client-FlightReservationWebService"/>
 </project>

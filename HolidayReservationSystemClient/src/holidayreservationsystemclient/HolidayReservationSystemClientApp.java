@@ -5,7 +5,6 @@
  */
 package holidayreservationsystemclient;
 
-import ejb.session.ws.CabinClassEntity;
 import ejb.session.ws.CabinClassTypeEnum;
 import ejb.session.ws.FareEntity;
 import ejb.session.ws.FlightNotFoundException_Exception;
@@ -36,8 +35,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -758,7 +755,7 @@ public class HolidayReservationSystemClientApp {
                 
                 System.out.println("Reservation Itinerary (Booking ID: " + itineraryId + ") created successfully for User " + currentPartner.getUserID() + "!\n");
             }           
-        } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ReservationExistException_Exception | UnknownPersistenceException_Exception | InvalidLoginCredentialException_Exception | UserNotFoundException_Exception | SeatInventoryNotFoundException_Exception | UpdateSeatsException_Exception | InputDataValidationException_Exception | ItineraryExistException_Exception | ItineraryNotFoundException_Exception ex) {
+        } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ReservationExistException_Exception | UnknownPersistenceException_Exception | UserNotFoundException_Exception | SeatInventoryNotFoundException_Exception | UpdateSeatsException_Exception | InputDataValidationException_Exception | ItineraryExistException_Exception | ItineraryNotFoundException_Exception ex) {
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n");
         } 
     }
@@ -927,7 +924,7 @@ public class HolidayReservationSystemClientApp {
     private void doViewFlightReservation() {
         Scanner sc = new Scanner(System.in);
         System.out.println("*** View Flight Reservations ***\n");
-        List<ItineraryEntity> list = retrieveItinerariesByCustomerId(currentPartner.getUserID());
+        List<ItineraryEntity> list = retrieveItinerariesByUserId(currentPartner.getUserID());
         for (ItineraryEntity itinerary : list) {
             System.out.println("Itinerary Reservation ID: " + itinerary.getItineraryId());
             System.out.println();
@@ -953,7 +950,7 @@ public class HolidayReservationSystemClientApp {
             long id = sc.nextLong();
             sc.nextLine();
             System.out.println();
-            ItineraryEntity itinerary = retrieveItineraryById(id);
+            ItineraryEntity itinerary = retreiveItineraryById(id);
             
             BigDecimal totalPaid = new BigDecimal(0);
             for (ReservationEntity res: itinerary.getReservations()) {
@@ -1158,35 +1155,10 @@ public class HolidayReservationSystemClientApp {
         }
     }
     
-    
 
-    private static boolean checkIfBooked(ejb.session.ws.SeatInventoryEntity arg0, java.lang.String arg1) {
-        ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
-        ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
-        return port.checkIfBooked(arg0, arg1);
-    }
 
-   
-
-    private static PartnerEntity doLogin(java.lang.String arg0, java.lang.String arg1) throws InvalidLoginCredentialException_Exception {
-        ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
-        ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
-        return port.doLogin(arg0, arg1);
-    }
-
-    private static FareEntity getBiggestFare(ejb.session.ws.FlightScheduleEntity arg0, ejb.session.ws.CabinClassTypeEnum arg1) throws FlightScheduleNotFoundException_Exception, CabinClassNotFoundException_Exception {
-        ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
-        ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
-        return port.getBiggestFare(arg0, arg1);
-    }
-
-    private static SeatInventoryEntity getCorrectSeatInventory(ejb.session.ws.FlightScheduleEntity arg0, ejb.session.ws.CabinClassTypeEnum arg1) throws FlightScheduleNotFoundException_Exception, SeatInventoryNotFoundException_Exception {
-        ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
-        ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
-        return port.getCorrectSeatInventory(arg0, arg1);
-    }
-
-    private static java.util.List<ejb.session.ws.FlightScheduleEntity> getFlightSchedules(java.lang.String arg0, java.lang.String arg1, java.util.Date arg2, ejb.session.ws.CabinClassTypeEnum arg3) throws FlightNotFoundException_Exception {
+/*
+    private static java.util.List<ejb.session.ws.FlightScheduleEntity> getFlightSchedules22(java.lang.String arg0, java.lang.String arg1, java.util.Date arg2, ejb.session.ws.CabinClassTypeEnum arg3) throws FlightNotFoundException_Exception {
         ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
         ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
         
@@ -1200,7 +1172,7 @@ public class HolidayReservationSystemClientApp {
         return null;
     }
 
-    private static java.util.List<ejb.session.ws.MyPair> getIndirectFlightSchedules(java.lang.String arg0, java.lang.String arg1, java.util.Date arg2, ejb.session.ws.CabinClassTypeEnum arg3) throws FlightNotFoundException_Exception {
+    private static java.util.List<ejb.session.ws.MyPair> getIndirectFlightSchedules22(java.lang.String arg0, java.lang.String arg1, java.util.Date arg2, ejb.session.ws.CabinClassTypeEnum arg3) throws FlightNotFoundException_Exception {
         ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
         ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
         
@@ -1212,38 +1184,87 @@ public class HolidayReservationSystemClientApp {
             System.out.println(ex.getMessage());
         }
         return null; 
+    }*/
+
+    private static boolean checkIfBooked(ejb.session.ws.SeatInventoryEntity seatinventoryentity, java.lang.String seatnumber) {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.checkIfBooked(seatinventoryentity, seatnumber);
     }
 
-    private static FlightScheduleEntity retrieveFlightScheduleById(java.lang.Long arg0) throws FlightScheduleNotFoundException_Exception, InvalidLoginCredentialException_Exception {
-        ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
-        ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
-        return port.retrieveFlightScheduleById(arg0);
+    private static PartnerEntity doLogin(java.lang.String username, java.lang.String password) throws InvalidLoginCredentialException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.doLogin(username, password);
     }
 
-
-
-    private static long createNewReservation(ejb.session.ws.ReservationEntity arg0, java.util.List<ejb.session.ws.PassengerEntity> arg1, long arg2, long arg3) throws FlightScheduleNotFoundException_Exception, ReservationExistException_Exception, UpdateSeatsException_Exception, InputDataValidationException_Exception, SeatInventoryNotFoundException_Exception, UnknownPersistenceException_Exception, ItineraryNotFoundException_Exception {
-        ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
-        ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
-        return port.createNewReservation(arg0, arg1, arg2, arg3);
+    private static FareEntity getBiggestFare(ejb.session.ws.FlightScheduleEntity flightscheduleentity, ejb.session.ws.CabinClassTypeEnum cabinclasstype) throws FlightScheduleNotFoundException_Exception, CabinClassNotFoundException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.getBiggestFare(flightscheduleentity, cabinclasstype);
     }
 
-    private static long createNewItinerary(java.lang.String arg0, java.lang.String arg1, long arg2) throws InputDataValidationException_Exception, ItineraryExistException_Exception, UnknownPersistenceException_Exception, UserNotFoundException_Exception {
-        ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
-        ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
-        return port.createNewItinerary(arg0, arg1, arg2);
+    private static SeatInventoryEntity getCorrectSeatInventory(ejb.session.ws.FlightScheduleEntity flightscheduleentity, ejb.session.ws.CabinClassTypeEnum cabinclasstype) throws SeatInventoryNotFoundException_Exception, FlightScheduleNotFoundException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.getCorrectSeatInventory(flightscheduleentity, cabinclasstype);
     }
 
-    private static java.util.List<ejb.session.ws.ItineraryEntity> retrieveItinerariesByCustomerId(long arg0) {
-        ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
-        ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
-        return port.retrieveItinerariesByCustomerId(arg0);
+    private static java.util.List<ejb.session.ws.FlightScheduleEntity> getFlightSchedules(java.lang.String origin, java.lang.String destination, java.util.Date date, ejb.session.ws.CabinClassTypeEnum cabinclasstype) throws FlightNotFoundException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        
+        XMLGregorianCalendar cal;
+        try {
+            cal = DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar(date.getYear(), date.getMonth(), date.getDay(), date.getHours(), date.getMinutes(), date.getSeconds()));
+            return port.getFlightSchedules(origin, destination, cal, cabinclasstype);
+        } catch (DatatypeConfigurationException ex) {
+            System.out.println(ex.getMessage());
+        }
+        return null;     
     }
 
-    private static ItineraryEntity retrieveItineraryById(long arg0) throws ItineraryNotFoundException_Exception {
-        ejb.session.ws.ReservationWebService_Service service = new ejb.session.ws.ReservationWebService_Service();
-        ejb.session.ws.ReservationWebService port = service.getReservationWebServicePort();
-        return port.retrieveItineraryById(arg0);
+    private static java.util.List<ejb.session.ws.MyPair> getIndirectFlightSchedules(java.lang.String origin, java.lang.String destination, java.util.Date date, ejb.session.ws.CabinClassTypeEnum cabinclasstype) throws FlightNotFoundException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        XMLGregorianCalendar cal;
+        try {
+            cal = DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar(date.getYear(), date.getMonth(), date.getDay(), date.getHours(), date.getMinutes(), date.getSeconds()));
+            return port.getIndirectFlightSchedules(origin, destination, cal, cabinclasstype);
+        } catch (DatatypeConfigurationException ex) {
+            System.out.println(ex.getMessage());
+        }
+        return null; 
+    }
+
+    private static FlightScheduleEntity retrieveFlightScheduleById(long flightscheduleid) throws FlightScheduleNotFoundException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.retrieveFlightScheduleById(flightscheduleid);
+    }
+
+    private static long createNewReservation(ejb.session.ws.ReservationEntity reservationentity, java.util.List<ejb.session.ws.PassengerEntity> passengers, long flightscheduleid, long itineraryid) throws ReservationExistException_Exception, InputDataValidationException_Exception, FlightScheduleNotFoundException_Exception, UnknownPersistenceException_Exception, SeatInventoryNotFoundException_Exception, UpdateSeatsException_Exception, ItineraryNotFoundException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.createNewReservation(reservationentity, passengers, flightscheduleid, itineraryid);
+    }
+
+    private static long createNewItinerary(java.lang.String creditcardnumber, java.lang.String cvv, long userid) throws UnknownPersistenceException_Exception, ItineraryExistException_Exception, InputDataValidationException_Exception, UserNotFoundException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.createNewItinerary(creditcardnumber, cvv, userid);
+    }
+
+    private static java.util.List<ejb.session.ws.ItineraryEntity> retrieveItinerariesByUserId(long userid) {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.retrieveItinerariesByUserId(userid);
+    }
+
+    private static ItineraryEntity retreiveItineraryById(long itineraryid) throws ItineraryNotFoundException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.retreiveItineraryById(itineraryid);
     }
     
     

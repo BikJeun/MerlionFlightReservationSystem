@@ -231,7 +231,7 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
         List<FareEntity> fares = flightScheduleEntity.getFlightSchedulePlan().getFares();
         List<FareEntity> ccfares = new ArrayList<>();
         for (FareEntity fare: fares) {
-            if (fare.getCabinClassType() == cabinClassType) {
+            if (fare.getCabinClassType().equals(cabinClassType)) {
                 ccfares.add(fare);
             }
         }
@@ -253,7 +253,7 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
         List<FareEntity> fares = flightSchedule.getFlightSchedulePlan().getFares();
         List<FareEntity> ccfares = new ArrayList<>();
         for(FareEntity fare : fares) {
-            if(fare.getCabinClassType() == type) {
+            if(fare.getCabinClassType().equals(type)) {
                 ccfares.add(fare);
             }
         }

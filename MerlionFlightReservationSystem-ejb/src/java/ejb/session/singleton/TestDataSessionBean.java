@@ -321,7 +321,16 @@ public class TestDataSessionBean {
                 Date date = c.getTime();
                 info.add(new Pair<>(date, fs.getDuration()));
             }
-            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares, flight2.getFlightID(), info);
+            
+            List<FareEntity> fares2 = new ArrayList<>();
+            fares2.add(new FareEntity("F001", BigDecimal.valueOf(6500), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("F002", BigDecimal.valueOf(6000), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("J001", BigDecimal.valueOf(3500), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("J002", BigDecimal.valueOf(3000), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("Y001", BigDecimal.valueOf(1500), CabinClassTypeEnum.Y));
+            fares2.add(new FareEntity("Y002", BigDecimal.valueOf(1000), CabinClassTypeEnum.Y));
+            
+            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares2, flight2.getFlightID(), info);
             flightSchedulePlanSessionBean.associateExistingPlanToComplementaryPlan(fsp.getFlightSchedulePlanID(), returnFsp.getFlightSchedulePlanID());
             ////////////
             
@@ -357,7 +366,16 @@ public class TestDataSessionBean {
                 Date date = c.getTime();
                 info.add(new Pair<>(date, fs.getDuration()));
             }
-            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares, flight2.getFlightID(), info);
+            
+            fares2.clear();
+            fares2.add(new FareEntity("F001", BigDecimal.valueOf(3250), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("F002", BigDecimal.valueOf(3000), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("J001", BigDecimal.valueOf(1750), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("J002", BigDecimal.valueOf(1500), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("Y001", BigDecimal.valueOf(750), CabinClassTypeEnum.Y));
+            fares2.add(new FareEntity("Y002", BigDecimal.valueOf(500), CabinClassTypeEnum.Y));
+                     
+            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares2, flight2.getFlightID(), info);
             flightSchedulePlanSessionBean.associateExistingPlanToComplementaryPlan(fsp.getFlightSchedulePlanID(), returnFsp.getFlightSchedulePlanID());
             ////////////
             
@@ -389,7 +407,12 @@ public class TestDataSessionBean {
                 Date date = c.getTime();
                 info.add(new Pair<>(date, fs.getDuration()));
             }
-            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares, flight2.getFlightID(), info);
+            
+            fares2.clear();
+            fares2.add(new FareEntity("Y001", BigDecimal.valueOf(700), CabinClassTypeEnum.Y));
+            fares2.add(new FareEntity("Y002", BigDecimal.valueOf(400), CabinClassTypeEnum.Y));
+            
+            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares2, flight2.getFlightID(), info);
             flightSchedulePlanSessionBean.associateExistingPlanToComplementaryPlan(fsp.getFlightSchedulePlanID(), returnFsp.getFlightSchedulePlanID());
             ////////////  
             
@@ -425,7 +448,16 @@ public class TestDataSessionBean {
                 Date date = c.getTime();
                 info.add(new Pair<>(date, fs.getDuration()));
             }
-            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares, flight2.getFlightID(), info);
+            
+            fares2.clear();
+            fares2.add(new FareEntity("F001", BigDecimal.valueOf(3350), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("F002", BigDecimal.valueOf(3100), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("J001", BigDecimal.valueOf(1850), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("J002", BigDecimal.valueOf(1600), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("Y001", BigDecimal.valueOf(850), CabinClassTypeEnum.Y));
+            fares2.add(new FareEntity("Y002", BigDecimal.valueOf(600), CabinClassTypeEnum.Y));
+            
+            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares2, flight2.getFlightID(), info);
             flightSchedulePlanSessionBean.associateExistingPlanToComplementaryPlan(fsp.getFlightSchedulePlanID(), returnFsp.getFlightSchedulePlanID());
             //////////// 
             
@@ -461,7 +493,16 @@ public class TestDataSessionBean {
                 Date date = c.getTime();
                 info.add(new Pair<>(date, fs.getDuration()));
             }
-            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares, flight2.getFlightID(), info);
+            
+            fares2.clear();
+            fares2.add(new FareEntity("F001", BigDecimal.valueOf(3150), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("F002", BigDecimal.valueOf(2900), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("J001", BigDecimal.valueOf(1650), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("J002", BigDecimal.valueOf(1400), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("Y001", BigDecimal.valueOf(650), CabinClassTypeEnum.Y));
+            fares2.add(new FareEntity("Y002", BigDecimal.valueOf(400), CabinClassTypeEnum.Y));
+            
+            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares2, flight2.getFlightID(), info);
             flightSchedulePlanSessionBean.associateExistingPlanToComplementaryPlan(fsp.getFlightSchedulePlanID(), returnFsp.getFlightSchedulePlanID());
             ////////////  
             
@@ -501,7 +542,16 @@ public class TestDataSessionBean {
                 Date date = c.getTime();
                 info.add(new Pair<>(date, fs.getDuration()));
             }
-            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares, flight2.getFlightID(), info);
+            
+            fares2.clear();
+            fares2.add(new FareEntity("F001", BigDecimal.valueOf(3100), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("F002", BigDecimal.valueOf(2850), CabinClassTypeEnum.F));
+            fares2.add(new FareEntity("J001", BigDecimal.valueOf(1600), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("J002", BigDecimal.valueOf(1350), CabinClassTypeEnum.J));
+            fares2.add(new FareEntity("Y001", BigDecimal.valueOf(600), CabinClassTypeEnum.Y));
+            fares2.add(new FareEntity("Y002", BigDecimal.valueOf(350), CabinClassTypeEnum.Y));
+            
+            returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares2, flight2.getFlightID(), info);
             flightSchedulePlanSessionBean.associateExistingPlanToComplementaryPlan(fsp.getFlightSchedulePlanID(), returnFsp.getFlightSchedulePlanID());        
             ////////////  
         } catch (EmployeeUsernameExistException | UnknownPersistenceException | PartnerUsernameExistException | AirportExistException | AircraftTypeExistException | CreateNewAircraftConfigException | AircraftConfigExistException | FlightRouteNotFoundException | FlightExistException | AircraftConfigNotFoundException | FlightNotFoundException | FlightSchedulePlanNotFoundException | FareExistException | ParseException | InputDataValidationException | FlightSchedulePlanExistException | AirportNotFoundException ex) {

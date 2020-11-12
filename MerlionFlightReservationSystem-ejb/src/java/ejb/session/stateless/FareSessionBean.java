@@ -57,7 +57,7 @@ public class FareSessionBean implements FareSessionBeanRemote, FareSessionBeanLo
                 flightSchedulePlan.getFares().add(fare);
                 fare.setFlightSchedulePlan(flightSchedulePlan);
 
-                em.flush();
+               
                 return fare;
             } catch (PersistenceException ex) { 
                 if (ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {

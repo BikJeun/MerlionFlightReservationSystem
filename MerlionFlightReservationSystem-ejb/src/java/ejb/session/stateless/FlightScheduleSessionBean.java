@@ -228,7 +228,9 @@ public class FlightScheduleSessionBean implements FlightScheduleSessionBeanRemot
     @Override
     public FareEntity getSmallestFare(FlightScheduleEntity flightSchedule, CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, CabinClassNotFoundException {
         FlightScheduleEntity flightScheduleEntity = retrieveFlightScheduleById(flightSchedule.getFlightScheduleID());
+        System.out.println("this1: " + flightScheduleEntity.getFlightSchedulePlan().getFares().size());
         List<FareEntity> fares = flightScheduleEntity.getFlightSchedulePlan().getFares();
+        System.out.println("this : " + fares.size());
         List<FareEntity> ccfares = new ArrayList<>();
         for (FareEntity fare: fares) {
             if (fare.getCabinClassType().equals(cabinClassType)) {

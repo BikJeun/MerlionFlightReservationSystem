@@ -75,7 +75,7 @@ public class FlightReservationWebService {
             @WebParam(name = "destination") String destination, 
             @WebParam(name = "date") Date date,
             @WebParam(name = "cabinclasstype") CabinClassTypeEnum cabinclasstype) throws FlightNotFoundException {
-        return flightScheduleSessionBean.getFlightSchedules(destination, destination, date, cabinclasstype);
+        return flightScheduleSessionBean.getFlightSchedules(origin, destination, date, cabinclasstype);
     }
     
     @WebMethod(operationName = "getBiggestFare")

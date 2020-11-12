@@ -6,6 +6,7 @@
 package entity;
 
 import java.io.Serializable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,11 +35,11 @@ public class SeatInventoryEntity implements Serializable {
     @Column(nullable = false)
     private char[][] seats;
     
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH)
     @JoinColumn(nullable = false)
     private CabinClassEntity cabin;
     
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH)
     @JoinColumn(nullable = false)
     private FlightScheduleEntity flightSchedule;
 

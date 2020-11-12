@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -40,14 +41,14 @@ public class FlightRouteEntity implements Serializable {
     @Column(nullable = false)
     private boolean disabled;
     
-    @OneToMany(mappedBy = "flightRoute", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "flightRoute", fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
     private List<FlightEntity> flights;
     
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "origin")
     private AirportEntity origin;
     
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "destination")
     private AirportEntity destination;
     

@@ -26,5 +26,9 @@ public interface ItinerarySessionBeanLocal {
      public List<ItineraryEntity> retrieveItinerariesByCustomerId(Long userID);
     
     public ItineraryEntity createNewItinerary(ItineraryEntity itinerary, long userId) throws UnknownPersistenceException, InputDataValidationException, UserNotFoundException, ItineraryExistException; 
+
+    public ItineraryEntity retrieveItineraryByIDUnmanaged(long itineraryId) throws ItineraryNotFoundException;
+
+    public List<ItineraryEntity> retrieveItinerariesByCustomerIdUnmanaged(Long userID);
     
 }

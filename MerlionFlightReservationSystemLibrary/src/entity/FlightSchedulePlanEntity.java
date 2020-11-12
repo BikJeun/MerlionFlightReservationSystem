@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -57,19 +58,19 @@ public class FlightSchedulePlanEntity implements Serializable {
     @Column(nullable = true)
     private Date recurrentEndDate;
     
-    @OneToMany(mappedBy = "flightSchedulePlan",  fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "flightSchedulePlan",  fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
     private List<FlightScheduleEntity> flightSchedule;
     
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH)
     @JoinColumn(nullable = false)
     private FlightEntity flight;
     
-    @OneToMany(mappedBy = "flightSchedulePlan",  fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "flightSchedulePlan",  fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
     private List<FareEntity> fares;
     
-    @OneToOne(mappedBy = "complementary")
+    @OneToOne(mappedBy = "complementary", cascade = CascadeType.DETACH)
     private FlightSchedulePlanEntity source;
-    @OneToOne
+    @OneToOne(cascade = CascadeType.DETACH)
     private FlightSchedulePlanEntity complementary;
     
     public FlightSchedulePlanEntity() {

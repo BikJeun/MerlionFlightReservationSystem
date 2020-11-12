@@ -8,6 +8,7 @@ package entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -42,11 +43,11 @@ public class ItineraryEntity implements Serializable {
     @Size(min = 3, max = 3)
     private String cvv;
   
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH)
     @JoinColumn(nullable = false)
     private UserEntity user;
     
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "itinerary")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "itinerary", cascade = CascadeType.DETACH)
     private List<ReservationEntity> reservations;
 
     public ItineraryEntity() {

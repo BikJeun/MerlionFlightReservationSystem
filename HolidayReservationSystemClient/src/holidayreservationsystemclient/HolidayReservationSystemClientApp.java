@@ -17,7 +17,7 @@ import ejb.session.ws.ItineraryEntity;
 import ejb.session.ws.ItineraryExistException_Exception;
 import ejb.session.ws.ItineraryNotFoundException_Exception;
 import ejb.session.ws.MyPair;
-import ejb.session.ws.PartnerEntity;
+import ejb.session.ws.ParseException_Exception;
 import ejb.session.ws.PassengerEntity;
 import ejb.session.ws.ReservationEntity;
 import ejb.session.ws.ReservationExistException_Exception;
@@ -32,12 +32,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Scanner;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import net.java.dev.jaxb.array.UnsignedShortArray;
 
 /**
@@ -47,7 +43,7 @@ import net.java.dev.jaxb.array.UnsignedShortArray;
 public class HolidayReservationSystemClientApp {
 
     boolean login;
-    PartnerEntity currentPartner;
+    Long currentPartner;
 
     public HolidayReservationSystemClientApp() {
     }
@@ -83,7 +79,7 @@ public class HolidayReservationSystemClientApp {
         Integer response = 0;
 
         while (login) {
-            System.out.println("You are currently logged in from " + currentPartner.getName() + "!\n");
+            System.out.println("Welcome to Holiday Reservation System!\n");
             System.out.println("1: Search Flight");
             System.out.println("2: Reserve Flight");
             System.out.println("3: View My Flight Reservation");
@@ -151,12 +147,13 @@ public class HolidayReservationSystemClientApp {
 
         System.out.print("Enter destination airport (By IATA code)> ");
         String destination = sc.nextLine().trim();
-
+           
         Date departureDate;
+        String date;
         while (true) {
-            try {
+            try { 
                 System.out.print("Enter departure date (dd/mm/yyyy)> ");
-                String date = sc.nextLine().trim();
+                date = sc.nextLine().trim();
                 departureDate = inputFormat.parse(date);
                 break;
             } catch (ParseException ex) {
@@ -205,25 +202,25 @@ public class HolidayReservationSystemClientApp {
 
         if (flightPref == 1) {
             try {
-                List<FlightScheduleEntity> dateActualFlightScheduleOutBound = getFlightSchedules(departure, destination, departureDate, cabin);
+                List<FlightScheduleEntity> dateActualFlightScheduleOutBound = getFlightSchedules(departure, destination, departureDate.toString(), cabin);
 
                 Calendar c = Calendar.getInstance();
 
                 c.setTime(departureDate);
                 c.add(Calendar.DATE, 1);
-                List<FlightScheduleEntity> dateAddOneFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateAddOneFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, 1);
-                List<FlightScheduleEntity> dateAddTwoFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateAddTwoFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, 1);
-                List<FlightScheduleEntity> dateAddThreeFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateAddThreeFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
 
                 c.setTime(departureDate);
                 c.add(Calendar.DATE, -1);
-                List<FlightScheduleEntity> dateMinusOneFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateMinusOneFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, -1);
-                List<FlightScheduleEntity> dateMinusTwoFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateMinusTwoFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, -1);
-                List<FlightScheduleEntity> dateMinusThreeFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateMinusThreeFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
 
                 System.out.println("                      ============= Available Outbound Flights ============= ");
                 
@@ -254,7 +251,7 @@ public class HolidayReservationSystemClientApp {
             } catch (FlightNotFoundException_Exception ex) {
                 System.out.print("Sorry, there are no flights with your desired flight route\n");
                 return;
-            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception ex) {
+            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ParseException_Exception ex) {
                 // wont hit
             }
         
@@ -262,25 +259,25 @@ public class HolidayReservationSystemClientApp {
         }
         if (flightPref == 2) {
             try {
-                List<MyPair> dateActualFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, departureDate, cabin);
+                List<MyPair> dateActualFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, departureDate.toString(), cabin);
 
                 Calendar c = Calendar.getInstance();
 
                 c.setTime(departureDate);
                 c.add(Calendar.DATE, 1);
-                List<MyPair> dateAddOneFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<MyPair> dateAddOneFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, 1);
-                List<MyPair> dateAddTwoFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<MyPair> dateAddTwoFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, 1);
-                List<MyPair> dateAddThreeFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<MyPair> dateAddThreeFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
 
                 c.setTime(departureDate);
                 c.add(Calendar.DATE, -1);
-                List<MyPair> dateMinusOneFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<MyPair> dateMinusOneFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, -1);
-                List<MyPair> dateMinusTwoFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<MyPair> dateMinusTwoFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, -1);
-                List<MyPair> dateMinusThreeFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime(), cabin);
+                List<MyPair> dateMinusThreeFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
 
                 System.out.println("                      ============= Available Outbound Flights ============= ");
 
@@ -308,7 +305,7 @@ public class HolidayReservationSystemClientApp {
             } catch (FlightNotFoundException_Exception ex) {
                 System.out.println("Sorry there are not indirect flights for your specified route");
                 return;
-            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception ex) {
+            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ParseException_Exception ex) {
                 // will nvr hit
             }                         
         }
@@ -321,33 +318,33 @@ public class HolidayReservationSystemClientApp {
             while (true) {
                 try {
                     System.out.print("Enter departure date (dd/mm/yyyy)> ");
-                    String date = sc.nextLine().trim();
-                    returnDate = inputFormat.parse(date);
+                    String date2 = sc.nextLine().trim();
+                    returnDate = inputFormat.parse(date2);
                     break;
                 } catch (ParseException ex) {
                     System.out.println("Error: Invalid date\nPlease try again!");
                 }
             }
             try {
-                List<FlightScheduleEntity> dateActualFlightScheduleInBound = getFlightSchedules(destination, departure, returnDate, cabin);
+                List<FlightScheduleEntity> dateActualFlightScheduleInBound = getFlightSchedules(destination, departure, returnDate.toString(), cabin);
 
                 Calendar c = Calendar.getInstance();
 
                 c.setTime(returnDate);
                 c.add(Calendar.DATE, 1);
-                List<FlightScheduleEntity> dateAddOneFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateAddOneFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, 1);
-                List<FlightScheduleEntity> dateAddTwoFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateAddTwoFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, 1);
-                List<FlightScheduleEntity> dateAddThreeFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateAddThreeFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
 
                 c.setTime(returnDate);
                 c.add(Calendar.DATE, -1);
-                List<FlightScheduleEntity> dateMinusOneFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateMinusOneFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, -1);
-                List<FlightScheduleEntity> dateMinusTwoFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateMinusTwoFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, -1);
-                List<FlightScheduleEntity> dateMinusThreeFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<FlightScheduleEntity> dateMinusThreeFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
                 
                      System.out.println("                      ============= Available Inbound Flights ============= ");
 
@@ -375,7 +372,7 @@ public class HolidayReservationSystemClientApp {
             } catch (FlightNotFoundException_Exception ex) {
                 System.out.print("Sorry there are no return flights for this flight route within this period");
                 return;
-            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception ex) {
+            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ParseException_Exception ex) {
                 // will nvr hit this
             }         
         }
@@ -386,8 +383,8 @@ public class HolidayReservationSystemClientApp {
             while (true) {
                 try {
                     System.out.print("Enter departure date (dd/mm/yyyy)> ");
-                    String date = sc.nextLine().trim();
-                    returnDate = inputFormat.parse(date);
+                    String date2 = sc.nextLine().trim();
+                    returnDate = inputFormat.parse(date2);
                     break;
                 } catch (ParseException ex) {
                     System.out.println("Error: Invalid date\nPlease try again!");
@@ -395,25 +392,25 @@ public class HolidayReservationSystemClientApp {
             }
 
             try {
-                List<MyPair> dateActualFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, returnDate, cabin);
+                List<MyPair> dateActualFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, returnDate.toString(), cabin);
 
                 Calendar c = Calendar.getInstance();
 
                 c.setTime(returnDate);
                 c.add(Calendar.DATE, 1);
-                List<MyPair> dateAddOneFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<MyPair> dateAddOneFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, 1);
-                List<MyPair> dateAddTwoFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<MyPair> dateAddTwoFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, 1);
-                List<MyPair> dateAddThreeFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<MyPair> dateAddThreeFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
 
                 c.setTime(returnDate);
                 c.add(Calendar.DATE, -1);
-                List<MyPair> dateMinusOneFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<MyPair> dateMinusOneFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, -1);
-                List<MyPair> dateMinusTwoFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<MyPair> dateMinusTwoFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
                 c.add(Calendar.DATE, -1);
-                List<MyPair> dateMinusThreeFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime(), cabin);
+                List<MyPair> dateMinusThreeFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
 
                 System.out.println("                      ============= Available Inbound Flights ============= ");
 
@@ -441,9 +438,10 @@ public class HolidayReservationSystemClientApp {
             } catch (FlightNotFoundException_Exception ex) {
                 System.out.print("Sorry there are no indirect return flights for this flight route within this period");
                 return;
-            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception ex) {
+            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ParseException_Exception ex) {
                 // will never hit this
             }
+            
                  
          
         }
@@ -550,7 +548,7 @@ public class HolidayReservationSystemClientApp {
                 String cvv = sc.nextLine().trim();
                 
                 
-                long itineraryId = createNewItinerary(creditCardNum, cvv, currentPartner.getUserID());
+                long itineraryId = createNewItinerary(creditCardNum, cvv, currentPartner);
                                
                 List<PassengerEntity> passengers = obtainPassengerDetails(noOfPassengers);
                 
@@ -559,7 +557,7 @@ public class HolidayReservationSystemClientApp {
                 }
                 createNewReservation(outbound1Reservation, passengers, outbound1FlightSchedule.getFlightScheduleID(), itineraryId);                  
                 
-                System.out.println("Reservation Itinerary (Booking ID: " + itineraryId + ") created successfully for User " + currentPartner.getUserID() + "!\n");
+                System.out.println("Reservation Itinerary (Booking ID: " + itineraryId + ") created successfully!\n");
             } else if (outbound2 == null && inbound2 == null) {
                 outbound1FlightSchedule = retrieveFlightScheduleById(outbound1);
                 System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -599,7 +597,7 @@ public class HolidayReservationSystemClientApp {
                 System.out.print("Enter cvv> ");
                 String cvv = sc.nextLine().trim();
                 
-                long itineraryId = createNewItinerary(creditCardNum, cvv, currentPartner.getUserID());
+                long itineraryId = createNewItinerary(creditCardNum, cvv, currentPartner);
                 
                 for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
@@ -611,7 +609,7 @@ public class HolidayReservationSystemClientApp {
                 }  
                 createNewReservation(inbound1Reservation, passengers, inbound1FlightSchedule.getFlightScheduleID(), itineraryId);  
                 
-                System.out.println("Reservation Itinerary (Booking ID: " + itineraryId + ") created successfully for User " + currentPartner.getUserID() + "!\n");
+                System.out.println("Reservation Itinerary (Booking ID: " + itineraryId + ") created successfully!\n");
             } else if (inbound1 == null && inbound2 == null) {
                 outbound1FlightSchedule = retrieveFlightScheduleById(outbound1);
                 System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -651,7 +649,7 @@ public class HolidayReservationSystemClientApp {
                 System.out.print("Enter cvv> ");
                 String cvv = sc.nextLine().trim();
                 
-                long itineraryId = createNewItinerary(creditCardNum, cvv, currentPartner.getUserID());
+                long itineraryId = createNewItinerary(creditCardNum, cvv, currentPartner);
                       
                 for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
@@ -663,7 +661,7 @@ public class HolidayReservationSystemClientApp {
                 }
                 createNewReservation(outbound2Reservation, passengers, outbound2FlightSchedule.getFlightScheduleID(), itineraryId);
                 
-                System.out.println("Reservation Itinerary (Booking ID: " + itineraryId + ") created successfully for User " + currentPartner.getUserID() + "!\n");
+                System.out.println("Reservation Itinerary (Booking ID: " + itineraryId + ") created successfully!\n");
             } else {
                 outbound1FlightSchedule = retrieveFlightScheduleById(outbound1);
                 System.out.println("Seat Selection for outbound flight " + outbound1FlightSchedule.getFlightSchedulePlan().getFlightNum());
@@ -731,7 +729,7 @@ public class HolidayReservationSystemClientApp {
                 System.out.print("Enter cvv> ");
                 String cvv = sc.nextLine().trim();
                  
-                long itineraryId = createNewItinerary(creditCardNum, cvv, currentPartner.getUserID());
+                long itineraryId = createNewItinerary(creditCardNum, cvv, currentPartner);
                 
                  for (int i = 0; i < passengers.size(); i++) {
                     passengers.get(i).setSeatNumber(outbound1SeatSelection.get(i));
@@ -753,7 +751,7 @@ public class HolidayReservationSystemClientApp {
                 }  
                 createNewReservation(inbound2Reservation, passengers, inbound2FlightSchedule.getFlightScheduleID(), itineraryId);
                 
-                System.out.println("Reservation Itinerary (Booking ID: " + itineraryId + ") created successfully for User " + currentPartner.getUserID() + "!\n");
+                System.out.println("Reservation Itinerary (Booking ID: " + itineraryId + ") created successfully!\n");
             }           
         } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ReservationExistException_Exception | UnknownPersistenceException_Exception | UserNotFoundException_Exception | SeatInventoryNotFoundException_Exception | UpdateSeatsException_Exception | InputDataValidationException_Exception | ItineraryExistException_Exception | ItineraryNotFoundException_Exception ex) {
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n");
@@ -799,18 +797,15 @@ public class HolidayReservationSystemClientApp {
         int totalBalanceSeats = seatInventory.getBalance();
         
         //idk how change to char
-        int[][] seats = new int[seatInventory.getCabin().getNumOfRows()][seatInventory.getCabin().getNumOfSeatsAbreast()];
+        char[][] seats = new char[seatInventory.getCabin().getNumOfRows()][seatInventory.getCabin().getNumOfSeatsAbreast()];
 
-        for(UnsignedShortArray a:seatInventory.getSeats()) {  
-            List<Integer> list = a.getItem();
-            for(int i = 0; i < seats.length; i++) {
-                for(int j = 0; j < seats[0].length; j++) {
-                    seats[i][j] = list.get(j);
-                }
+        for(int i = 0; i < seats.length; i++) {
+            List<Integer> list = seatInventory.getSeats().get(i).getItem();
+            for(int j = 0; j < seats[0].length; j++) {
+                seats[i][j] = (char) list.get(j).intValue();
             }
         }
-        
-        System.out.println(seats);
+        //System.out.println(seats);
         
         //char[][] seats = seatInventory.getSeats();
         String cabinClassConfig = seatInventory.getCabin().getSeatingConfigPerColumn();
@@ -924,7 +919,7 @@ public class HolidayReservationSystemClientApp {
     private void doViewFlightReservation() {
         Scanner sc = new Scanner(System.in);
         System.out.println("*** View Flight Reservations ***\n");
-        List<ItineraryEntity> list = retrieveItinerariesByUserId(currentPartner.getUserID());
+        List<ItineraryEntity> list = retrieveItinerariesByUserId(currentPartner);
         for (ItineraryEntity itinerary : list) {
             System.out.println("Itinerary Reservation ID: " + itinerary.getItineraryId());
             System.out.println();
@@ -1192,7 +1187,7 @@ public class HolidayReservationSystemClientApp {
         return port.checkIfBooked(seatinventoryentity, seatnumber);
     }
 
-    private static PartnerEntity doLogin(java.lang.String username, java.lang.String password) throws InvalidLoginCredentialException_Exception {
+    private static Long doLogin(java.lang.String username, java.lang.String password) throws InvalidLoginCredentialException_Exception {
         ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
         ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
         return port.doLogin(username, password);
@@ -1210,32 +1205,6 @@ public class HolidayReservationSystemClientApp {
         return port.getCorrectSeatInventory(flightscheduleentity, cabinclasstype);
     }
 
-    private static java.util.List<ejb.session.ws.FlightScheduleEntity> getFlightSchedules(java.lang.String origin, java.lang.String destination, java.util.Date date, ejb.session.ws.CabinClassTypeEnum cabinclasstype) throws FlightNotFoundException_Exception {
-        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
-        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
-        
-        XMLGregorianCalendar cal;
-        try {
-            cal = DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar(date.getYear(), date.getMonth(), date.getDay(), date.getHours(), date.getMinutes(), date.getSeconds()));
-            return port.getFlightSchedules(origin, destination, cal, cabinclasstype);
-        } catch (DatatypeConfigurationException ex) {
-            System.out.println(ex.getMessage());
-        }
-        return null;     
-    }
-
-    private static java.util.List<ejb.session.ws.MyPair> getIndirectFlightSchedules(java.lang.String origin, java.lang.String destination, java.util.Date date, ejb.session.ws.CabinClassTypeEnum cabinclasstype) throws FlightNotFoundException_Exception {
-        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
-        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
-        XMLGregorianCalendar cal;
-        try {
-            cal = DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar(date.getYear(), date.getMonth(), date.getDay(), date.getHours(), date.getMinutes(), date.getSeconds()));
-            return port.getIndirectFlightSchedules(origin, destination, cal, cabinclasstype);
-        } catch (DatatypeConfigurationException ex) {
-            System.out.println(ex.getMessage());
-        }
-        return null; 
-    }
 
     private static FlightScheduleEntity retrieveFlightScheduleById(long flightscheduleid) throws FlightScheduleNotFoundException_Exception {
         ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
@@ -1265,6 +1234,19 @@ public class HolidayReservationSystemClientApp {
         ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
         ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
         return port.retreiveItineraryById(itineraryid);
+    }
+
+
+    private static java.util.List<ejb.session.ws.FlightScheduleEntity> getFlightSchedules(java.lang.String origin, java.lang.String destination, java.lang.String date, ejb.session.ws.CabinClassTypeEnum cabinclasstype) throws FlightNotFoundException_Exception, ParseException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.getFlightSchedules(origin, destination, date, cabinclasstype);
+    }
+
+    private static java.util.List<ejb.session.ws.MyPair> getIndirectFlightSchedules(java.lang.String origin, java.lang.String destination, java.lang.String date, ejb.session.ws.CabinClassTypeEnum cabinclasstype) throws FlightNotFoundException_Exception, ParseException_Exception {
+        ejb.session.ws.FlightReservationWebService_Service service = new ejb.session.ws.FlightReservationWebService_Service();
+        ejb.session.ws.FlightReservationWebService port = service.getFlightReservationWebServicePort();
+        return port.getIndirectFlightSchedules(origin, destination, date, cabinclasstype);
     }
     
     

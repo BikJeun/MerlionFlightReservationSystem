@@ -8,6 +8,7 @@ package entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -32,7 +33,7 @@ public class AircraftTypeEntity implements Serializable {
     @Column(nullable = false)
     private int maxCapacity;
     
-    @OneToMany(mappedBy = "aircraftType", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "aircraftType", fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
     private List<AircraftConfigurationEntity> aircraftConfig;
 
     public AircraftTypeEntity() {

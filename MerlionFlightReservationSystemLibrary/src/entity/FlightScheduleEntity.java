@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import javafx.util.Pair;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -46,14 +47,14 @@ public class FlightScheduleEntity implements Serializable {
     @Max(24)
     private double duration;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH)
     @JoinColumn(nullable = false)
     private FlightSchedulePlanEntity flightSchedulePlan;
     
-    @OneToMany(mappedBy = "flightSchedule", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "flightSchedule", fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
     private List<SeatInventoryEntity> seatInventory;
     
-    @OneToMany(mappedBy = "flightSchedule", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "flightSchedule", fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
     private List<ReservationEntity> reservations;
 
     public FlightScheduleEntity() {

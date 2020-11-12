@@ -35,10 +35,20 @@ public interface FlightScheduleSessionBeanLocal {
 
     public List<FlightScheduleEntity> getFlightSchedules(String departure, String destination, Date date, CabinClassTypeEnum cabin) throws FlightNotFoundException;
 
-    public FareEntity getBiggestFare(FlightScheduleEntity flightScheduleEntity, CabinClassTypeEnum type) throws FlightScheduleNotFoundException, CabinClassNotFoundException;
+    //public FareEntity getBiggestFare(FlightScheduleEntity flightScheduleEntity, CabinClassTypeEnum type) throws FlightScheduleNotFoundException, CabinClassNotFoundException;
 
     public List<Pair<FlightScheduleEntity, FlightScheduleEntity>> getIndirectFlightSchedules(String departure, String destination, Date date, CabinClassTypeEnum cabin)  throws FlightNotFoundException;
 
     public SeatInventoryEntity getCorrectSeatInventory(FlightScheduleEntity flightSchedule, CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, SeatInventoryNotFoundException;
+
+    public SeatInventoryEntity getCorrectSeatInventoryUnmanaged(FlightScheduleEntity flightSchedule, CabinClassTypeEnum cabinClassType) throws FlightScheduleNotFoundException, SeatInventoryNotFoundException;
+
+    public List<FlightScheduleEntity> getFlightSchedulesUnmanaged(String departure, String destination, Date date, CabinClassTypeEnum cabin) throws FlightNotFoundException;
+
+    public List<Pair<FlightScheduleEntity, FlightScheduleEntity>> getIndirectFlightSchedulesUnmanaged(String departure, String destination, Date date, CabinClassTypeEnum cabin) throws FlightNotFoundException;
+
+    public FlightScheduleEntity retrieveFlightScheduleByIdUnmanaged(Long flightScheduleID) throws FlightScheduleNotFoundException;
+
+    public FareEntity getBiggestFareUnmanaged(FlightScheduleEntity flightScheduleEntity, CabinClassTypeEnum type) throws FlightScheduleNotFoundException, CabinClassNotFoundException;
     
 }

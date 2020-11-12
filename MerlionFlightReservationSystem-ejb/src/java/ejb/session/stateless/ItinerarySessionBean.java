@@ -87,11 +87,34 @@ public class ItinerarySessionBean implements ItinerarySessionBeanRemote, Itinera
     }
     
     @Override
+    public ItineraryEntity retrieveItineraryByIDUnmanaged(long itineraryId) throws ItineraryNotFoundException {
+        ItineraryEntity itinerary = em.find(ItineraryEntity.class, itineraryId);
+        if (itinerary == null) {
+            throw new ItineraryNotFoundException("Itinerary not found");
+        } else {
+            em.detach(itinerary);
+            return itinerary;
+        }
+    }
+    
+    @Override
     public List<ItineraryEntity> retrieveItinerariesByCustomerId(Long userID) {
         Query query = em.createQuery("SELECT r FROM ItineraryEntity r WHERE r.user.UserID = :id");
         query.setParameter("id", userID);
         
         return query.getResultList();
+    }
+    
+    @Override
+    public List<ItineraryEntity> retrieveItinerariesByCustomerIdUnmanaged(Long userID) {
+        Query query = em.createQuery("SELECT r FROM ItineraryEntity r WHERE r.user.UserID = :id");
+        query.setParameter("id", userID);
+        
+        List<ItineraryEntity> list =  query.getResultList();
+        for (ItineraryEntity it: list) {
+            em.detach(it);
+        }
+        return list;
     }
     
     private String prepareInputDataValidationErrorsMessage(Set<ConstraintViolation<ItineraryEntity>> constraintViolations) {

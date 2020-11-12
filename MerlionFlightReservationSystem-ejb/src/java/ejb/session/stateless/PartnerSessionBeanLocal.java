@@ -20,6 +20,6 @@ public interface PartnerSessionBeanLocal {
 
     public PartnerEntity createNewPartner(PartnerEntity partner) throws PartnerUsernameExistException, UnknownPersistenceException;
 
-    public PartnerEntity doLogin(String username, String password) throws InvalidLoginCredentialException;
+    public long doLogin(String username, String password) throws InvalidLoginCredentialException;
     
 }

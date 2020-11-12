@@ -8,6 +8,7 @@ package entity;
 import enumeration.CabinClassTypeEnum;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -51,7 +52,7 @@ public class FareEntity implements Serializable {
     @NotNull
     private CabinClassTypeEnum cabinClassType;
     
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH)
     @JoinColumn(nullable = false)
     private FlightSchedulePlanEntity flightSchedulePlan;
 

@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -37,22 +38,22 @@ public class FlightEntity implements Serializable {
     @Column(nullable = false)
     private boolean disabled;
     
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH)
     @JoinColumn(nullable = false)
     private FlightRouteEntity flightRoute;
     
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, cascade = CascadeType.DETACH)
     @JoinColumn(nullable = false)
     private AircraftConfigurationEntity aircraftConfig;
     
-    @OneToMany(mappedBy = "flight", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "flight", fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
     private List<FlightSchedulePlanEntity> flightSchedulePlan;
     
     //One-to-One self referencing constraints (please check)
     //QN: Why is a self referencing like this??
-    @OneToOne
+    @OneToOne(cascade = CascadeType.DETACH)
     private FlightEntity returningFlight;
-    @OneToOne(mappedBy = "returningFlight")
+    @OneToOne(mappedBy = "returningFlight", cascade = CascadeType.DETACH)
     private FlightEntity sourceFlight;
 
     public FlightEntity() {

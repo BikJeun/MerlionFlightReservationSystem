@@ -207,7 +207,7 @@ public class FlightReservationWebService {
         SeatInventoryEntity seats = flightScheduleSessionBean.getCorrectSeatInventoryUnmanaged(flightscheduleentity, cabinclasstype);
         if (seats.getCabin()!= null) {seats.getCabin().setAircraftConfig(null);}
         seats.setFlightSchedule(null);
-        return flightScheduleSessionBean.getCorrectSeatInventory(flightscheduleentity, cabinclasstype);
+        return seats;
     }
     
     @WebMethod(operationName = "checkIfBooked")

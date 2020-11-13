@@ -544,12 +544,10 @@ public class HolidayReservationSystemClientApp {
          }
 
         if (type == 2 && flightPref == 1) {
-            System.out.print("Enter return date (dd/mm/yyyy)> ");
-
             Date returnDate;
             while (true) {
                 try {
-                    System.out.print("Enter departure date (dd/mm/yyyy)> ");
+                    System.out.print("Enter return date (dd/mm/yyyy)> ");
                     String date2 = sc.nextLine().trim();
                     returnDate = inputFormat.parse(date2);
                     break;
@@ -609,12 +607,11 @@ public class HolidayReservationSystemClientApp {
             }         
         }
         if (type == 2 && flightPref == 2) {
-            System.out.print("Enter return date (dd/mm/yyyy)> ");
 
             Date returnDate;
             while (true) {
                 try {
-                    System.out.print("Enter departure date (dd/mm/yyyy)> ");
+                    System.out.print("Enter return date (dd/mm/yyyy)> ");
                     String date2 = sc.nextLine().trim();
                     returnDate = inputFormat.parse(date2);
                     break;

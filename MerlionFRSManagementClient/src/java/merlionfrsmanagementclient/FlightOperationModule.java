@@ -547,8 +547,9 @@ public class FlightOperationModule {
                 case 4:
                     plan.setTypeExistingInPlan(ScheduleTypeEnum.RECURRENTWEEK);
                     pair = getFlightScheduleInfo();
-                    System.out.println("Enter recurrent day (1 -> Sunday , 7 -> Saturday)> ");
+                    System.out.print("Enter recurrent day (1 -> Sunday , 7 -> Saturday)> ");
                     recurrentDay = sc.nextInt();
+                    sc.nextLine();
                     System.out.print("Enter recurrent end date (dd/mm/yyyy)> ");
                     String date1 = sc.nextLine().trim();
                     Date weekEnd = recurrentInputFormat.parse(date1);
@@ -689,7 +690,7 @@ public class FlightOperationModule {
                     System.out.println("Fares successfully created!\n");
                     
                     returnPlan = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnPlan, fares2, returnFlight.getFlightID(), info2);
-                    System.out.println("New Flight Schedule Plan for Return Flight " + plan.getFlightNum() + " created successfully!\n");
+                    System.out.println("New Flight Schedule Plan for Return Flight " + returnPlan.getFlightNum() + " created successfully!\n");
 
                     flightSchedulePlanSessionBean.associateExistingPlanToComplementaryPlan(plan.getFlightSchedulePlanID(), returnPlan.getFlightSchedulePlanID()); 
                  

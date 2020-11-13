@@ -787,7 +787,7 @@ public class MainApp {
                 System.out.print("Enter the inbound flight you would like to reserve (Flight ID)> ");
                 inbound1 = sc.nextLong();
                 sc.nextLine();   
-                outbound2 = sc.nextLong();
+                
             } else if (type == 2 && choice == 2) {
                 System.out.print("Enter the first outbound flight you would like to reserve (Flight ID)> ");
                  outbound1 = sc.nextLong();

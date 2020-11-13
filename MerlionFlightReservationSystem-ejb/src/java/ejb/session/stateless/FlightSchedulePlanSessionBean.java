@@ -83,10 +83,11 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
                 } else {
                     Date presentDate = pair.getKey();
                     Date endDate = plan.getRecurrentEndDate();
-                    
+                    // set initial day (wed)
                     while(endDate.compareTo(presentDate) > 0) {
                         Calendar c = Calendar.getInstance();
                         c.setTime(presentDate);
+                        // here: from presentdate, set to first instance of day (eg wednesday)
                         FlightScheduleEntity schedule = new FlightScheduleEntity(c.getTime(), pair.getValue());
                         flightScheduleSessionBean.createNewSchedule(plan, schedule);
                         c.add(Calendar.DAY_OF_MONTH, recurrent);         

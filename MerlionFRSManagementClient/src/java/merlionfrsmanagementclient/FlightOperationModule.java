@@ -768,7 +768,7 @@ public class FlightOperationModule {
             
             for (FlightScheduleEntity list : schedule) { 
                 for (FareEntity fares : fare) {
-                    System.out.printf("%10s%15s%20s%25s%30s%25s%40s%40s%20s%30s\n", plan.getFlightSchedulePlanID(), plan.getFlightNum(), plan.getTypeExistingInPlan(), list.getFlightScheduleID(), list.getDepartureDateTime(), list.getDuration(), route.getOrigin().getAirportName(), route.getDestination().getAirportName(), fares.getCabinClassType(), fares.getFareAmount());
+                    System.out.printf("%10s%15s%20s%25s%30s%25s%40s%40s%20s%30s\n", plan.getFlightSchedulePlanID(), plan.getFlightNum(), plan.getTypeExistingInPlan(), list.getFlightScheduleID(), list.getDepartureDateTime().toString().substring(0, 19), list.getDuration(), route.getOrigin().getAirportName(), route.getDestination().getAirportName(), fares.getCabinClassType(), fares.getFareAmount());
                 }
             }
             System.out.println("--------------------------");
@@ -817,6 +817,7 @@ public class FlightOperationModule {
             System.out.println(" * All Fares *");
             for (FareEntity fare: plan.getFares()) {
                 System.out.println(i+ ") " + fare.getFareBasisCode() + ", $" + fare.getFareAmount());
+                i++;
             }
             System.out.print("Which fare would you like to update (index no)> ");
             int choice = sc.nextInt();

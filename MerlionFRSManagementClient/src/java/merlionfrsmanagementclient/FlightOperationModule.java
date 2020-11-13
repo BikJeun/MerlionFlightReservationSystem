@@ -501,6 +501,7 @@ public class FlightOperationModule {
             SimpleDateFormat recurrentInputFormat = new SimpleDateFormat("dd/M/yyyy");
             List<Pair<Date, Double>> info = new ArrayList<>();
             Pair<Date, Double> pair = null;
+            int recurrentDay = 0;
             
             System.out.println("*** Create a new flight schedule plan ***");
                       
@@ -546,6 +547,8 @@ public class FlightOperationModule {
                 case 4:
                     plan.setTypeExistingInPlan(ScheduleTypeEnum.RECURRENTWEEK);
                     pair = getFlightScheduleInfo();
+                    System.out.println("Enter recurrent day (1 -> Sunday , 7 -> Saturday)> ");
+                    recurrentDay = sc.nextInt();
                     System.out.print("Enter recurrent end date (dd/mm/yyyy)> ");
                     String date1 = sc.nextLine().trim();
                     Date weekEnd = recurrentInputFormat.parse(date1);
@@ -598,7 +601,7 @@ public class FlightOperationModule {
                     sc.nextLine();
                     plan = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(plan, fares, flight.getFlightID(), pair, days);
                 } else if (plan.getTypeExistingInPlan().equals(ScheduleTypeEnum.RECURRENTWEEK)) {
-                    plan = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(plan, fares, flight.getFlightID(), pair, 7);
+                    plan = flightSchedulePlanSessionBean.createNewFlightSchedulePlanWeekly(plan, fares, flight.getFlightID(), pair, recurrentDay);
                 } else {
                     plan = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(plan, fares, flight.getFlightID(), pair, 0);
                 }

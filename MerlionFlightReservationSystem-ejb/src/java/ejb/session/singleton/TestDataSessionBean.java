@@ -303,7 +303,7 @@ public class TestDataSessionBean {
             fares.add(new FareEntity("Y001", BigDecimal.valueOf(1500), CabinClassTypeEnum.Y));
             fares.add(new FareEntity("Y002", BigDecimal.valueOf(1000), CabinClassTypeEnum.Y));
             
-            fsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(fsp, fares, flight1.getFlightID(), pair, 7);
+            fsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanWeekly(fsp, fares, flight1.getFlightID(), pair, 2);
             
             FlightEntity flight2 = flightSessionBean.retrieveFlightByFlightNumber("ML712");
             FlightSchedulePlanEntity returnFsp = new FlightSchedulePlanEntity(ScheduleTypeEnum.RECURRENTWEEK, recurrentEnd, flight2);
@@ -349,7 +349,7 @@ public class TestDataSessionBean {
             fares.add(new FareEntity("Y001", BigDecimal.valueOf(750), CabinClassTypeEnum.Y));
             fares.add(new FareEntity("Y002", BigDecimal.valueOf(500), CabinClassTypeEnum.Y));
             
-            fsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(fsp, fares, flight1.getFlightID(), pair, 7);
+            fsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanWeekly(fsp, fares, flight1.getFlightID(), pair, 1);
             flight2 = flightSessionBean.retrieveFlightByFlightNumber("ML612");
             returnFsp = new FlightSchedulePlanEntity(ScheduleTypeEnum.RECURRENTWEEK, recurrentEnd, flight2);
             info = new ArrayList<>();
@@ -390,7 +390,7 @@ public class TestDataSessionBean {
             fares.add(new FareEntity("Y001", BigDecimal.valueOf(700), CabinClassTypeEnum.Y));
             fares.add(new FareEntity("Y002", BigDecimal.valueOf(400), CabinClassTypeEnum.Y));
             
-            fsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(fsp, fares, flight1.getFlightID(), pair, 7);
+            fsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanWeekly(fsp, fares, flight1.getFlightID(), pair, 3);
             flight2 = flightSessionBean.retrieveFlightByFlightNumber("ML622");
             returnFsp = new FlightSchedulePlanEntity(ScheduleTypeEnum.RECURRENTWEEK, recurrentEnd, flight2);
             info = new ArrayList<>();
@@ -431,7 +431,7 @@ public class TestDataSessionBean {
             fares.add(new FareEntity("Y001", BigDecimal.valueOf(850), CabinClassTypeEnum.Y));
             fares.add(new FareEntity("Y002", BigDecimal.valueOf(600), CabinClassTypeEnum.Y));
             
-            fsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(fsp, fares, flight1.getFlightID(), pair, 7);
+            fsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanWeekly(fsp, fares, flight1.getFlightID(), pair, 2);
             flight2 = flightSessionBean.retrieveFlightByFlightNumber("ML312");
             returnFsp = new FlightSchedulePlanEntity(ScheduleTypeEnum.RECURRENTWEEK, recurrentEnd, flight2);
             info = new ArrayList<>();
@@ -466,7 +466,7 @@ public class TestDataSessionBean {
             flight1 = flightSessionBean.retrieveFlightByFlightNumber("ML411");
             startDateTime = scheduleFormatter.parse("1/12/2020 1:00:00 PM");
             pair = new Pair<>(startDateTime, 4.0);
-            fsp = new FlightSchedulePlanEntity(ScheduleTypeEnum.RECURRENTWEEK, recurrentEnd, flight1);
+            fsp = new FlightSchedulePlanEntity(ScheduleTypeEnum.RECURRENTDAY, recurrentEnd, flight1);
             
             fares.clear();
             fares.add(new FareEntity("F001", BigDecimal.valueOf(3150), CabinClassTypeEnum.F));
@@ -478,7 +478,7 @@ public class TestDataSessionBean {
             
             fsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlan(fsp, fares, flight1.getFlightID(), pair, 2);
             flight2 = flightSessionBean.retrieveFlightByFlightNumber("ML412");
-            returnFsp = new FlightSchedulePlanEntity(ScheduleTypeEnum.RECURRENTWEEK, recurrentEnd, flight2);
+            returnFsp = new FlightSchedulePlanEntity(ScheduleTypeEnum.RECURRENTDAY, recurrentEnd, flight2);
             info = new ArrayList<>();
             diff = flight1.getFlightRoute().getDestination().getGmt() - flight1.getFlightRoute().getOrigin().getGmt();
             for(FlightScheduleEntity fs : fsp.getFlightSchedule()) {

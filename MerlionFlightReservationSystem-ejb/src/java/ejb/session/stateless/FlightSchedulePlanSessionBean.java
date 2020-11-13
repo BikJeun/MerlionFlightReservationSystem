@@ -144,6 +144,101 @@ public class FlightSchedulePlanSessionBean implements FlightSchedulePlanSessionB
     
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
+    public FlightSchedulePlanEntity createNewFlightSchedulePlanWeekly(FlightSchedulePlanEntity plan, List<FareEntity> fares, long flightID, Pair<Date, Double> pair, int recurrent) throws InputDataValidationException, FareExistException, UnknownPersistenceException, FlightNotFoundException, FlightSchedulePlanExistException {
+        Set<ConstraintViolation<FlightSchedulePlanEntity>>constraintViolations = validator.validate(plan);
+        
+        if (constraintViolations.isEmpty()) {
+            try{
+                em.persist(plan);
+                
+//                //Create Flight Schedule
+//                if(recurrent == 0) {
+//                    FlightScheduleEntity schedule = new FlightScheduleEntity(pair.getKey(), pair.getValue());
+//                    flightScheduleSessionBean.createNewSchedule(plan, schedule);
+//                    //plan.getFlightSchedule().add(schedule); //association done on schedule bean
+//                } else {
+                    Date presentDate = pair.getKey();
+                    Date endDate = plan.getRecurrentEndDate();
+                    
+                    // set initial day (wed)
+                    Calendar cal = Calendar.getInstance();
+                    
+                    
+                    cal.setTime(presentDate);
+                    // here: from presentdate, set to first instance of day (eg wednesday)
+                    FlightScheduleEntity  schedule = new FlightScheduleEntity(cal.getTime(), pair.getValue());
+                    flightScheduleSessionBean.createNewSchedule(plan, schedule);
+                    
+                    boolean deo = false;
+                    while(cal.get(Calendar.DAY_OF_WEEK) != recurrent) {
+                        cal.add(Calendar.DATE, 1);
+                        deo = true;
+                    }       
+            
+                    if (deo) {
+                        schedule = new FlightScheduleEntity(cal.getTime(), pair.getValue());
+                        flightScheduleSessionBean.createNewSchedule(plan, schedule);      
+                    }
+                    
+                    cal.add(Calendar.DAY_OF_MONTH, 7);
+                     //Set recurrent
+                    while(endDate.compareTo(cal.getTime()) > 0) {            
+                        
+                        schedule = new FlightScheduleEntity(cal.getTime(), pair.getValue());
+                        flightScheduleSessionBean.createNewSchedule(plan, schedule);
+                        cal.add(Calendar.DAY_OF_MONTH, 7);         
+                                      
+                    }
+                
+                
+                associateFlightToPlan(flightID, plan);
+                //System.out.print("test" + plan.getFlightSchedule().size());
+                 
+                for (FlightScheduleEntity fse: plan.getFlightSchedule()) {               
+                    for (CabinClassEntity cc: plan.getFlight().getAircraftConfig().getCabin()) {                    
+                        SeatInventoryEntity seats = new SeatInventoryEntity(cc.getMaxSeatCapacity(), 0 , cc.getMaxSeatCapacity());                       
+                        seatsInventorySessionBean.createSeatInventory(seats, fse, cc);
+                    }
+                }
+                
+                for (FareEntity fare: fares) {
+                    fareSessionBean.createFareEntity(fare, plan);
+                }
+                
+                em.flush();
+                return plan;
+            } catch(PersistenceException ex) {
+                eJBContext.setRollbackOnly();
+                if(ex.getCause() != null && ex.getCause().getClass().getName().equals("org.eclipse.persistence.exceptions.DatabaseException")) {
+                    if(ex.getCause().getCause() != null && ex.getCause().getCause().getClass().getName().equals("java.sql.SQLIntegrityConstraintViolationException")) {
+                        throw new FlightSchedulePlanExistException();
+                    } else {
+                        throw new UnknownPersistenceException(ex.getMessage());
+                    }
+                } else {
+                    throw new UnknownPersistenceException(ex.getMessage());
+                }
+            } catch (InputDataValidationException ex) {
+                eJBContext.setRollbackOnly();
+                throw new InputDataValidationException(ex.getMessage());
+            } catch (FlightNotFoundException ex) {
+                eJBContext.setRollbackOnly();
+                throw new FlightNotFoundException(ex.getMessage());
+            } catch (FlightSchedulePlanExistException ex) {
+                eJBContext.setRollbackOnly();
+                throw new FlightSchedulePlanExistException(ex.getMessage());
+            } catch (FareExistException ex) {
+                eJBContext.setRollbackOnly();
+                throw new FareExistException(ex.getMessage());
+            } 
+        } else {
+            eJBContext.setRollbackOnly();
+            throw new InputDataValidationException(prepareInputDataValidationErrorsMessage(constraintViolations));
+        }
+    }
+    
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    @Override
     public FlightSchedulePlanEntity createNewFlightSchedulePlanMultiple(FlightSchedulePlanEntity plan, List<FareEntity> fares, long flightID, List<Pair<Date, Double>> info) throws InputDataValidationException, FareExistException, UnknownPersistenceException, FlightNotFoundException, FlightSchedulePlanExistException {
         Set<ConstraintViolation<FlightSchedulePlanEntity>>constraintViolations = validator.validate(plan);
         

@@ -55,9 +55,9 @@ public class HolidayReservationSystemClientApp {
 
                 System.out.println(" === Welcome to Holiday Reservation System ===\n");
                 System.out.println("*** Login ***");
-                System.out.println("Enter username> ");
+                System.out.print("Enter username> ");
                 String username = sc.nextLine().trim();
-                System.out.println("Enter password> ");
+                System.out.print("Enter password> ");
                 String password = sc.nextLine().trim();
 
                 if (username.length() > 0 && password.length() > 0) {

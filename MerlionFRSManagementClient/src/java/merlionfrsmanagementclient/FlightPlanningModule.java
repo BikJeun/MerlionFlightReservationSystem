@@ -265,10 +265,10 @@ public class FlightPlanningModule {
             System.out.println("Error: " + ex.getMessage() + "\nPlease try again!\n");
             return;
         }
-        System.out.printf("%30s%20s%25s%20s\n", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type");
+        System.out.printf("%30s%40s%25s%20s\n", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type");
         
         for(AircraftConfigurationEntity config : list) {
-            System.out.printf("%30s%20s%25s%20s\n", config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName());
+            System.out.printf("%30s%40s%25s%20s\n", config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName());
         }
         System.out.print("Press any key to continue...> ");
         sc.nextLine();
@@ -280,10 +280,22 @@ public class FlightPlanningModule {
             System.out.println("*** View aircraft configuration details ***");
             System.out.print("Enter configuration ID> ");
             Long id = sc.nextLong();
+            sc.nextLine();
             
             AircraftConfigurationEntity config = aircraftConfigurationSessionBean.retriveAircraftConfigByID(id);
-            System.out.printf("%30s%20s%25s%20s\n", "Aircraft Configuration ID", "Name", "Number of Cabin Class", "Aircraft Type");
-            System.out.printf("%30s%20s%25s%20s\n", config.getAircraftConfigID().toString(), config.getName(), config.getNumberOfCabinClasses(), config.getAircraftType().getTypeName());
+            int max = 0;
+            for (CabinClassEntity cabin: config.getCabin()) {
+                max += cabin.getMaxSeatCapacity();
+            }
+            System.out.println("\n" + config.getName() + ", " + config.getCabin().size() + ", " + max);
+            System.out.println();
+            for (CabinClassEntity cabin: config.getCabin()) {
+                System.out.println("\t" + cabin.getCabinClassType().toString() + ", " + cabin.getNumOfAisles() + " aisle(s), " + cabin.getNumOfRows() + ", " + cabin.getNumOfSeatsAbreast() + ", seats abreast, " + cabin.getSeatingConfigPerColumn() + ", " + cabin.getMaxSeatCapacity());
+            }
+            System.out.println();
+            System.out.print("Press any key to continue...> ");
+            sc.nextLine();
+           
         } catch (AircraftConfigNotFoundException ex) {
             System.out.println(ex.getMessage());
         }

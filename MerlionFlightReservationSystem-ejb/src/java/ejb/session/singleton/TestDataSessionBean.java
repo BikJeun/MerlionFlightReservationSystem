@@ -554,10 +554,8 @@ public class TestDataSessionBean {
             returnFsp = flightSchedulePlanSessionBean.createNewFlightSchedulePlanMultiple(returnFsp, fares2, flight2.getFlightID(), info);
             flightSchedulePlanSessionBean.associateExistingPlanToComplementaryPlan(fsp.getFlightSchedulePlanID(), returnFsp.getFlightSchedulePlanID());        
             ////////////  
-        } catch (EmployeeUsernameExistException | UnknownPersistenceException | PartnerUsernameExistException | AirportExistException | AircraftTypeExistException | CreateNewAircraftConfigException | AircraftConfigExistException | FlightRouteNotFoundException | FlightExistException | AircraftConfigNotFoundException | FlightNotFoundException | FlightSchedulePlanNotFoundException | FareExistException | ParseException | InputDataValidationException | FlightSchedulePlanExistException | AirportNotFoundException ex) {
+        } catch (EmployeeUsernameExistException | UnknownPersistenceException | PartnerUsernameExistException | AirportExistException | AircraftTypeExistException | CreateNewAircraftConfigException | AircraftConfigExistException | FlightRouteNotFoundException | FlightExistException | AircraftConfigNotFoundException | FlightNotFoundException | FlightSchedulePlanNotFoundException | FareExistException | ParseException | InputDataValidationException | FlightSchedulePlanExistException | AirportNotFoundException | FlightRouteExistException ex) {
             System.out.println(ex.getMessage());
-        } catch (FlightRouteExistException ex) {
-            Logger.getLogger(TestDataSessionBean.class.getName()).log(Level.SEVERE, null, ex);
         }  
     }
 }

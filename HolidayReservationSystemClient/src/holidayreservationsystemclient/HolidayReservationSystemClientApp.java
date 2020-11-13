@@ -166,9 +166,9 @@ public class HolidayReservationSystemClientApp {
 
         int flightPref;
         while (true) {
-            System.out.print("State you preference (1. Direct Flight 2.Connecting Flight)> ");
+            System.out.print("State you preference (0. No Preference 1. Direct Flight 2.Connecting Flight)> ");
             flightPref = sc.nextInt();
-            if (flightPref != 1 && flightPref != 2) {
+            if (flightPref != 1 && flightPref != 2 && flightPref != 0) {
                 System.out.println("Error: Invalid option\nPlease try again!");
             } else {
                 break;
@@ -198,6 +198,118 @@ public class HolidayReservationSystemClientApp {
             } else {
                 System.out.println("Error: Invalid option\nPlease try again!");
             }
+        }
+        
+        if (flightPref == 0) {
+            boolean exit = false;
+            boolean exit2 = false;
+            try {
+                List<FlightScheduleEntity> dateActualFlightScheduleOutBound = getFlightSchedules(departure, destination, departureDate.toString(), cabin);
+
+                Calendar c = Calendar.getInstance();
+
+                c.setTime(departureDate);
+                c.add(Calendar.DATE, 1);
+                List<FlightScheduleEntity> dateAddOneFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, 1);
+                List<FlightScheduleEntity> dateAddTwoFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, 1);
+                List<FlightScheduleEntity> dateAddThreeFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+
+                c.setTime(departureDate);
+                c.add(Calendar.DATE, -1);
+                List<FlightScheduleEntity> dateMinusOneFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, -1);
+                List<FlightScheduleEntity> dateMinusTwoFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, -1);
+                List<FlightScheduleEntity> dateMinusThreeFlightScheduleOutBound = getFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+
+
+                System.out.println("                      ============= Available Direct Outbound Flights ============= ");
+                
+                System.out.println("                             ============ On Desired Date =========== ");
+                printSingleFlightSchedule(dateActualFlightScheduleOutBound, cabin, passengers);               
+
+                System.out.println("\n                  ============ Departing 1 day before Desired Date ============ ");
+                printSingleFlightSchedule(dateMinusOneFlightScheduleOutBound, cabin, passengers);                    
+                
+                System.out.println("\n                  ============ Departing 2 days before Desired Date ============ ");
+                printSingleFlightSchedule(dateMinusTwoFlightScheduleOutBound, cabin, passengers);  
+              
+                
+                System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
+                printSingleFlightSchedule(dateMinusThreeFlightScheduleOutBound, cabin, passengers);  
+                                     
+                
+                System.out.println("\n                  ============ Departing 1 day after Desired Date ============ ");
+                printSingleFlightSchedule(dateAddOneFlightScheduleOutBound, cabin, passengers); 
+                              
+                System.out.println("\n                  ============ Departing 2 days after Desired Date ============ ");
+                printSingleFlightSchedule(dateAddTwoFlightScheduleOutBound, cabin, passengers); 
+             
+                
+                System.out.println("\n                  ============ Departing 3 days after Desired Date ============ ");
+                printSingleFlightSchedule(dateAddThreeFlightScheduleOutBound, cabin, passengers);    
+            } catch (FlightNotFoundException_Exception ex) {
+                System.out.print("Sorry, there are no direct flights with your desired flight route\n");   
+                exit = true;
+            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ParseException_Exception ex) {
+                // wont hit
+            }
+                
+             try {
+                List<MyPair> dateActualFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, departureDate.toString(), cabin);
+
+                Calendar c = Calendar.getInstance();
+
+                c.setTime(departureDate);
+                c.add(Calendar.DATE, 1);
+                List<MyPair> dateAddOneFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, 1);
+                List<MyPair> dateAddTwoFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, 1);
+                List<MyPair> dateAddThreeFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+
+                c.setTime(departureDate);
+                c.add(Calendar.DATE, -1);
+                List<MyPair> dateMinusOneFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, -1);
+                List<MyPair> dateMinusTwoFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, -1);
+                List<MyPair> dateMinusThreeFlightScheduleOutBound = getIndirectFlightSchedules(departure, destination, c.getTime().toString(), cabin);
+
+                System.out.println("\n\n                      ============= Available Connecting Outbound Flights ============= ");
+
+                System.out.println("                             ============ On Desired Date =========== ");
+                printFlightScheduleWithConnecting(dateActualFlightScheduleOutBound, cabin, passengers);
+                
+                System.out.println("\n                  ============ Departing 1 day before Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateMinusOneFlightScheduleOutBound, cabin, passengers);
+            
+                System.out.println("\n                  ============ Departing 2 days before Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateMinusTwoFlightScheduleOutBound, cabin, passengers);
+                                  
+                System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateMinusThreeFlightScheduleOutBound, cabin, passengers);
+              
+                System.out.println("\n                  ============ Departing 1 day after Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateAddOneFlightScheduleOutBound, cabin, passengers);
+                         
+                System.out.println("\n                  ============ Departing 2 days after Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateAddTwoFlightScheduleOutBound, cabin, passengers);
+                               
+                System.out.println("\n                  ============ Departing 3 days after Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateAddThreeFlightScheduleOutBound, cabin, passengers);
+                              
+            } catch (FlightNotFoundException_Exception ex) {
+                System.out.println("Sorry there are no indirect flights for your specified route\n");
+                exit2 = true;
+            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ParseException_Exception ex) {
+                // will nvr hit
+            }      
+            if (exit && exit2) {
+                return;
+            }        
         }
 
         if (flightPref == 1) {
@@ -310,6 +422,126 @@ public class HolidayReservationSystemClientApp {
             }                         
         }
         System.out.println("\n");
+        
+         if (type == 2 && flightPref == 0) {
+            Date returnDate;
+            while (true) {
+                try { 
+                    System.out.print("Enter return date (dd/mm/yyyy)> ");
+                    String date2 = sc.nextLine().trim();
+                    returnDate = inputFormat.parse(date2);
+                    break;
+                } catch (ParseException ex) {
+                    System.out.println("Error: Invalid date\nPlease try again!");
+                }      
+            }
+            boolean exit = false;
+            boolean exit2 = false;
+            try {
+                List<FlightScheduleEntity> dateActualFlightScheduleInBound = getFlightSchedules(destination, departure, returnDate.toString(), cabin);
+
+                Calendar c = Calendar.getInstance();
+
+                c.setTime(returnDate);
+                c.add(Calendar.DATE, 1);
+                List<FlightScheduleEntity> dateAddOneFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, 1);
+                List<FlightScheduleEntity> dateAddTwoFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, 1);
+                List<FlightScheduleEntity> dateAddThreeFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+
+                c.setTime(returnDate);
+                c.add(Calendar.DATE, -1);
+                List<FlightScheduleEntity> dateMinusOneFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, -1);
+                List<FlightScheduleEntity> dateMinusTwoFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, -1);
+                List<FlightScheduleEntity> dateMinusThreeFlightScheduleInBound = getFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+                
+                     System.out.println("                      ============= Available Direct Inbound Flights ============= ");
+
+                System.out.println("                             ============ On Desired Date =========== ");
+                printSingleFlightSchedule(dateActualFlightScheduleInBound, cabin, passengers);
+              
+                System.out.println("\n                  ============ Departing 1 day before Desired Date ============ ");
+                printSingleFlightSchedule(dateMinusOneFlightScheduleInBound, cabin, passengers);
+               
+                System.out.println("\n                  ============ Departing 2 days before Desired Date ============ ");
+                printSingleFlightSchedule(dateMinusTwoFlightScheduleInBound, cabin, passengers);
+               
+                System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
+                printSingleFlightSchedule(dateMinusThreeFlightScheduleInBound, cabin, passengers);
+               
+                System.out.println("\n                  ============ Departing 1 day after Desired Date ============ ");
+                printSingleFlightSchedule(dateAddOneFlightScheduleInBound, cabin, passengers);
+               
+                System.out.println("\n                  ============ Departing 2 days after Desired Date ============ ");
+                printSingleFlightSchedule(dateAddTwoFlightScheduleInBound, cabin, passengers);
+               
+                System.out.println("\n                  ============ Departing 3 days after Desired Date ============ ");
+                printSingleFlightSchedule(dateAddThreeFlightScheduleInBound, cabin, passengers);
+               
+            } catch (FlightNotFoundException_Exception ex) {
+                System.out.print("Sorry there are no return flights for this flight route within this period");
+                exit = true;
+            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ParseException_Exception ex) {
+                // will nvr hit this
+            }        
+             
+            try {
+                List<MyPair> dateActualFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, returnDate.toString(), cabin);
+
+                Calendar c = Calendar.getInstance();
+
+                c.setTime(returnDate);
+                c.add(Calendar.DATE, 1);
+                List<MyPair> dateAddOneFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, 1);
+                List<MyPair> dateAddTwoFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, 1);
+                List<MyPair> dateAddThreeFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+
+                c.setTime(returnDate);
+                c.add(Calendar.DATE, -1);
+                List<MyPair> dateMinusOneFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, -1);
+                List<MyPair> dateMinusTwoFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+                c.add(Calendar.DATE, -1);
+                List<MyPair> dateMinusThreeFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
+
+                System.out.println("                      ============= Available Connecting Inbound Flights ============= ");
+
+                System.out.println("                             ============ On Desired Date =========== ");
+                printFlightScheduleWithConnecting(dateActualFlightScheduleInBound, cabin, passengers);
+                              
+                System.out.println("\n                  ============ Departing 1 day before Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateMinusOneFlightScheduleInBound, cabin, passengers);
+                                
+                System.out.println("\n                  ============ Departing 2 days before Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateMinusTwoFlightScheduleInBound, cabin, passengers);
+                               
+                System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateMinusThreeFlightScheduleInBound, cabin, passengers);
+                              
+                System.out.println("\n                  ============ Departing 1 day after Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateAddOneFlightScheduleInBound, cabin, passengers);
+                                                      
+                System.out.println("\n                  ============ Departing 2 days after Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateAddTwoFlightScheduleInBound, cabin, passengers);
+                                          
+                System.out.println("\n                  ============ Departing 3 days before Desired Date ============ ");
+                printFlightScheduleWithConnecting(dateAddThreeFlightScheduleInBound, cabin, passengers);
+             
+            } catch (FlightNotFoundException_Exception ex) {
+                System.out.print("Sorry there are no indirect return flights for this flight route within this period");
+                exit2 = true;
+            } catch (FlightScheduleNotFoundException_Exception | CabinClassNotFoundException_Exception | ParseException_Exception ex) {
+                // will never hit this
+            } 
+            if (exit && exit2) {
+                return;
+            }          
+         }
 
         if (type == 2 && flightPref == 1) {
             System.out.print("Enter return date (dd/mm/yyyy)> ");
@@ -412,7 +644,7 @@ public class HolidayReservationSystemClientApp {
                 c.add(Calendar.DATE, -1);
                 List<MyPair> dateMinusThreeFlightScheduleInBound = getIndirectFlightSchedules(destination, departure, c.getTime().toString(), cabin);
 
-                System.out.println("                      ============= Available Inbound Flights ============= ");
+                System.out.println("\n\n                      ============= Available Connecting Flights ============= ");
 
                 System.out.println("                             ============ On Desired Date =========== ");
                 printFlightScheduleWithConnecting(dateActualFlightScheduleInBound, cabin, passengers);
@@ -463,20 +695,21 @@ public class HolidayReservationSystemClientApp {
             outbound1 = sc.nextLong();
             sc.nextLine();
         } else if (type == 1 && flightPref == 2) {
+            inbound1 = null;
+            inbound2 = null;
+            System.out.print("Enter the first outbound flight you would like to reserve (Flight ID)> ");
+            outbound1 = sc.nextLong();
+            System.out.print("Enter the connecting outbound flight you would like to reserve (Flight ID)> ");
+            outbound2 = sc.nextLong();   
+            sc.nextLine();
+        } else if (type == 2 && flightPref == 1) {
             outbound2 = null;
             inbound2 = null;
             System.out.print("Enter the outbound flight you would like to reserve (Flight ID)> ");
             outbound1 = sc.nextLong();
             System.out.print("Enter the inbound flight you would like to reserve (Flight ID)> ");
             inbound1 = sc.nextLong();
-            sc.nextLine();
-        } else if (type == 2 && flightPref == 1) {
-            inbound1 = null;
-            inbound2 = null;
-            System.out.print("Enter the first outbound flight you would like to reserve (Flight ID)> ");
-            outbound1 = sc.nextLong();
-            System.out.print("Enter the connecting outbound flight you would like to reserve (Flight ID)> ");
-            outbound2 = sc.nextLong();
+            sc.nextLine();    
         } else if (type == 2 && flightPref == 2) {
             System.out.print("Enter the first outbound flight you would like to reserve (Flight ID)> ");
             outbound1 = sc.nextLong();
@@ -486,6 +719,46 @@ public class HolidayReservationSystemClientApp {
             inbound1 = sc.nextLong();
             System.out.print("Enter the connecting inbound flight you would like to reserve (Flight ID)> ");
             inbound2 = sc.nextLong();
+        } else if (flightPref == 0) {
+            System.out.print("Select type of flight you would like to reserve (1. Direct Flight 2.Connecting Flight)> ");
+            int choice = sc.nextInt();
+            sc.nextLine();
+            if (type == 1 && choice == 1) {
+                outbound2 = null;
+                inbound2 = null;
+                inbound1 = null;
+                System.out.print("Enter flight you would like to reserve (Flight ID)> ");
+                outbound1 = sc.nextLong();
+                sc.nextLine();
+            } else if (type == 1 && choice == 2) {
+                inbound1 = null;
+                inbound2 = null;
+                System.out.print("Enter the first outbound flight you would like to reserve (Flight ID)> ");
+                outbound1 = sc.nextLong();
+                System.out.print("Enter the connecting outbound flight you would like to reserve (Flight ID)> ");
+                outbound2 = sc.nextLong(); 
+            } else if (type == 2 && choice == 1) {
+               outbound2 = null;
+                inbound2 = null;
+                System.out.print("Enter the outbound flight you would like to reserve (Flight ID)> ");
+                outbound1 = sc.nextLong();
+                System.out.print("Enter the inbound flight you would like to reserve (Flight ID)> ");
+                inbound1 = sc.nextLong();
+                sc.nextLine();   
+                outbound2 = sc.nextLong();
+            } else if (type == 2 && choice == 2) {
+                System.out.print("Enter the first outbound flight you would like to reserve (Flight ID)> ");
+                 outbound1 = sc.nextLong();
+                 System.out.print("Enter the connecting outbound flight you would like to reserve (Flight ID)> ");
+                 outbound2 = sc.nextLong();
+                 System.out.print("Enter the first inbound flight you would like to reserve (Flight ID)> ");
+                 inbound1 = sc.nextLong();
+                 System.out.print("Enter the connecting inbound flight you would like to reserve (Flight ID)> ");
+                 inbound2 = sc.nextLong();       
+            } else {
+                System.out.println("Error: Invalid option\nPlease try again!\n");
+                return;
+            }
         } else {
             return;
         }

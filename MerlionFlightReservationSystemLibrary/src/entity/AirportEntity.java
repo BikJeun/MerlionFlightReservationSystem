@@ -11,6 +11,10 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  *
@@ -23,17 +27,36 @@ public class AirportEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long airportID;
+    
     @Column(nullable = false, length = 64)
+    @Size(min = 1, max = 64)
+    @NotNull
     private String airportName;
+    
     @Column(nullable = false, unique = true, length = 3)
+    @Size(min = 3, max = 3)
+    @NotNull
     private String IATACode;
+    
     @Column(nullable = false, length = 64)
+    @Size(min = 1, max = 64)
+    @NotNull
     private String city;
+    
     @Column(nullable = false, length = 64)
+    @Size(min = 1, max = 64)
+    @NotNull
     private String state;
+    
     @Column(nullable = false, length = 64)
+    @Size(min = 1, max = 64)
+    @NotNull
     private String country;
+    
     @Column(nullable = false)
+    @Min(0)
+    @Max(24)
+    @NotNull
     private int gmt;
     
     

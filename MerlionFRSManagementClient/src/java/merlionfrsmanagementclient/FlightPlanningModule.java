@@ -30,8 +30,6 @@ import exceptions.UnknownPersistenceException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -287,10 +285,10 @@ public class FlightPlanningModule {
             for (CabinClassEntity cabin: config.getCabin()) {
                 max += cabin.getMaxSeatCapacity();
             }
-            System.out.println("\n" + config.getName() + ", " + config.getCabin().size() + ", " + max);
+            System.out.println("\n" + config.getName() + ", " + config.getCabin().size() + " cabin class(es), " + max + " total seats");
             System.out.println();
             for (CabinClassEntity cabin: config.getCabin()) {
-                System.out.println("\t" + cabin.getCabinClassType().toString() + ", " + cabin.getNumOfAisles() + " aisle(s), " + cabin.getNumOfRows() + ", " + cabin.getNumOfSeatsAbreast() + ", seats abreast, " + cabin.getSeatingConfigPerColumn() + ", " + cabin.getMaxSeatCapacity());
+                System.out.println("\t" + cabin.getCabinClassType().toString() + ", " + cabin.getNumOfAisles() + " aisle(s), " + cabin.getNumOfRows() + " row(s), " + cabin.getNumOfSeatsAbreast() + " seats abreast, " + cabin.getSeatingConfigPerColumn() + " seating configuration, " + cabin.getMaxSeatCapacity() + " total seats");
             }
             System.out.println();
             System.out.print("Press any key to continue...> ");

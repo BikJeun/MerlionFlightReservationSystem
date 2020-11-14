@@ -23,7 +23,7 @@ import javax.ejb.Remote;
 @Remote
 public interface FlightSessionBeanRemote {
 
-    public FlightEntity createNewFlight(FlightEntity flight, Long chosenRoute, Long chosenConfig) throws FlightExistException, UnknownPersistenceException, FlightRouteNotFoundException, AircraftConfigNotFoundException;
+    public FlightEntity createNewFlight(FlightEntity flight, Long chosenRoute, Long chosenConfig) throws FlightExistException, UnknownPersistenceException, FlightRouteNotFoundException, AircraftConfigNotFoundException, InputDataValidationException;
 
     public void associateExistingFlightWithReturnFlight(Long flightID, Long returnFlightID) throws FlightNotFoundException;
     

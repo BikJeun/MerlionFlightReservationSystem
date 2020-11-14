@@ -24,8 +24,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.util.Pair;
 
 /**
@@ -101,7 +99,7 @@ public class SalesManagementModule {
             System.out.printf("%25s%30s%20s\n", "Flight Schedule ID", "Departure Date Time", "Duration (HRS)");
             for (FlightSchedulePlanEntity fsp: flight.getFlightSchedulePlan()) {
                 for (FlightScheduleEntity fs: fsp.getFlightSchedule()) {
-                    System.out.printf("%25s%30s%20s\n", fs.getFlightScheduleID().toString(), fs.getDepartureDateTime().toString(), String.valueOf(fs.getDuration()));
+                    System.out.printf("%25s%30s%20s\n", fs.getFlightScheduleID().toString(), fs.getDepartureDateTime().toString().substring(0, 19), String.valueOf(fs.getDuration()));
                 }
             }
             System.out.print("Select flight schedule (BY ID)>  ");
@@ -220,7 +218,7 @@ public class SalesManagementModule {
             System.out.printf("%25s%30s%20s\n", "Flight Schedule ID", "Departure Date Time", "Duration (HRS)");
             for (FlightSchedulePlanEntity fsp: flight.getFlightSchedulePlan()) {
                 for (FlightScheduleEntity fs: fsp.getFlightSchedule()) {
-                    System.out.printf("%25s%30s%20s\n", fs.getFlightScheduleID().toString(), fs.getDepartureDateTime().toString(), String.valueOf(fs.getDuration()));
+                    System.out.printf("%25s%30s%20s\n", fs.getFlightScheduleID().toString(), fs.getDepartureDateTime().toString().substring(0, 19), String.valueOf(fs.getDuration()));
                 }
             }
             System.out.print("Select flight schedule (BY ID)>  ");
@@ -276,6 +274,9 @@ public class SalesManagementModule {
             }
             
             System.out.println("\n +++ All Reservations for Flight Schedule (ID: " + chosenFlightScheduleId + " +++\n");
+            if (cabinTypes.isEmpty()) {
+                System.out.println("No existing reservations for this flight schedule\n");
+            }
             for (int i = 0; i < cabinTypes.size(); i++) {
                 String type;
                 switch (cabinTypes.get(i)) {

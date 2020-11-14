@@ -20,6 +20,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.Size;
 
 /**
  *
@@ -33,8 +34,11 @@ public class FlightEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long FlightID;
+    
     @Column(nullable = false, unique = true, length = 32)
+    @Size(min = 3, max = 32)
     private String flightNum;
+    
     @Column(nullable = false)
     private boolean disabled;
     

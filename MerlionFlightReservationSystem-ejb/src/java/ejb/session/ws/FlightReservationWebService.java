@@ -6,7 +6,6 @@
 package ejb.session.ws;
 
 import helper.MyPair;
-import entity.PartnerEntity;
 import entity.FlightScheduleEntity;
 import entity.FareEntity;
 import entity.SeatInventoryEntity;

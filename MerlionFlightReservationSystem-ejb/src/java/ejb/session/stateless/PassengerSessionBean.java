@@ -7,7 +7,6 @@ package ejb.session.stateless;
 
 import entity.PassengerEntity;
 import exceptions.PassengerAlreadyExistException;
-import exceptions.PassengerNotFoundException;
 import exceptions.UnknownPersistenceException;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

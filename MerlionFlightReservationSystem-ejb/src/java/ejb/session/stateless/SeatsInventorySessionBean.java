@@ -8,20 +8,16 @@ package ejb.session.stateless;
 import entity.CabinClassEntity;
 import entity.FlightScheduleEntity;
 import entity.SeatInventoryEntity;
-import enumeration.CabinClassTypeEnum;
 import exceptions.InputDataValidationException;
 import exceptions.SeatInventoryNotFoundException;
 import exceptions.UpdateSeatsException;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
@@ -48,14 +44,12 @@ public class SeatsInventorySessionBean implements SeatsInventorySessionBeanRemot
     // only exposed in local interface
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
-    public SeatInventoryEntity createSeatInventory(SeatInventoryEntity seatInventory, FlightScheduleEntity flightSchedule, CabinClassEntity cabinClass) {
-        
-        em.persist(seatInventory);
-        
+    public SeatInventoryEntity createSeatInventory(SeatInventoryEntity seatInventory, FlightScheduleEntity flightSchedule, CabinClassEntity cabinClass) throws InputDataValidationException {
+       
         int noOfRows = cabinClass.getNumOfRows();
         int noOfSeatsAbreast = cabinClass.getNumOfSeatsAbreast();
         char[][] seats = new char[noOfRows][noOfSeatsAbreast];
-        
+
         for (int i = 0; i < noOfRows; i++) {
             for (int j = 0; j < noOfSeatsAbreast; j++) {
                 seats[i][j] = '-';
@@ -63,11 +57,18 @@ public class SeatsInventorySessionBean implements SeatsInventorySessionBeanRemot
         }
         seatInventory.setSeats(seats);
         
-        seatInventory.setCabin(cabinClass);
-        seatInventory.setFlightSchedule(flightSchedule);
-        flightSchedule.getSeatInventory().add(seatInventory);
-        
-        return seatInventory;
+        Set<ConstraintViolation<SeatInventoryEntity>>constraintViolations = validator.validate(seatInventory);
+        if (constraintViolations.isEmpty()) {
+            em.persist(seatInventory);
+
+            seatInventory.setCabin(cabinClass);
+            seatInventory.setFlightSchedule(flightSchedule);
+            flightSchedule.getSeatInventory().add(seatInventory);
+
+            return seatInventory;
+        } else {
+            throw new InputDataValidationException(prepareInputDataValidationErrorsMessage(constraintViolations));
+        }
     }
     
     

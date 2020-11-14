@@ -10,9 +10,9 @@ import exceptions.AircraftConfigNotFoundException;
 import exceptions.FlightExistException;
 import exceptions.FlightNotFoundException;
 import exceptions.FlightRouteNotFoundException;
+import exceptions.InputDataValidationException;
 import exceptions.UnknownPersistenceException;
 import java.util.List;
-import javafx.util.Pair;
 import javax.ejb.Local;
 
 /**
@@ -22,7 +22,7 @@ import javax.ejb.Local;
 @Local
 public interface FlightSessionBeanLocal {
     
-    public FlightEntity createNewFlight(FlightEntity flight, Long chosenRoute, Long chosenConfig) throws FlightExistException, UnknownPersistenceException, FlightRouteNotFoundException, AircraftConfigNotFoundException;
+    public FlightEntity createNewFlight(FlightEntity flight, Long chosenRoute, Long chosenConfig) throws FlightExistException, UnknownPersistenceException, FlightRouteNotFoundException, AircraftConfigNotFoundException, InputDataValidationException;
 
     public FlightEntity retreiveFlightById(Long id) throws FlightNotFoundException;
     

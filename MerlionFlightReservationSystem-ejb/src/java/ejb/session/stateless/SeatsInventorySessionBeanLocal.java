@@ -8,6 +8,7 @@ package ejb.session.stateless;
 import entity.CabinClassEntity;
 import entity.FlightScheduleEntity;
 import entity.SeatInventoryEntity;
+import exceptions.InputDataValidationException;
 import exceptions.SeatInventoryNotFoundException;
 import exceptions.UpdateSeatsException;
 import java.util.List;
@@ -22,7 +23,7 @@ public interface SeatsInventorySessionBeanLocal {
     
     public void deleteSeatInventory(List<SeatInventoryEntity> seats);
     
-    public SeatInventoryEntity createSeatInventory(SeatInventoryEntity seatInventory, FlightScheduleEntity flightSchedule, CabinClassEntity cabinClass);
+    public SeatInventoryEntity createSeatInventory(SeatInventoryEntity seatInventory, FlightScheduleEntity flightSchedule, CabinClassEntity cabinClass) throws InputDataValidationException;
     
     public SeatInventoryEntity retrieveSeatsById(Long seatInventoryID) throws SeatInventoryNotFoundException;
     

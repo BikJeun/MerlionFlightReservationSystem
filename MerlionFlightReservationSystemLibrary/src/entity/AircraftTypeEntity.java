@@ -16,6 +16,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  *
@@ -28,9 +31,15 @@ public class AircraftTypeEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long aircraftID;
+    
     @Column(nullable = false, length = 32)
+    @Size(min = 1, max = 32)
+    @NotNull
     private String typeName;
+    
     @Column(nullable = false)
+    @Min(0)
+    @NotNull
     private int maxCapacity;
     
     @OneToMany(mappedBy = "aircraftType", fetch = FetchType.EAGER, cascade = CascadeType.DETACH)

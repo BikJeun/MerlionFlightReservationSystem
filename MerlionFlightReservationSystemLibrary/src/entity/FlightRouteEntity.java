@@ -22,6 +22,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
 
 /**
  *
@@ -39,6 +40,7 @@ public class FlightRouteEntity implements Serializable {
     private Long flightRouteID;
     
     @Column(nullable = false)
+    @NotNull
     private boolean disabled;
     
     @OneToMany(mappedBy = "flightRoute", fetch = FetchType.EAGER, cascade = CascadeType.DETACH)

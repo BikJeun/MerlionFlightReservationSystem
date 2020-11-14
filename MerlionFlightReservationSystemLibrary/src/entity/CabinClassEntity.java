@@ -19,6 +19,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 /**
@@ -35,26 +36,33 @@ public class CabinClassEntity implements Serializable {
     
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @NotNull
     private CabinClassTypeEnum cabinClassType;
     
     @Column(nullable = false)
     @Min(0)
     @Max(2)
+    @NotNull
     private int numOfAisles;
     
     @Column(nullable = false)
     @Min(1)
+    @NotNull
     private int numOfRows;
     
     @Column(nullable = false)
+    @Min(1)
+    @NotNull
     private int numOfSeatsAbreast;
     
     @Column(nullable = false)
     @Size(min=1, max=5)
+     @NotNull
     private String seatingConfigPerColumn;
     
     @Column(nullable = false)
     @Min(1)
+    @NotNull
     private int maxSeatCapacity;
     
     @ManyToOne(optional = false, cascade = CascadeType.DETACH)
